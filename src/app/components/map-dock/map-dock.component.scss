@@ -22,9 +22,33 @@
 .camera-anchor {
   position: relative;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: flex-end;
+  gap: 8px;
   pointer-events: none;
+}
+
+.osm-attrib {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: radius("pill");
+  font-size: font-size("xxs");
+  line-height: 1.2;
+  color: color("text-dim");
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: calc(100% - 46px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color transition("fast"), border-color transition("fast");
+
+  &:hover {
+    color: color("text-bright");
+    border-color: color("accent");
+  }
 }
 
 .camera-fab {

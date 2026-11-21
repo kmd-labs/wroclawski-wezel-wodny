@@ -4,8 +4,16 @@
 
 <footer class="dock-wrap">
   <div class="dock-shell">
-    <!-- Floating Camera Control Trigger & Popover above the bottom timeline component -->
+    <!-- Top-of-timeline row: Always-expanded OSM attribution on left, Camera button on right -->
     <div class="camera-anchor">
+      <a
+        class="osm-attrib glass-panel"
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener noreferrer">
+        {{ t.osmAttribution }}
+      </a>
+
       @if (state.cameraControlsOpen()) {
         <div class="camera-popover glass-panel" role="dialog" [attr.aria-label]="t.cameraBtn">
           <!-- Heading / Bearing -->

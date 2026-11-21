@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import {
-  AttributionControl,
   GeoJSONSource,
   Map as MapLibreMap,
   setWorkerUrl
@@ -264,8 +263,6 @@ export class MapService {
           maplibreLogo: false
         })
     );
-
-    map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
 
     map.on('style.load', () => {
       this.zone.run(() => {
