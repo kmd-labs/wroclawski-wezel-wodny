@@ -24,22 +24,14 @@ import { LodLevel, WwwLodBundle } from '../services/vector-data.service';
 export const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
 /**
- * Computes 3D river segment extrusion height proportional to discharge Q (m³/s)
- * and calibrated per LOD tier so water volume remains visually legible at every zoom.
+ * Computes 3D river segment extrusion height proportional to discharge Q (m³/s).
+ * Constant across all zoom/LOD tiers so river blocks keep a fixed height when zooming.
  */
-const LOD_Q_SCALE: Record<LodLevel, { baseM: number; mPerM3s: number }> = {
-  0: { baseM: 4.0, mPerM3s: 0.085 },  // Overview zoom: 400 m³/s -> 38 m, 3640 m³/s -> 313 m
-  1: { baseM: 2.5, mPerM3s: 0.022 },  // City zoom:     400 m³/s -> 11 m, 3640 m³/s -> 83 m
-  2: { baseM: 1.2, mPerM3s: 0.0065 }  // Street zoom:   400 m³/s -> 3.8 m, 3640 m³/s -> 25 m
-};
-
 export function computeCanalVolumeHeight(
   flowM3s: number,
-  lod: LodLevel,
   riverScale = 5
 ): number {
-  const { baseM, mPerM3s } = LOD_Q_SCALE[lod];
-  return Math.round((baseM + Math.max(0, flowM3s) * mPerM3s) * riverScale * 100) / 100;
+  return Math.round((2.5 + Math.max(0, flowM3s) * 0.022) * riverScale * 100) / 100;
 }
 
 export interface DynamicDataContext {
@@ -109,7 +101,7 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
         selected: ctx.selectedSegmentKey === segKey,
         flowM3s,
         status,
-        height: computeCanalVolumeHeight(flowM3s, ctx.lod, ctx.riverScale)
+        height: computeCanalVolumeHeight(flowM3s, ctx.riverScale)
       }
     });
   }

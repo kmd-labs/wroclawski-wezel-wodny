@@ -142,12 +142,12 @@ export const EN: Dict = {
       desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
     },
     {
-      name: 'OpenFreeMap Vector Tiles & Noto Fonts',
-      provider: 'OpenFreeMap / OpenMapTiles',
+      name: 'OpenFreeMap 3D Buildings, Vector Tiles & Noto Fonts',
+      provider: 'OpenFreeMap / OpenMapTiles (OSM Building Footprints & Heights)',
       url: 'https://openfreemap.org/',
       license: 'MIT / ODbL',
       licenseUrl: 'https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md',
-      desc: 'Base vector tiles (buildings, roads, parks, water) and font glyphs rendered in the 3D canvas.'
+      desc: '3D buildings (render_height extrusions from OpenStreetMap building tags), roads, parks, water basemap, and map label glyphs.'
     },
     {
       name: 'AWS Terrain Tiles (Terrarium DEM / EU-DEM)',
@@ -200,5 +200,5 @@ export const EN: Dict = {
       desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
     }
   ],
-  osmAttribution: '© OpenStreetMap · PGW Wody Polskie (ISOK MZP)'
+  osmAttribution: '© OpenStreetMap contributors'
 };

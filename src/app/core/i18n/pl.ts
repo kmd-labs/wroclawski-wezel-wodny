@@ -142,12 +142,12 @@ export const PL: Dict = {
       desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% użyte do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
     },
     {
-      name: 'OpenFreeMap Vector Tiles & Noto Fonts',
-      provider: 'OpenFreeMap / OpenMapTiles',
+      name: 'OpenFreeMap: Budynki 3D, kafelki wektorowe i fonty Noto',
+      provider: 'OpenFreeMap / OpenMapTiles (bryły i wysokości budynków z OSM)',
       url: 'https://openfreemap.org/',
       license: 'MIT / ODbL',
       licenseUrl: 'https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md',
-      desc: 'Podkładowe kafelki wektorowe (zabudowa 3D, drogi, zieleń, wody) oraz glify etykiet mapy.'
+      desc: 'Budynki 3D (ekstruzja render_height na bazie OpenStreetMap), sieć dróg, zieleń, wody oraz glify etykiet mapy.'
     },
     {
       name: 'AWS Terrain Tiles (Terrarium DEM / EU-DEM)',
@@ -200,5 +200,5 @@ export const PL: Dict = {
       desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% wykorzystane do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
     }
   ],
-  osmAttribution: '© Współtwórcy OpenStreetMap · PGW Wody Polskie (ISOK MZP)'
+  osmAttribution: '© Współtwórcy OpenStreetMap'
 };
