@@ -104,6 +104,8 @@ export const PL: Dict = {
   lodLow: 'LOD 0',
   lodMedium: 'LOD 1',
   lodHigh: 'LOD 2',
+  riverScaleLabel: 'Przewyższenie segmentów rzeki (wysokość Q)',
+  riverScaleDesc: 'Skaluje wyłącznie wysokość 3D segmentów rzeki i kanałów (budynki i wały pozostają w skali 1:1).',
   layersLabel: 'Warstwy mapy',
   layerBuildings3d: 'Budynki 3D (OSM)',
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',

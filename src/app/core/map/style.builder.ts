@@ -33,15 +33,20 @@ const LOD_Q_SCALE: Record<LodLevel, { baseM: number; mPerM3s: number }> = {
   2: { baseM: 1.2, mPerM3s: 0.0065 }  // Street zoom:   400 m³/s -> 3.8 m, 3640 m³/s -> 25 m
 };
 
-export function computeCanalVolumeHeight(flowM3s: number, lod: LodLevel): number {
+export function computeCanalVolumeHeight(
+  flowM3s: number,
+  lod: LodLevel,
+  riverScale = 1
+): number {
   const { baseM, mPerM3s } = LOD_Q_SCALE[lod];
-  return Math.round((baseM + Math.max(0, flowM3s) * mPerM3s) * 100) / 100;
+  return Math.round((baseM + Math.max(0, flowM3s) * mPerM3s) * riverScale * 100) / 100;
 }
 
 export interface DynamicDataContext {
   lang: Lang;
   view: ViewMode;
   lod: LodLevel;
+  riverScale: number;
   bundle: WwwLodBundle | null;
   show3dEmbankments: boolean;
   showDepressionZones: boolean;
@@ -113,7 +118,7 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
           selected: ctx.selectedSegmentKey === segKey,
           flowM3s,
           status,
-          height: computeCanalVolumeHeight(flowM3s, ctx.lod)
+          height: computeCanalVolumeHeight(flowM3s, ctx.lod, ctx.riverScale)
         }
       });
     }

@@ -104,6 +104,8 @@ export const EN: Dict = {
   lodLow: 'LOD 0',
   lodMedium: 'LOD 1',
   lodHigh: 'LOD 2',
+  riverScaleLabel: 'River Segment Exaggeration (Q Height)',
+  riverScaleDesc: 'Multiplies only the 3D height of river and canal segments (buildings and flood embankments remain 1:1).',
   layersLabel: 'Map Layers',
   layerBuildings3d: '3D OSM Buildings',
   layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',

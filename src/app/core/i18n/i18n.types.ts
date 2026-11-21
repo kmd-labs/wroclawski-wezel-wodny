@@ -115,7 +115,7 @@ export interface Dict {
   silesiaAtWroclaw: string;
   silesiaCapacityUnit: string;
 
-  // Settings Popup (LOD, Layers, Theme)
+  // Settings Popup (LOD, River Exaggeration, Layers, Theme)
   settingsTitle: string;
   lodLabel: string;
   lodDesc: string;
@@ -123,6 +123,8 @@ export interface Dict {
   lodLow: string;
   lodMedium: string;
   lodHigh: string;
+  riverScaleLabel: string;
+  riverScaleDesc: string;
   layersLabel: string;
   layerBuildings3d: string;
   layerEmbankments3d: string;

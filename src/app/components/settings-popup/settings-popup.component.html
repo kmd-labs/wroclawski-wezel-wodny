@@ -18,6 +18,33 @@
     </app-switcher>
   </section>
 
+  <!-- River Segment Vertical Exaggeration (River Segments Only) -->
+  <section class="settings__section">
+    <div class="settings__head">
+      <h3 class="settings__label">{{ t.riverScaleLabel }}</h3>
+      <span class="settings__value">{{ state.riverVerticalScale() }}×</span>
+    </div>
+    <p class="settings__desc">{{ t.riverScaleDesc }}</p>
+
+    <app-switcher
+      size="sm"
+      [options]="scalePresets"
+      [value]="state.riverVerticalScale()"
+      [ariaLabel]="t.riverScaleLabel"
+      (valueChange)="state.riverVerticalScale.set($event ?? 1)">
+    </app-switcher>
+
+    <input
+      class="settings__range"
+      type="range"
+      min="0.5"
+      max="8"
+      step="0.5"
+      [value]="state.riverVerticalScale()"
+      [attr.aria-label]="t.riverScaleLabel"
+      (input)="onRiverScaleRange($event)" />
+  </section>
+
   <!-- Map Layers -->
   <section class="settings__section">
     <h3 class="settings__label">{{ t.layersLabel }}</h3>

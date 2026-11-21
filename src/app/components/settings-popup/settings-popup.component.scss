@@ -41,6 +41,12 @@
     color: color("text-desc");
   }
 
+  &__range {
+    width: 100%;
+    accent-color: color("accent");
+    cursor: pointer;
+  }
+
   &__toggles {
     display: flex;
     flex-direction: column;

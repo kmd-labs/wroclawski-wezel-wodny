@@ -34,6 +34,14 @@ export class SettingsPopupComponent {
     ];
   });
 
+  readonly scalePresets: SwitcherOption<number>[] = [
+    { value: 1, label: '1×' },
+    { value: 2, label: '2×' },
+    { value: 3, label: '3×' },
+    { value: 5, label: '5×' },
+    { value: 8, label: '8×' }
+  ];
+
   readonly themeOptions = computed<SwitcherOption<ThemeMode>[]>(() => {
     const t = this.i18n.t();
     return [
@@ -44,5 +52,10 @@ export class SettingsPopupComponent {
 
   onLodChange(mode: LodMode | undefined): void {
     this.vectors.setLodMode(mode ?? 'auto', this.state.cameraZoom());
+  }
+
+  onRiverScaleRange(event: Event): void {
+    const val = parseFloat((event.target as HTMLInputElement).value);
+    if (!isNaN(val)) this.state.riverVerticalScale.set(val);
   }
 }
