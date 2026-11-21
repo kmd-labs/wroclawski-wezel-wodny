@@ -44,15 +44,15 @@ export class SourcesPopupComponent {
 
     switch (style) {
       case 'oxford':
-        return `KMD Labs, '${title}' (KMD Labs, 2026) <${APP_URL}> [${acc} ${this.accessDate}].`;
+        return `kmd-labs, '${title}' (kmd-labs, 2026) <${APP_URL}> [${acc} ${this.accessDate}].`;
       case 'apa':
-        return `KMD Labs. (2026). ${title} [Interactive 3D hydrological visualization]. ${APP_URL}`;
+        return `kmd-labs. (2026). ${title} [Interactive 3D hydrological visualization]. ${APP_URL}`;
       case 'harvard':
-        return `KMD Labs (2026) '${title}'. Available at: ${APP_URL} (${acc} ${this.accessDate}).`;
+        return `kmd-labs (2026) '${title}'. Available at: ${APP_URL} (${acc} ${this.accessDate}).`;
       case 'chicago':
-        return `KMD Labs. 2026. "${title}." Interactive 3D Hydrological Visualization. ${APP_URL}.`;
+        return `kmd-labs. 2026. "${title}." Interactive 3D Hydrological Visualization. ${APP_URL}.`;
       case 'bibtex':
-        return `@misc{kmdlabs2026www,\n  author = {{KMD Labs}},\n  title = {{${title}}},\n  year = {2026},\n  url = {${APP_URL}},\n  note = {${acc} ${this.accessDate}}\n}`;
+        return `@misc{kmdlabs2026www,\n  author = {{kmd-labs}},\n  title = {{${title}}},\n  year = {2026},\n  url = {${APP_URL}},\n  note = {${acc} ${this.accessDate}}\n}`;
     }
   });
 
