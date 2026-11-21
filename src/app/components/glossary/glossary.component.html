@@ -1,0 +1,13 @@
+@let t = i18n.t();
+
+<div class="glossary">
+  @for (item of t.glossaryEntries; track item.term) {
+    <article class="glossary__item">
+      <div class="glossary__top">
+        <h3 class="glossary__term">{{ item.term }}</h3>
+        <span class="glossary__badge">{{ item.badge }}</span>
+      </div>
+      <p class="glossary__desc">{{ item.desc }}</p>
+    </article>
+  }
+</div>

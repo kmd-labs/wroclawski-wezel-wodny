@@ -7,7 +7,7 @@
   <header class="header" [class.header--popup-open]="isPopupOpen()">
     <div class="header__left">
       <app-brand
-        [appName]="'Wroclawski Wezel Wodny'"
+        [appName]="'Wrocławski Węzeł Wodny'"
         [lang]="i18n.lang()"
         (btnClick)="about.open({ lang: i18n.lang() })">
       </app-brand>
@@ -33,37 +33,25 @@
           align="right"
           [fullWidth]="true"
           [options]="viewOptions()"
-          [value]="currentView()"
+          [value]="state.currentView()"
           [icon]="currentViewIcon()"
           [ariaLabel]="t.chooseView"
-          (valueChange)="currentView.set($event)">
+          (valueChange)="state.setView($event)">
         </app-dropdown>
       </div>
     </div>
   </header>
 
-  <!-- Fullscreen Visualization Stage -->
-  <section class="stage" [attr.aria-label]="t.stageAriaLabel"></section>
+  <!-- Fullscreen 3D Map Stage -->
+  <section class="stage" [attr.aria-label]="t.stageAriaLabel">
+    <app-map-stage></app-map-stage>
+  </section>
 
-  <!-- Bottom Dock: Sliders & Glossaries -->
-  <footer class="dock-wrap">
-    <div class="dock glass-panel">
-      <div class="dock__slider">
-        <app-timeline-slider
-          [min]="-100"
-          [max]="100"
-          [step]="1"
-          [value]="sliderValue()"
-          [ariaLabel]="t.timelineLabel"
-          (valueChange)="sliderValue.set($event)">
-        </app-timeline-slider>
-      </div>
-      <app-button variant="ghost" (btnClick)="openGlossary()">
-        <lucide-icon [img]="bookOpenIcon" [size]="15"></lucide-icon>
-        <span>{{ t.glossary }}</span>
-      </app-button>
-    </div>
-  </footer>
+  <!-- Pin Inspector Card -->
+  <app-pin-inspector></app-pin-inspector>
+
+  <!-- Bottom Dock: Controls, Telemetry, Timeline & Popups -->
+  <app-map-dock></app-map-dock>
 
   <app-popup [closeAriaLabel]="t.close"></app-popup>
   <app-tooltip></app-tooltip>

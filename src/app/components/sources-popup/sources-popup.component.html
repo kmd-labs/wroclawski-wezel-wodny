@@ -1,0 +1,47 @@
+@let t = i18n.t();
+
+<div class="sources">
+  <section class="sources__section">
+    <h3 class="sources__heading">{{ t.sourcesLiteratureTitle }}</h3>
+    <div class="sources__list">
+      @for (s of t.sourcesList; track s.url) {
+        <article class="sources__card">
+          <div class="sources__card-top">
+            <a [href]="s.url" target="_blank" rel="noopener noreferrer" class="sources__link">
+              <span>{{ s.name }}</span>
+              <lucide-icon [img]="externalLinkIcon" [size]="12"></lucide-icon>
+            </a>
+            <span class="sources__badge">{{ s.license }}</span>
+          </div>
+          <div class="sources__meta">{{ s.authors }} · {{ s.year }}</div>
+          <p class="sources__desc">{{ s.desc }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="sources__section">
+    <h3 class="sources__heading">{{ t.sourcesArticlesTitle }} ({{ articleLinks().length }})</h3>
+    <ul class="sources__articles">
+      @for (a of articleLinks(); track a.url) {
+        <li>
+          <a [href]="a.url" target="_blank" rel="noopener noreferrer" class="sources__article-link">
+            <span class="sources__article-outlet">{{ a.outlet }}</span>
+            <span class="sources__article-title">{{ a.title }}</span>
+            <lucide-icon [img]="externalLinkIcon" [size]="11"></lucide-icon>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <section class="sources__section">
+    <h3 class="sources__heading">{{ t.sourcesMethodologyTitle }}</h3>
+    <p class="sources__desc">{{ t.sourcesMethodologyText }}</p>
+  </section>
+
+  <section class="sources__section sources__built">
+    <h3 class="sources__heading">{{ t.sourcesBuiltTitle }}</h3>
+    <p class="sources__desc">{{ t.sourcesBuiltBy }}</p>
+  </section>
+</div>

@@ -1,0 +1,45 @@
+<div #mapContainer class="map-canvas"></div>
+
+<!-- Event Pins Overlay (50% opacity before occurrence, 100% when reached) -->
+<div class="map-pins" aria-live="polite">
+  @for (pin of mapService.projectedPins(); track pin.id) {
+    @if (pin.visible) {
+      <button
+        type="button"
+        class="map-pin"
+        [class.map-pin--reached]="pin.reached"
+        [class.map-pin--breach]="pin.category === 'breach'"
+        [class.map-pin--selected]="state.selectedPinId() === pin.id"
+        [style.left.px]="pin.screenX"
+        [style.top.px]="pin.screenY"
+        [style.opacity]="pin.opacity"
+        [attr.aria-label]="pin.title"
+        [appTooltip]="pin.title"
+        (click)="selectPin(pin)">
+        <lucide-icon [img]="pinIcon(pin.category)" [size]="13"></lucide-icon>
+        <span class="map-pin__tag">{{ pin.label }}</span>
+      </button>
+    }
+  }
+
+  <!-- Controllable Weir Badges in Equilibrium View -->
+  @for (badge of mapService.projectedWeirs(); track badge.weir.id) {
+    @if (badge.visible) {
+      <button
+        type="button"
+        class="weir-badge"
+        [class.weir-badge--selected]="state.selectedWeirId() === badge.weir.gateId"
+        [class.weir-badge--closed]="badge.openingPct === 0"
+        [style.left.px]="badge.x"
+        [style.top.px]="badge.y"
+        [appTooltip]="i18n.lang() === 'pl' ? badge.weir.namePl : badge.weir.nameEn"
+        (click)="selectWeir(badge)">
+        <lucide-icon [img]="weirIcon" [size]="11"></lucide-icon>
+        <span class="weir-badge__name">
+          {{ i18n.lang() === 'pl' ? badge.weir.namePl : badge.weir.nameEn }}
+        </span>
+        <span class="weir-badge__pct">{{ badge.openingPct }}%</span>
+      </button>
+    }
+  }
+</div>

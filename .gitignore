@@ -3,3 +3,5 @@ node_modules/
 .angular/
 .DS_Store
 *.log
+tools/pipeline/data/
+tools/pipeline/node_modules/

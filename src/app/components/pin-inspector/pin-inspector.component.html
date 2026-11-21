@@ -1,0 +1,42 @@
+@let t = i18n.t();
+@let pin = selectedPin();
+
+@if (pin) {
+  <aside class="inspector glass-panel" role="dialog" [attr.aria-label]="pin.title">
+    <div class="inspector__head">
+      <div class="inspector__status" [class.inspector__status--breach]="pin.category === 'breach'">
+        <lucide-icon [img]="pin.category === 'breach' ? breachIcon : waterIcon" [size]="14"></lucide-icon>
+        <span>{{ pin.dateLabel }}</span>
+        <span class="inspector__opacity-tag">
+          {{ pin.reached ? t.pinOccurredLabel : t.pinPendingLabel }}
+        </span>
+      </div>
+      <button type="button" class="inspector__close" [attr.aria-label]="t.close" (click)="close()">
+        <lucide-icon [img]="closeIcon" [size]="15"></lucide-icon>
+      </button>
+    </div>
+
+    <h3 class="inspector__title">{{ pin.title }}</h3>
+    <p class="inspector__desc">{{ pin.desc }}</p>
+
+    <div class="inspector__metrics">
+      @if (pin.waterLevelCm) {
+        <div class="inspector__metric">
+          <span class="inspector__metric-label">{{ t.waterStageLabel }}</span>
+          <span class="inspector__metric-val">{{ pin.waterLevelCm }} cm</span>
+        </div>
+      }
+      @if (pin.flowM3s) {
+        <div class="inspector__metric">
+          <span class="inspector__metric-label">{{ t.dischargeLabel }}</span>
+          <span class="inspector__metric-val">{{ pin.flowM3s }} m³/s</span>
+        </div>
+      }
+    </div>
+
+    <a [href]="pin.sourceUrl" target="_blank" rel="noopener noreferrer" class="inspector__source">
+      <span>{{ pin.sourceOutlet }} · {{ t.readArticleBtn }}</span>
+      <lucide-icon [img]="externalIcon" [size]="12"></lucide-icon>
+    </a>
+  </aside>
+}

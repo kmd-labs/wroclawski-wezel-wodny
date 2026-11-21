@@ -1,0 +1,49 @@
+@use "variables" as *;
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__label {
+    margin: 0;
+    font-size: font-size("xs");
+    font-weight: font-weight("semibold");
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: color("text-dim");
+  }
+
+  &__value {
+    font-family: $font-family-mono;
+    font-size: font-size("xs");
+    font-weight: font-weight("bold");
+    color: color("accent");
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: font-size("xs");
+    line-height: 1.45;
+    color: color("text-desc");
+  }
+
+  &__toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

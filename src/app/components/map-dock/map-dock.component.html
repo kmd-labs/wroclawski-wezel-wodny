@@ -1,0 +1,340 @@
+@let t = i18n.t();
+@let view = state.currentView();
+@let eq = hydro.equilibriumSummary();
+
+<footer class="dock-wrap">
+  <div class="dock-shell">
+    <!-- Floating Camera Control Trigger & Popover above the bottom timeline component -->
+    <div class="camera-anchor">
+      @if (state.cameraControlsOpen()) {
+        <div class="camera-popover glass-panel" role="dialog" [attr.aria-label]="t.cameraBtn">
+          <!-- Heading / Bearing -->
+          <div class="camera-row">
+            <div class="camera-row__head">
+              <span class="camera-row__label">{{ t.cameraHeading }}</span>
+              <span class="camera-row__val">{{ state.cameraBearing() }}°</span>
+            </div>
+            <div class="camera-row__controls">
+              <button type="button" class="cam-pill" (click)="mapService.rotateBy(-45)">-45°</button>
+              <button type="button" class="cam-pill" (click)="mapService.resetNorth()">{{ t.cameraResetNorth }}</button>
+              <button type="button" class="cam-pill" (click)="mapService.rotateBy(45)">+45°</button>
+            </div>
+            <input
+              type="range"
+              min="-180"
+              max="180"
+              step="1"
+              [value]="state.cameraBearing()"
+              [attr.aria-label]="t.cameraHeading"
+              (input)="onHeadingRange($event)" />
+          </div>
+
+          <!-- Zoom -->
+          <div class="camera-row">
+            <div class="camera-row__head">
+              <span class="camera-row__label">{{ t.cameraZoom }}</span>
+              <span class="camera-row__val">{{ state.cameraZoom().toFixed(1) }} · LOD {{ vectors.activeLod() }}</span>
+            </div>
+            <div class="camera-row__controls">
+              <button type="button" class="cam-pill" [attr.aria-label]="t.cameraZoomOut" (click)="mapService.zoomBy(-1)">
+                <lucide-icon [img]="minusIcon" [size]="12"></lucide-icon>
+              </button>
+              <input
+                type="range"
+                min="6.5"
+                max="18"
+                step="0.2"
+                [value]="state.cameraZoom()"
+                [attr.aria-label]="t.cameraZoom"
+                (input)="onZoomRange($event)" />
+              <button type="button" class="cam-pill" [attr.aria-label]="t.cameraZoomIn" (click)="mapService.zoomBy(1)">
+                <lucide-icon [img]="plusIcon" [size]="12"></lucide-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tilt / Pitch -->
+          <div class="camera-row">
+            <div class="camera-row__head">
+              <span class="camera-row__label">{{ t.cameraTilt }}</span>
+              <span class="camera-row__val">{{ state.cameraPitch() }}°</span>
+            </div>
+            <div class="camera-row__controls">
+              <button type="button" class="cam-pill" (click)="mapService.setPitch(0)">{{ t.cameraTiltFlat }}</button>
+              <button type="button" class="cam-pill" (click)="mapService.setPitch(55)">{{ t.cameraTilt3d }}</button>
+              <button type="button" class="cam-pill" [attr.aria-label]="t.cameraResetView" (click)="mapService.resetCamera()">
+                <lucide-icon [img]="resetIcon" [size]="12"></lucide-icon>
+              </button>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="65"
+              step="1"
+              [value]="state.cameraPitch()"
+              [attr.aria-label]="t.cameraTilt"
+              (input)="onTiltRange($event)" />
+          </div>
+        </div>
+      }
+
+      <div class="camera-fab glass-panel">
+        <app-button
+          variant="ghost"
+          size="sm"
+          [iconOnly]="true"
+          [active]="state.cameraControlsOpen()"
+          [ariaLabel]="t.cameraBtn"
+          [appTooltip]="t.cameraBtn"
+          (btnClick)="state.cameraControlsOpen.set(!state.cameraControlsOpen())">
+          <lucide-icon
+            [img]="compassIcon"
+            [size]="16"
+            [style.transform]="'rotate(' + -state.cameraBearing() + 'deg)'">
+          </lucide-icon>
+        </app-button>
+      </div>
+    </div>
+
+    <div class="dock glass-panel">
+      <!-- 1. Equilibrium Weir & Floodgate Controls Drawer -->
+      @if (view === 'equilibrium' && state.weirPanelOpen()) {
+        <div class="dock__drawer">
+          <div class="dock__drawer-head">
+            <div>
+              <h2 class="dock__drawer-title">{{ t.weirPanelTitle }}</h2>
+              <p class="dock__drawer-sub">{{ t.weirPanelSubtitle }}</p>
+            </div>
+            <div class="dock__presets">
+              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPresetNormal()">
+                {{ t.presetNormalBtn }}
+              </app-button>
+              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPreset1997Wave()">
+                {{ t.preset1997Btn }}
+              </app-button>
+              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyGateErrorDemo()">
+                {{ t.presetMisuseBtn }}
+              </app-button>
+              <app-button size="sm" variant="default" [active]="true" (btnClick)="hydro.applyOptimalEquilibrium()">
+                <lucide-icon [img]="autoIcon" [size]="13"></lucide-icon>
+                <span>{{ t.autoEquilibriumBtn }}</span>
+              </app-button>
+            </div>
+          </div>
+
+          <div class="weir-grid">
+            @for (weir of controllableWeirs; track weir.id) {
+              @let gid = weir.gateId!;
+              @let pct = state.gateOpenings()[gid];
+              <div
+                class="weir-ctrl"
+                [class.weir-ctrl--selected]="state.selectedWeirId() === gid">
+                <div class="weir-ctrl__top">
+                  <span class="weir-ctrl__name">{{ i18n.lang() === 'pl' ? weir.namePl : weir.nameEn }}</span>
+                  <span class="weir-ctrl__val">{{ pct }}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  [value]="pct"
+                  [attr.aria-label]="i18n.lang() === 'pl' ? weir.namePl : weir.nameEn"
+                  (input)="onGateInput(gid, $event)" />
+              </div>
+            }
+          </div>
+
+          <div class="dock__drawer-foot">
+            <app-toggle
+              size="sm"
+              [label]="t.polderShavingLabel"
+              [checked]="state.polderRetentionActive()"
+              (checkedChange)="state.polderRetentionActive.set($event)">
+            </app-toggle>
+
+            @if (floodedZoneNames().length > 0) {
+              <div class="dock__alert dock__alert--danger">
+                <lucide-icon [img]="warnIcon" [size]="13"></lucide-icon>
+                <span>{{ t.floodedDistrictsLabel }}: {{ floodedZoneNames().join(', ') }}</span>
+              </div>
+            } @else {
+              <div class="dock__alert dock__alert--safe">
+                <lucide-icon [img]="safeIcon" [size]="13"></lucide-icon>
+                <span>{{ t.noFloodingLabel }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 2. Floods Scenario Switcher -->
+      @if (view === 'floods') {
+        <div class="dock__subbar">
+          <app-switcher
+            size="sm"
+            [options]="scenarioOptions()"
+            [value]="state.floodScenario()"
+            [ariaLabel]="t.chooseView"
+            (valueChange)="state.floodScenario.set($event ?? '1997'); state.floodTimelineStep.set(55)">
+          </app-switcher>
+          <span class="dock__subtitle">
+            {{
+              state.floodScenario() === '1997'
+                ? t.scenario1997Subtitle
+                : state.floodScenario() === '2012'
+                  ? t.scenario2012Subtitle
+                  : t.scenario2024Subtitle
+            }}
+          </span>
+        </div>
+      }
+
+      <!-- 3. History Summary Bar -->
+      @if (view === 'history') {
+        @let era = hydro.activeHistoryEra();
+        <div class="dock__subbar">
+          <span class="dock__era-badge">{{ i18n.lang() === 'pl' ? era.labelPl : era.labelEn }}</span>
+          <span class="dock__subtitle">{{ i18n.lang() === 'pl' ? era.summaryPl : era.summaryEn }}</span>
+        </div>
+      }
+
+      <!-- 4. Lower Silesia Polders & Reservoirs Bar -->
+      @if (view === 'silesia') {
+        <div class="dock__subbar dock__subbar--wrap">
+          <div class="silesia-chips">
+            @for (fac of silesiaFacilities; track fac.id) {
+              <button
+                type="button"
+                class="silesia-chip"
+                [class.silesia-chip--active]="state.silesiaActiveIds().has(fac.id)"
+                (click)="state.toggleSilesiaFacility(fac.id)">
+                <span>{{ i18n.lang() === 'pl' ? fac.namePl : fac.nameEn }}</span>
+                <span class="silesia-chip__cap">-{{ fac.peakReductionM3s }} m³/s</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Telemetry & Status Strip -->
+      <div class="dock__top">
+        <div class="dock__readouts">
+          @if (view === 'equilibrium') {
+            <span
+              class="status-pill"
+              [class.status-pill--warn]="eq.status === 'warning'"
+              [class.status-pill--danger]="eq.status === 'overflow'">
+              {{ eq.status === 'overflow' ? t.statusOverflow : eq.status === 'warning' ? t.statusWarning : t.statusSafe }}
+            </span>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutTrestno }}</span>
+              <span class="readout__val">{{ state.inflowM3s() }} m³/s</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutNodeLoad }}</span>
+              <span class="readout__val">{{ eq.maxLoadPct }}%</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutDowntown }}</span>
+              <span class="readout__val">{{ eq.downtownFlow }} m³/s</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutWidawa }}</span>
+              <span class="readout__val">{{ eq.widawaFlow }} m³/s</span>
+            </div>
+          } @else if (view === 'floods') {
+            @let kf = hydro.activeFloodKeyframe();
+            <span class="status-pill status-pill--accent">{{ kf.dateLabel }}</span>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutTrestno }}</span>
+              <span class="readout__val">{{ kf.flowTrestnoM3s }} m³/s</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutStage }}</span>
+              <span class="readout__val">{{ kf.stageTrestnoCm }} cm</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutCapacity }}</span>
+              <span class="readout__val">{{ hydro.activeFloodScenario().systemCapacityM3s }} m³/s</span>
+            </div>
+          } @else if (view === 'history') {
+            @let era = hydro.activeHistoryEra();
+            <span class="status-pill status-pill--accent">{{ state.historyYear() }}</span>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutCapacity }}</span>
+              <span class="readout__val">{{ era.capacityM3s }} m³/s</span>
+            </div>
+            <span class="dock__note">{{ t.historyNoBuildingsNote }}</span>
+          } @else {
+            @let sil = hydro.silesiaSummary();
+            <span class="status-pill" [class.status-pill--danger]="!sil.safeForModernWww">
+              {{ sil.safeForModernWww ? t.statusSafe : t.statusOverflow }}
+            </span>
+            <div class="readout">
+              <span class="readout__label">{{ t.silesiaInflowPeak }}</span>
+              <span class="readout__val">{{ sil.rawPeak }} m³/s</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.silesiaAtWroclaw }}</span>
+              <span class="readout__val">{{ sil.atWroclaw }} m³/s</span>
+            </div>
+            <div class="readout">
+              <span class="readout__label">{{ t.readoutRetention }}</span>
+              <span class="readout__val">{{ sil.totalCapacity }} {{ t.silesiaCapacityUnit }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="dock__actions">
+          @if (view === 'equilibrium') {
+            <app-button
+              size="sm"
+              variant="ghost"
+              [active]="state.weirPanelOpen()"
+              (btnClick)="state.weirPanelOpen.set(!state.weirPanelOpen())">
+              <lucide-icon [img]="state.weirPanelOpen() ? chevDown : chevUp" [size]="14"></lucide-icon>
+              <span>{{ t.weirToggleBtn }}</span>
+            </app-button>
+          }
+          <app-button size="sm" variant="ghost" [ariaLabel]="t.settingsBtn" (btnClick)="openSettings()">
+            <lucide-icon [img]="settingsIcon" [size]="14"></lucide-icon>
+            <span>LOD {{ vectors.activeLod() }}</span>
+          </app-button>
+          <app-button size="sm" variant="ghost" (btnClick)="openSources()">
+            <lucide-icon [img]="sourcesIcon" [size]="14"></lucide-icon>
+            <span>{{ t.sourcesBtn }}</span>
+          </app-button>
+          <app-button size="sm" variant="ghost" (btnClick)="openGlossary()">
+            <lucide-icon [img]="bookIcon" [size]="14"></lucide-icon>
+            <span>{{ t.glossary }}</span>
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Main Timeline Slider -->
+      <div class="dock__timeline">
+        <app-timeline-slider
+          [min]="sliderMin()"
+          [max]="sliderMax()"
+          [step]="sliderStep()"
+          [value]="sliderValue()"
+          [markers]="sliderMarkers()"
+          [ariaLabel]="t.timelineLabel"
+          (valueChange)="onSliderChange($event)"
+          (markerClick)="onMarkerClick($event)">
+          <div timelineAction>
+            <app-button
+              variant="play"
+              [iconOnly]="true"
+              [active]="state.isPlaying()"
+              [ariaLabel]="state.isPlaying() ? t.playStop : t.playStart"
+              (btnClick)="state.togglePlaying()">
+              <lucide-icon [img]="state.isPlaying() ? pauseIcon : playIcon" [size]="15"></lucide-icon>
+            </app-button>
+          </div>
+        </app-timeline-slider>
+      </div>
+    </div>
+  </div>
+</footer>
