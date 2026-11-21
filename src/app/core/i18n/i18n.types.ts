@@ -30,7 +30,6 @@ export interface Dict {
   viewEquilibrium: string;
   viewFloods: string;
   viewHistory: string;
-  viewSilesia: string;
   stageAriaLabel: string;
 
   // Bottom Dock & Playback
@@ -58,9 +57,6 @@ export interface Dict {
 
   // Hydrological Telemetry & Readouts
   readoutTrestno: string;
-  readoutNodeLoad: string;
-  readoutWidawa: string;
-  readoutDowntown: string;
   readoutStaraOdra: string;
   readoutCapacity: string;
   readoutPeak: string;
@@ -68,7 +64,6 @@ export interface Dict {
   readoutYear: string;
   readoutRetention: string;
   readoutReducedFlow: string;
-  readoutFloodLevel: string;
   segmentCapacity: string;
   segmentLoad: string;
 
@@ -77,9 +72,6 @@ export interface Dict {
   weirPanelSubtitle: string;
   weirToggleBtn: string;
   autoEquilibriumBtn: string;
-  presetNormalBtn: string;
-  preset1997Btn: string;
-  presetMisuseBtn: string;
   polderShavingLabel: string;
   statusSafe: string;
   statusWarning: string;
@@ -90,13 +82,20 @@ export interface Dict {
   gateOpen: string;
   gateOpeningLabel: string;
 
+  // Map Click Flood Level Popup
+  floodPopupTitle: string;
+  floodPopupGround: string;
+  floodPopupWaterLevel: string;
+  floodPopupDepth: string;
+  floodPopupDry: string;
+  floodPopupProtected: string;
+  floodPopupFloodway: string;
+  floodPopupUpland: string;
+
   // Historical Floods View
   scenario1997: string;
   scenario2012: string;
   scenario2024: string;
-  scenario1997Subtitle: string;
-  scenario2012Subtitle: string;
-  scenario2024Subtitle: string;
   wwwStatePreModern: string;
   wwwStateModern: string;
   pinPendingLabel: string;
@@ -111,14 +110,6 @@ export interface Dict {
   // History View
   historySubtitle: string;
   historyNoBuildingsNote: string;
-
-  // Lower Silesia View
-  silesiaSubtitle: string;
-  silesiaToggleAll: string;
-  silesiaWaveLabel: string;
-  silesiaInflowPeak: string;
-  silesiaAtWroclaw: string;
-  silesiaCapacityUnit: string;
 
   // Settings Popup (Layers & Theme)
   settingsTitle: string;

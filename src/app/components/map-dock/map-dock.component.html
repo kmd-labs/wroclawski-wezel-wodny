@@ -4,8 +4,16 @@
 
 <footer class="dock-wrap">
   <div class="dock-shell">
-    <!-- Floating Camera Control Trigger & Popover above the bottom timeline component -->
+    <!-- Top-of-timeline row: Always-expanded OSM attribution on left, Camera button on right -->
     <div class="camera-anchor">
+      <a
+        class="osm-attrib glass-panel"
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener noreferrer">
+        {{ t.osmAttribution }}
+      </a>
+
       @if (state.cameraControlsOpen()) {
         <div class="camera-popover glass-panel" role="dialog" [attr.aria-label]="t.cameraBtn">
           <!-- Heading / Bearing -->
@@ -106,15 +114,6 @@
               <p class="dock__drawer-sub">{{ t.weirPanelSubtitle }}</p>
             </div>
             <div class="dock__presets">
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPresetNormal()">
-                {{ t.presetNormalBtn }}
-              </app-button>
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPreset1997Wave()">
-                {{ t.preset1997Btn }}
-              </app-button>
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyGateErrorDemo()">
-                {{ t.presetMisuseBtn }}
-              </app-button>
               <app-button size="sm" variant="default" [active]="true" (btnClick)="hydro.applyOptimalEquilibrium()">
                 <lucide-icon [img]="autoIcon" [size]="13"></lucide-icon>
                 <span>{{ t.autoEquilibriumBtn }}</span>
@@ -168,6 +167,32 @@
         </div>
       }
 
+      <!-- Level 1: Primary Dock Action Controls (above status & timeline) -->
+      <div class="dock__level dock__actions">
+        @if (view === 'equilibrium') {
+          <app-button
+            size="sm"
+            variant="ghost"
+            [active]="state.weirPanelOpen()"
+            (btnClick)="state.weirPanelOpen.set(!state.weirPanelOpen())">
+            <lucide-icon [img]="state.weirPanelOpen() ? chevDown : chevUp" [size]="14"></lucide-icon>
+            <span>{{ t.weirToggleBtn }}</span>
+          </app-button>
+        }
+        <app-button size="sm" variant="ghost" [ariaLabel]="t.settingsBtn" (btnClick)="openSettings()">
+          <lucide-icon [img]="settingsIcon" [size]="14"></lucide-icon>
+          <span>{{ t.settingsBtn }}</span>
+        </app-button>
+        <app-button size="sm" variant="ghost" (btnClick)="openSources()">
+          <lucide-icon [img]="sourcesIcon" [size]="14"></lucide-icon>
+          <span>{{ t.sourcesBtn }}</span>
+        </app-button>
+        <app-button size="sm" variant="ghost" (btnClick)="openGlossary()">
+          <lucide-icon [img]="bookIcon" [size]="14"></lucide-icon>
+          <span>{{ t.glossary }}</span>
+        </app-button>
+      </div>
+
       <!-- 2. Floods Scenario Switcher & Multi-Day Hydrograph -->
       @if (view === 'floods') {
         @let kf = hydro.activeFloodKeyframe();
@@ -185,15 +210,6 @@
               class="dock__lozenge"
               [class.dock__lozenge--premod]="state.floodScenario() !== '2024'">
               {{ state.floodScenario() === '2024' ? t.wwwStateModern : t.wwwStatePreModern }}
-            </span>
-            <span class="dock__subtitle">
-              {{
-                state.floodScenario() === '1997'
-                  ? t.scenario1997Subtitle
-                  : state.floodScenario() === '2012'
-                    ? t.scenario2012Subtitle
-                    : t.scenario2024Subtitle
-              }}
             </span>
           </div>
 
@@ -238,129 +254,49 @@
         </div>
       }
 
-      <!-- 4. Lower Silesia Polders & Reservoirs Bar -->
-      @if (view === 'silesia') {
-        <div class="dock__subbar dock__subbar--wrap">
-          <div class="silesia-chips">
-            @for (fac of silesiaFacilities; track fac.id) {
-              <button
-                type="button"
-                class="silesia-chip"
-                [class.silesia-chip--active]="state.silesiaActiveIds().has(fac.id)"
-                (click)="state.toggleSilesiaFacility(fac.id)">
-                <span>{{ i18n.lang() === 'pl' ? fac.namePl : fac.nameEn }}</span>
-                <span class="silesia-chip__cap">-{{ fac.peakReductionM3s }} m³/s</span>
-              </button>
-            }
+      <!-- Level 2: Telemetry & Overflow Status Strip -->
+      <div class="dock__level dock__readouts">
+        @if (view === 'equilibrium') {
+          <span
+            class="status-pill"
+            [class.status-pill--warn]="eq.status === 'warning'"
+            [class.status-pill--danger]="eq.status === 'overflow'">
+            {{ eq.status === 'overflow' ? t.statusOverflow : eq.status === 'warning' ? t.statusWarning : t.statusSafe }}
+          </span>
+          <div class="readout">
+            <span class="readout__label">{{ t.readoutTrestno }}</span>
+            <span class="readout__val">{{ state.inflowM3s() }} m³/s</span>
           </div>
-        </div>
-      }
-
-      <!-- Telemetry & Status Strip -->
-      <div class="dock__top">
-        <div class="dock__readouts">
-          @if (view === 'equilibrium') {
-            <span
-              class="status-pill"
-              [class.status-pill--warn]="eq.status === 'warning'"
-              [class.status-pill--danger]="eq.status === 'overflow'">
-              {{ eq.status === 'overflow' ? t.statusOverflow : eq.status === 'warning' ? t.statusWarning : t.statusSafe }}
-            </span>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutTrestno }}</span>
-              <span class="readout__val">{{ state.inflowM3s() }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutNodeLoad }}</span>
-              <span class="readout__val">{{ eq.maxLoadPct }}%</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutDowntown }}</span>
-              <span class="readout__val">{{ eq.downtownFlow }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutWidawa }}</span>
-              <span class="readout__val">{{ eq.widawaFlow }} m³/s</span>
-            </div>
-            @if (hydro.floodPlaneState().active) {
-              <div class="readout">
-                <span class="readout__label">{{ t.readoutFloodLevel }}</span>
-                <span class="readout__val">{{ hydro.floodPlaneState().displayMasl }} m</span>
-              </div>
-            }
-          } @else if (view === 'floods') {
-            @let kf = hydro.activeFloodKeyframe();
-            <span class="status-pill status-pill--accent">
-              {{ t.floodDayLabel }} {{ kf.dayNumber }}/{{ kf.durationDays }} · +{{ kf.hoursFromStart }}h
-            </span>
-            <span class="readout__val">{{ kf.dateLabel }}</span>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutTrestno }}</span>
-              <span class="readout__val">{{ kf.flowTrestnoM3s }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutStage }}</span>
-              <span class="readout__val">{{ kf.stageTrestnoCm }} cm</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutCapacity }}</span>
-              <span class="readout__val">{{ hydro.activeFloodScenario().systemCapacityM3s }} m³/s</span>
-            </div>
-          } @else if (view === 'history') {
-            @let era = hydro.activeHistoryEra();
-            <span class="status-pill status-pill--accent">{{ state.historyYear() }}</span>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutCapacity }}</span>
-              <span class="readout__val">{{ era.capacityM3s }} m³/s</span>
-            </div>
-            <span class="dock__note">{{ t.historyNoBuildingsNote }}</span>
-          } @else {
-            @let sil = hydro.silesiaSummary();
-            <span class="status-pill" [class.status-pill--danger]="!sil.safeForModernWww">
-              {{ sil.safeForModernWww ? t.statusSafe : t.statusOverflow }}
-            </span>
-            <div class="readout">
-              <span class="readout__label">{{ t.silesiaInflowPeak }}</span>
-              <span class="readout__val">{{ sil.rawPeak }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.silesiaAtWroclaw }}</span>
-              <span class="readout__val">{{ sil.atWroclaw }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutRetention }}</span>
-              <span class="readout__val">{{ sil.totalCapacity }} {{ t.silesiaCapacityUnit }}</span>
-            </div>
-          }
-        </div>
-
-        <div class="dock__actions">
-          @if (view === 'equilibrium') {
-            <app-button
-              size="sm"
-              variant="ghost"
-              [active]="state.weirPanelOpen()"
-              (btnClick)="state.weirPanelOpen.set(!state.weirPanelOpen())">
-              <lucide-icon [img]="state.weirPanelOpen() ? chevDown : chevUp" [size]="14"></lucide-icon>
-              <span>{{ t.weirToggleBtn }}</span>
-            </app-button>
-          }
-          <app-button size="sm" variant="ghost" [ariaLabel]="t.settingsBtn" (btnClick)="openSettings()">
-            <lucide-icon [img]="settingsIcon" [size]="14"></lucide-icon>
-            <span>{{ t.settingsBtn }}</span>
-          </app-button>
-          <app-button size="sm" variant="ghost" (btnClick)="openSources()">
-            <lucide-icon [img]="sourcesIcon" [size]="14"></lucide-icon>
-            <span>{{ t.sourcesBtn }}</span>
-          </app-button>
-          <app-button size="sm" variant="ghost" (btnClick)="openGlossary()">
-            <lucide-icon [img]="bookIcon" [size]="14"></lucide-icon>
-            <span>{{ t.glossary }}</span>
-          </app-button>
-        </div>
+        } @else if (view === 'floods') {
+          @let kf = hydro.activeFloodKeyframe();
+          <span class="status-pill status-pill--accent">
+            {{ t.floodDayLabel }} {{ kf.dayNumber }}/{{ kf.durationDays }} · +{{ kf.hoursFromStart }}h
+          </span>
+          <span class="readout__val">{{ kf.dateLabel }}</span>
+          <div class="readout">
+            <span class="readout__label">{{ t.readoutTrestno }}</span>
+            <span class="readout__val">{{ kf.flowTrestnoM3s }} m³/s</span>
+          </div>
+          <div class="readout">
+            <span class="readout__label">{{ t.readoutStage }}</span>
+            <span class="readout__val">{{ kf.stageTrestnoCm }} cm</span>
+          </div>
+          <div class="readout">
+            <span class="readout__label">{{ t.readoutCapacity }}</span>
+            <span class="readout__val">{{ hydro.activeFloodScenario().systemCapacityM3s }} m³/s</span>
+          </div>
+        } @else {
+          @let era = hydro.activeHistoryEra();
+          <span class="status-pill status-pill--accent">{{ state.historyYear() }}</span>
+          <div class="readout">
+            <span class="readout__label">{{ t.readoutCapacity }}</span>
+            <span class="readout__val">{{ era.capacityM3s }} m³/s</span>
+          </div>
+          <span class="dock__note">{{ t.historyNoBuildingsNote }}</span>
+        }
       </div>
 
-      <!-- Main Timeline Slider -->
+      <!-- Level 3: Main Timeline Slider -->
       <div class="dock__timeline">
         <app-timeline-slider
           [min]="sliderMin()"
@@ -368,6 +304,7 @@
           [step]="sliderStep()"
           [value]="sliderValue()"
           [markers]="sliderMarkers()"
+          [trackGradient]="sliderTrackGradient()"
           [ariaLabel]="view === 'equilibrium' ? t.dischargeSliderLabel : t.timelineLabel"
           (valueChange)="onSliderChange($event)"
           (markerClick)="onMarkerClick($event)">

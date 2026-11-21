@@ -5,8 +5,7 @@ import {
   Globe,
   SlidersHorizontal,
   Waves,
-  History,
-  Mountain
+  History
 } from 'lucide-angular';
 import {
   AboutService,
@@ -61,7 +60,7 @@ export class AppComponent {
   constructor() {
     this.seo.update({
       title: 'KMD · Wrocławski Węzeł Wodny',
-      description: 'Interactive 3D hydrotechnical visualization of the Wrocław Water Node, historical floods (1997, 2010/2012, 2024), and Lower Silesia flood protection polders.',
+      description: 'Interactive 3D hydrotechnical visualization of the Wrocław Water Node, historical floods (1997, 2010/2012, 2024), and channel evolution.',
       image: 'assets/design-system/og-image.png'
     });
   }
@@ -80,8 +79,7 @@ export class AppComponent {
     return [
       { value: 'equilibrium', label: t.viewEquilibrium, icon: SlidersHorizontal },
       { value: 'floods', label: t.viewFloods, icon: Waves },
-      { value: 'history', label: t.viewHistory, icon: History },
-      { value: 'silesia', label: t.viewSilesia, icon: Mountain }
+      { value: 'history', label: t.viewHistory, icon: History }
     ];
   });
 

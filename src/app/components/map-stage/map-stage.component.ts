@@ -62,7 +62,7 @@ export class MapStageComponent implements AfterViewInit, OnDestroy {
 
   selectPin(pin: MapPinViewModel): void {
     this.state.selectedPinId.set(this.state.selectedPinId() === pin.id ? null : pin.id);
-    this.mapService.flyTo(pin.lngLat, this.state.currentView() === 'silesia' ? 9.5 : 13.5);
+    this.mapService.flyTo(pin.lngLat, 13.5);
   }
 
   selectWeir(badge: ProjectedWeirBadge, event: MouseEvent): void {

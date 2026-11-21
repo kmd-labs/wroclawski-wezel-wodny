@@ -26,8 +26,8 @@ const RAW_DIR = '/workspace/tools/pipeline/data/raw';
 const OUT_DIR = '/workspace/src/assets/data';
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-// Wrocław Water Node bounding box (Trestno -> Janówek/Paniowice, Ślęza -> Widawa)
-const WRO_BBOX = [16.855, 51.040, 17.195, 51.188];
+// Wrocław Water Node bounding box (Trestno -> Pracze Odrzańskie / Janówek / Paniowice, Ślęza -> Widawa)
+const WRO_BBOX = [16.835, 51.040, 17.205, 51.218];
 // Regional Lower Silesia + Upper Odra bbox for main river corridors
 const SILESIA_BBOX = [15.80, 49.85, 18.45, 51.45];
 
@@ -37,6 +37,9 @@ const OSIEDLE_TO_ZONE = new Map([
   [2338689, 'wielka-wyspa'],          // Zacisze-Zalesie-Szczytniki
   [2341617, 'kozanow-pilczyce'],      // Pilczyce-Kozanów-Popowice Północne
   [2341613, 'kozanow-pilczyce'],      // Maślice
+  [2341618, 'pracze-odrzanskie'],     // Pracze Odrzańskie (Janówek / Bystrzyca confluence)
+  [2341615, 'pracze-odrzanskie'],     // Osobowice-Rędzin
+  [2341621, 'pracze-odrzanskie'],     // Świniary (Widawa confluence corridor)
   [2336763, 'przedmiescie-olawskie'], // Przedmieście Oławskie
   [2341614, 'nadodrze-olbin'],        // Nadodrze
   [2341612, 'nadodrze-olbin'],        // Kleczków
@@ -44,6 +47,8 @@ const OSIEDLE_TO_ZONE = new Map([
   [2341619, 'ostrow-tumski'],         // Stare Miasto
   [2338685, 'kowale-swojczyce'],      // Kowale
   [2336724, 'kowale-swojczyce'],      // Strachocin-Swojczyce-Wojnów
+  [2338688, 'kowale-swojczyce'],      // Sołtysowice
+  [2339137, 'kowale-swojczyce'],      // Widawa
   [2336576, 'opatowice-bierdzany']    // Księże
 ]);
 
@@ -108,8 +113,12 @@ function classifyWroclawBranch(cx, cy, name = '') {
   if (n.includes('stara odra')) return 'stara-odra';
 
   // Spatial classification along Wrocław Water Node hydrotechnical boundaries
-  if (cy > 51.142 && cx > 16.95) return 'przewal-widawski'; // Widawa valley north of Wrocław
-  if (cx < 16.935 && cy < 51.158) return 'bystrzyca-river';
+  if (n.includes('odra') && !n.includes('stara')) {
+    if (cx < 17.011 && cy >= 51.122) return 'odra-redzin';
+  }
+  const widawaBoundaryLat = 51.142 + Math.max(0, (17.05 - cx) * 0.48);
+  if (cy > widawaBoundaryLat && cx > 16.925) return 'przewal-widawski'; // Widawa valley north of Wrocław
+  if (cx < 16.930 && cy < 51.182 && !(cx >= 16.890 && cy >= 51.160)) return 'bystrzyca-river';
   if (cx < 16.985 && cy < 51.132) return 'sleza-river';
   if (cx > 17.048 && cx < 17.105 && cy < 51.097) return 'olawa-river';
 
@@ -151,6 +160,7 @@ function classifyWroclawBranch(cx, cy, name = '') {
  */
 function classifyEmbankment(cx, cy) {
   if (cx > 17.115 && cy < 51.080) return { id: 'wal-blizanowice', builtYear: 1935, crestHeightM: 6.4 };
+  if (cy >= 51.158 && cx < 16.985) return { id: 'wal-pracze', builtYear: 1928, crestHeightM: 6.8 };
   if (cx < 16.925 && cy >= 51.120) return { id: 'wal-marszowice', builtYear: 1932, crestHeightM: 5.8 };
   if (cx < 16.970 && cy >= 51.132) return { id: 'wal-maslice', builtYear: 1917, crestHeightM: 7.2 };
   if (cx < 17.012 && cy >= 51.105 && cy <= 51.142) return { id: 'wal-kozanow', builtYear: 1930, crestHeightM: 7.0 };
@@ -307,11 +317,34 @@ function mergePolygons(geoms) {
 
 // ─── 1. Extract Dolnośląskie (Wrocław Water Node + Lower Silesia) ────────────
 
+const EMBANKMENT_STREET_BLACKLIST = /podwale|wa[lł]brzyska|walecznych|walerego|zawalna|trwa[lł]a|grunwaldzk|kawaleryjsk|wa[lł]owa/i;
+const LEVEE_NAME_REGEX = /\b(grobla|wa[lł]y?\b)/i;
+
+function isLeveeCandidateTags(t) {
+  if (t.man_made === 'dyke') return 'dyke';
+  if (t.railway || t.bridge || t.tunnel) return null;
+  if (/^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|construction|proposed)$/.test(t.highway || '')) {
+    return null;
+  }
+  const n = t.name || '';
+  if (LEVEE_NAME_REGEX.test(n) && !EMBANKMENT_STREET_BLACKLIST.test(n)) {
+    return 'named-levee';
+  }
+  if (t.embankment === 'yes' || t.embankment === 'dyke') {
+    return 'emb-crest';
+  }
+  if (t.man_made === 'embankment') {
+    return 'mm-emb';
+  }
+  return null;
+}
+
 const dolno = await extractFromPbf(path.join(RAW_DIR, 'dolnoslaskie.osm.pbf'), {
   matchWay(w) {
     const t = w.tags || {};
     if (TARGET_WAY_FACILITIES.has(w.id)) return 'silesia-facility';
-    if (t.man_made === 'dyke') return 'dyke';
+    const embRole = isLeveeCandidateTags(t);
+    if (embRole) return embRole;
     if (t.waterway === 'weir' || t.waterway === 'lock_gate' || t.man_made === 'sluice_gate' || (t.waterway === 'dam' && t.name)) return 'weir';
     if (t.natural === 'water' || t.waterway === 'riverbank' || t.water === 'river' || t.water === 'canal' || t.water === 'lock') {
       if (t.name && /mietk/i.test(t.name)) return 'mietkow-water';
@@ -417,6 +450,8 @@ for (const rel of dolno.targetRelations) {
   }
 }
 
+const candidateEmbankments = [];
+
 // B. Process Dolnośląskie ways (Waterways, Water polygons, Dykes, Weirs, Reservoirs)
 const TRIBUTARY_LINE_NAMES = /widawa|o[lł]awa|[sś]l[eę]za|bystrzyca|odp[lł]ywowy|przekop szczytnicki|kana[lł] miejski|kana[lł] [zż]eglugowy|kana[lł] powodziowy/i;
 
@@ -484,25 +519,16 @@ for (const w of dolno.matchedWays.values()) {
         geometry: geom
       });
     }
-  } else if (w.role === 'dyke') {
+  } else if (w.role === 'dyke' || w.role === 'named-levee' || w.role === 'emb-crest' || w.role === 'mm-emb') {
     const closed = w.refs[0] === w.refs[w.refs.length - 1] && coords.length >= 4;
+    // Skip tiny closed mound polygons (< ~30m span)
+    if (closed && Math.abs(signedRingArea(coords)) < 2e-7 && w.role !== 'dyke') continue;
     const geom = closed
       ? { type: 'Polygon', coordinates: [orientRing(coords, true)] }
-      : bufferLineToPolygon(coords, 7.5);
+      : bufferLineToPolygon(coords, w.role === 'dyke' || w.role === 'named-levee' ? 7.5 : 6.0);
     if (!geom) continue;
     const [cx, cy] = centroidOfGeometry(geom);
-    const cls = classifyEmbankment(cx, cy);
-    embankmentFeatures.push({
-      type: 'Feature',
-      properties: {
-        id: cls.id,
-        osmId: `d${w.id}`,
-        name: w.tags.name || '',
-        builtYear: cls.builtYear,
-        crestHeightM: cls.crestHeightM
-      },
-      geometry: geom
-    });
+    candidateEmbankments.push({ role: w.role, way: w, geom, cx, cy });
   } else if (w.role === 'weir') {
     const closed = w.refs[0] === w.refs[w.refs.length - 1] && coords.length >= 4;
     const geom = closed
@@ -524,6 +550,52 @@ for (const w of dolno.matchedWays.values()) {
       geometry: geom
     });
   }
+}
+
+// Filter secondary embankment candidates to river-adjacent flood levees using sampled canal vertices
+const riverSamples = [];
+for (const cf of canalFeatures) {
+  const ring = cf.geometry.type === 'Polygon' ? cf.geometry.coordinates[0] : cf.geometry.coordinates[0]?.[0];
+  if (!ring) continue;
+  const step = Math.max(1, Math.floor(ring.length / 24));
+  for (let i = 0; i < ring.length; i += step) {
+    riverSamples.push(ring[i]);
+  }
+}
+function minDistToRiverM(cx, cy) {
+  let best2 = Infinity;
+  const mPerLon = 111195 * Math.cos((51.12 * Math.PI) / 180);
+  const mPerLat = 111195;
+  for (const [rx, ry] of riverSamples) {
+    const dx = (cx - rx) * mPerLon;
+    const dy = (cy - ry) * mPerLat;
+    const d2 = dx * dx + dy * dy;
+    if (d2 < best2) best2 = d2;
+  }
+  return Math.sqrt(best2);
+}
+for (const item of candidateEmbankments) {
+  let keep = false;
+  if (item.role === 'dyke' || item.role === 'named-levee') {
+    keep = true;
+  } else {
+    const d = minDistToRiverM(item.cx, item.cy);
+    if (item.role === 'emb-crest' && d <= 380) keep = true;
+    else if (item.role === 'mm-emb' && d <= 240) keep = true;
+  }
+  if (!keep) continue;
+  const cls = classifyEmbankment(item.cx, item.cy);
+  embankmentFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: cls.id,
+      osmId: `d${item.way.id}`,
+      name: item.way.tags.name || '',
+      builtYear: cls.builtYear,
+      crestHeightM: cls.crestHeightM
+    },
+    geometry: item.geom
+  });
 }
 
 // C. Process Opolskie & Śląskie Reservoirs/Polders & Regional Rivers
@@ -558,6 +630,7 @@ for (const dataset of [opolskie, slaskie]) {
 const DEPRESSED_META = {
   'wielka-wyspa': { nameEn: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', namePl: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', deficit: '-3.6 m', depthM: 3.6 },
   'kozanow-pilczyce': { nameEn: 'Kozanów, Pilczyce & Maślice Basin', namePl: 'Niecka Kozanowa, Pilczyc i Maślic', deficit: '-4.2 m', depthM: 4.2 },
+  'pracze-odrzanskie': { nameEn: 'Pracze Odrzańskie, Janówek & Rędzin–Świniary', namePl: 'Pracze Odrzańskie, Janówek i Rędzin–Świniary', deficit: '-3.7 m', depthM: 3.7 },
   'przedmiescie-olawskie': { nameEn: 'Przedmieście Oławskie & Niskie Łąki', namePl: 'Przedmieście Oławskie i Niskie Łąki', deficit: '-3.4 m', depthM: 3.4 },
   'nadodrze-olbin': { nameEn: 'Nadodrze, Ołbin & Kleczków', namePl: 'Nadodrze, Ołbin i Kleczków', deficit: '-3.8 m', depthM: 3.8 },
   'ostrow-tumski': { nameEn: 'Stare Miasto & Ostrów Tumski', namePl: 'Stare Miasto i Ostrów Tumski', deficit: '-2.5 m', depthM: 2.5 },
@@ -655,8 +728,8 @@ for (const [yr, idSet] of Object.entries(HISTORY_OSIEDLA)) {
 // ─── G. Generate 3 Multi-LOD Bundles (LOD 0 / LOD 1 / LOD 2) ──────────────────
 
 const LOD_SPECS = [
-  // LOD 0: Overview / Regional (zoom < 11.2) — ~55m simplification, ultra-fast
-  { level: 0, tolCity: 0.00055, tolSilesia: 0.0014, tolRiver: 0.0022, decimals: 5, includeSmallDykes: false },
+  // LOD 0: Overview / Regional (zoom < 11.2) — ~55m simplification, keep all dykes
+  { level: 0, tolCity: 0.00055, tolSilesia: 0.0014, tolRiver: 0.0022, decimals: 5, includeSmallDykes: true },
   // LOD 1: City / Water Node (11.2 <= zoom < 13.8) — ~9m simplification
   { level: 1, tolCity: 0.00010, tolSilesia: 0.00045, tolRiver: 0.0007, decimals: 5, includeSmallDykes: true },
   // LOD 2: Full Hydrotechnical / Street Detail (zoom >= 13.8) — ~0.9m native OSM precision

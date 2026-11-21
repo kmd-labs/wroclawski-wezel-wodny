@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import {
-  AttributionControl,
   GeoJSONSource,
   Map as MapLibreMap,
   setWorkerUrl
@@ -18,15 +17,11 @@ import {
   MAP_DEFAULT_ZOOM,
   MAP_MAX_ZOOM,
   MAP_MIN_ZOOM,
-  MAP_SILESIA_ZOOM,
-  SILESIA_CENTER,
   SRC_CANALS,
   SRC_DEPRESSIONS,
   SRC_EMBANKMENTS,
   SRC_HISTORY_URBAN,
   SRC_INUNDATION,
-  SRC_SILESIA,
-  SRC_SILESIA_RIVERS,
   SRC_WEIRS,
   WROCLAW_BOUNDS,
   WROCLAW_CENTER
@@ -41,8 +36,8 @@ import { I18nService } from '../i18n/i18n.service';
 import { AppStateService } from '../services/app-state.service';
 import { HydrologyService } from '../services/hydrology.service';
 import { VectorDataService } from '../services/vector-data.service';
-import { HISTORY_ERAS, SILESIA_FACILITIES } from '../data/www-events.data';
-import { CANAL_SEGMENTS, WEIR_NODES } from '../data/www-hydrology.data';
+import { HISTORY_ERAS } from '../data/www-events.data';
+import { CANAL_SEGMENTS, DEPRESSED_ZONES, WEIR_NODES } from '../data/www-hydrology.data';
 import { MapPinViewModel, WeirNode } from '../models/www.model';
 
 const WORKER_ASSET_PATH = 'assets/maplibre/maplibre-gl-worker.mjs';
@@ -148,8 +143,8 @@ export class MapService {
       untracked(() => {
         this.zone.runOutsideAngular(() => {
           map.flyTo({
-            center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
-            zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
+            center: WROCLAW_CENTER,
+            zoom: MAP_DEFAULT_ZOOM,
             pitch: 0,
             bearing: 0,
             duration: 950
@@ -164,22 +159,23 @@ export class MapService {
       this.state.floodScenario();
       this.state.floodTimelineStep();
       this.state.historyYear();
-      this.state.silesiaWaveStep();
-      this.state.silesiaActiveIds();
       this.state.gateOpenings();
       this.i18n.lang();
       this.mapReady();
       untracked(() => this.updateProjections());
     });
 
-    // 6. Keep clicked river segment tooltip live when timeline, gates, or language change
+    // 6. Keep clicked river segment or map flood-level tooltip live when timeline, gates, or language change
     effect(() => {
       const seg = this.state.selectedSegment();
+      const floodPt = this.state.selectedFloodPoint();
       this.hydro.branchHydrology();
+      this.hydro.floodPlaneState();
       this.i18n.lang();
       this.mapReady();
       untracked(() => {
         if (seg) this.updateSegmentTooltip();
+        else if (floodPt) this.updateFloodPointTooltip();
         else this.tooltip.hide();
       });
     });
@@ -192,11 +188,7 @@ export class MapService {
       if (!map || !ready) return;
       untracked(() => {
         this.zone.runOutsideAngular(() => {
-          this.floodPlaneLayer.setWaterLevel(
-            plane.active,
-            plane.trestnoMasl,
-            plane.redzinMasl
-          );
+          this.floodPlaneLayer.setFloodState(plane);
         });
       });
     });
@@ -272,8 +264,6 @@ export class MapService {
         })
     );
 
-    map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
-
     map.on('style.load', () => {
       this.zone.run(() => {
         if (!map.getLayer(this.floodPlaneLayer.id)) {
@@ -281,7 +271,7 @@ export class MapService {
           map.addLayer(this.floodPlaneLayer, beforeId);
         }
         const plane = untracked(() => this.hydro.floodPlaneState());
-        this.floodPlaneLayer.setWaterLevel(plane.active, plane.trestnoMasl, plane.redzinMasl);
+        this.floodPlaneLayer.setFloodState(plane);
         this.styleLoaded.set(true);
       });
     });
@@ -301,6 +291,8 @@ export class MapService {
       this.updateProjections();
       if (this.state.selectedSegment()) {
         this.zone.run(() => this.updateSegmentTooltip());
+      } else if (this.state.selectedFloodPoint()) {
+        this.zone.run(() => this.updateFloodPointTooltip());
       }
     });
     map.on('zoomend', () => {
@@ -322,6 +314,7 @@ export class MapService {
           const segKey = String(props['segKey'] ?? '');
           const branchId = String(props['id'] ?? '');
           if (segKey && branchId) {
+            this.state.selectedFloodPoint.set(null);
             this.state.selectedSegment.set({
               segKey,
               branchId,
@@ -331,7 +324,9 @@ export class MapService {
             return;
           }
         }
-        this.clearSelectedSegment();
+        this.state.selectedSegment.set(null);
+        this.state.selectedFloodPoint.set([e.lngLat.lng, e.lngLat.lat]);
+        this.updateFloodPointTooltip();
       });
     });
 
@@ -340,7 +335,91 @@ export class MapService {
 
   clearSelectedSegment(): void {
     this.state.selectedSegment.set(null);
+    this.state.selectedFloodPoint.set(null);
     this.tooltip.hide();
+  }
+
+  private updateFloodPointTooltip(): void {
+    const map = this.map;
+    const coords = this.state.selectedFloodPoint();
+    if (!map || !coords) return;
+
+    const pt = map.project(coords);
+    const rect = map.getContainer().getBoundingClientRect();
+    const sx = rect.left + pt.x;
+    const sy = rect.top + pt.y;
+
+    const lang = this.i18n.lang();
+    const t = this.i18n.t();
+    const info = this.hydro.inspectFloodAtLngLat(coords[0], coords[1]);
+    const zoneMeta = info.zoneId ? DEPRESSED_ZONES.find(z => z.id === info.zoneId) : null;
+    const title = zoneMeta
+      ? (lang === 'pl' ? zoneMeta.namePl : zoneMeta.nameEn)
+      : info.isFloodway
+        ? t.floodPopupFloodway
+        : t.floodPopupTitle;
+
+    const waterText =
+      info.waterMasl !== null
+        ? `${info.waterMasl.toFixed(1)} m a.s.l.`
+        : info.kind === 'protected' && this.hydro.floodPlaneState().active
+          ? t.floodPopupProtected
+          : info.kind === 'upland'
+            ? t.floodPopupUpland
+            : t.floodPopupDry;
+
+    const depthText = info.depthM > 0 ? `+${info.depthM.toFixed(1)} m` : '0.0 m';
+
+    const terrainSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--cap"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>`;
+    const waterSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--water"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
+    const depthSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--load"><path d="M12 2v20"/><path d="m8 18 4 4 4-4"/><path d="m8 6 4-4 4 4"/></svg>`;
+
+    const htmlString = `
+      <div class="www-tooltip-col">
+        <div class="www-tooltip-col__header">
+          <span class="www-tooltip-col__title">${title}</span>
+        </div>
+        <div class="www-tooltip-col__divider"></div>
+        <div class="www-tooltip-col__rows">
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${terrainSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupGround}</span>
+            </div>
+            <span class="www-tooltip-col__val">${info.groundMasl.toFixed(1)} m</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${waterSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupWaterLevel}</span>
+            </div>
+            <span class="www-tooltip-col__val ${info.depthM > 0 ? 'www-tooltip-col__val--overtop' : ''}">${waterText}</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${depthSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupDepth}</span>
+            </div>
+            <span class="www-tooltip-col__val ${info.depthM > 0 ? 'www-tooltip-col__val--overtop' : ''}">${depthText}</span>
+          </div>
+        </div>
+      </div>
+    `.trim();
+
+    const safeHtml = this.sanitizer.bypassSecurityTrustHtml(htmlString);
+    this.tooltip.show(
+      `${title}: ${depthText}`,
+      sx,
+      sy - 10,
+      'top',
+      0,
+      {
+        html: safeHtml,
+        interactive: true,
+        closable: true,
+        onClose: () => this.clearSelectedSegment()
+      }
+    );
   }
 
   private updateSegmentTooltip(): void {
@@ -454,11 +533,10 @@ export class MapService {
   }
 
   resetCamera(): void {
-    const view = this.state.currentView();
     this.zone.runOutsideAngular(() => {
       this.map?.flyTo({
-        center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
-        zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
+        center: WROCLAW_CENTER,
+        zoom: MAP_DEFAULT_ZOOM,
         pitch: 0,
         bearing: 0,
         duration: 650
@@ -495,8 +573,6 @@ export class MapService {
       floodedZones: this.hydro.floodedZoneIds(),
       breachedEmbankments: this.hydro.breachedEmbankmentIds(),
       historyYear: this.state.historyYear(),
-      silesiaWaveStep: this.state.silesiaWaveStep(),
-      silesiaActiveIds: this.state.silesiaActiveIds(),
       selectedSegmentKey: this.state.selectedSegment()?.segKey ?? null
     });
   }
@@ -508,8 +584,6 @@ export class MapService {
       [SRC_WEIRS, payload.weirs],
       [SRC_DEPRESSIONS, payload.depressions],
       [SRC_INUNDATION, payload.inundation],
-      [SRC_SILESIA, payload.silesia],
-      [SRC_SILESIA_RIVERS, payload.silesiaRivers],
       [SRC_HISTORY_URBAN, payload.historyUrban]
     ];
     for (const [id, data] of entries) {
@@ -591,32 +665,6 @@ export class MapService {
           sourceOutlet: era.pin.sourceOutlet,
           sourceTitle: lang === 'pl' ? era.labelPl : era.labelEn,
           sourceUrl: era.pin.sourceUrl
-        });
-      }
-    } else if (view === 'silesia') {
-      const step = this.state.silesiaWaveStep();
-      const activeIds = this.state.silesiaActiveIds();
-      for (const fac of SILESIA_FACILITIES) {
-        const pt = map.project(fac.lngLat);
-        const active = activeIds.has(fac.id);
-        const reached = active && step >= fac.waveArrivalStep;
-        pins.push({
-          id: fac.id,
-          lngLat: fac.lngLat,
-          screenX: pt.x,
-          screenY: pt.y,
-          visible: pt.x >= -40 && pt.x <= w + 40 && pt.y >= -40 && pt.y <= h + 40,
-          reached,
-          opacity: reached ? 1.0 : 0.5,
-          category: fac.kind === 'reservoir' ? 'reservoir' : 'polder',
-          label: `${fac.capacityMlnM3} mln m³`,
-          dateLabel: `${fac.river} · ${fac.commissionedYear}`,
-          flowM3s: fac.peakReductionM3s,
-          title: lang === 'pl' ? fac.namePl : fac.nameEn,
-          desc: lang === 'pl' ? fac.descPl : fac.descEn,
-          sourceOutlet: 'PGW Wody Polskie',
-          sourceTitle: `${fac.river} · -${fac.peakReductionM3s} m³/s`,
-          sourceUrl: 'https://www.gov.pl/web/wody-polskie-wroclaw'
         });
       }
     }

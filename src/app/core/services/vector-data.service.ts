@@ -11,8 +11,6 @@ export interface WwwLodBundle {
   embankments: FeatureCollection;
   weirs: FeatureCollection;
   depressions: FeatureCollection;
-  silesia: FeatureCollection;
-  silesiaRivers: FeatureCollection;
   historyUrban: Record<string, Feature>;
 }
 

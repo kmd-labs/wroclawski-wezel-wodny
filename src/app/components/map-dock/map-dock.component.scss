@@ -22,9 +22,33 @@
 .camera-anchor {
   position: relative;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: flex-end;
+  gap: 8px;
   pointer-events: none;
+}
+
+.osm-attrib {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: radius("pill");
+  font-size: font-size("xxs");
+  line-height: 1.2;
+  color: color("text-dim");
+  text-decoration: none;
+  white-space: nowrap;
+  max-width: calc(100% - 46px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color transition("fast"), border-color transition("fast");
+
+  &:hover {
+    color: color("text-bright");
+    border-color: color("accent");
+  }
 }
 
 .camera-fab {
@@ -259,12 +283,13 @@
     color: color("text-dim");
   }
 
-  &__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
+  &__level {
+    padding-bottom: 10px;
+    border-bottom: 1px solid color("line");
+
+    @include respond-to("mobile") {
+      padding-bottom: 8px;
+    }
   }
 
   &__readouts {
@@ -390,12 +415,6 @@
   }
 }
 
-.silesia-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
 .hydrograph {
   display: flex;
   flex-direction: column;
@@ -444,27 +463,28 @@
   }
 }
 
-.silesia-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: radius("pill");
-  border: 1px solid color("line");
-  background: color("panel-inset");
-  color: color("text-dim");
-  font-size: font-size("xxs");
-  cursor: pointer;
-  transition: all transition("fast");
+.dock__timeline {
+  ::ng-deep .timeline-slider__event:first-child app-button {
+    transform: translateX(18px);
 
-  &--active {
-    border-color: color("accent");
-    background: color("surface-muted");
-    color: color("text-bright");
+    @include respond-to("mobile") {
+      transform: none;
+    }
+
+    @include respond-to("mobile-landscape") {
+      transform: none;
+    }
   }
 
-  &__cap {
-    font-family: $font-family-mono;
-    color: color("accent");
+  ::ng-deep .timeline-slider__event:last-child app-button {
+    transform: translateX(-18px);
+
+    @include respond-to("mobile") {
+      transform: none;
+    }
+
+    @include respond-to("mobile-landscape") {
+      transform: none;
+    }
   }
 }

@@ -1,7 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ThemeMode, ThemeService } from '@kmd/design-system';
 import { DEFAULT_GATE_OPENINGS } from '../data/www-hydrology.data';
-import { SILESIA_FACILITIES } from '../data/www-events.data';
 import { FloodScenarioId, GateId, ViewMode } from '../models/www.model';
 
 const THEME_STORAGE_KEY = 'wroclawski-wezel-wodny.theme';
@@ -19,11 +18,12 @@ export class AppStateService {
     branchId: string;
     lngLat: [number, number];
   } | null>(null);
+  readonly selectedFloodPoint = signal<[number, number] | null>(null);
 
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
   readonly gateOpenings = signal<Record<GateId, number>>({ ...DEFAULT_GATE_OPENINGS });
-  readonly polderRetentionActive = signal<boolean>(true);
+  readonly polderRetentionActive = signal<boolean>(false);
   readonly weirPanelOpen = signal<boolean>(false);
 
   // 2. Floods View State
@@ -33,18 +33,12 @@ export class AppStateService {
   // 3. History View State (1241..2024)
   readonly historyYear = signal<number>(1917);
 
-  // 4. Lower Silesia View State
-  readonly silesiaWaveStep = signal<number>(80);
-  readonly silesiaActiveIds = signal<Set<string>>(
-    new Set(SILESIA_FACILITIES.map(f => f.id))
-  );
-
   // Playback State
   readonly isPlaying = signal<boolean>(false);
   private playTimer: ReturnType<typeof setInterval> | null = null;
 
   // Map Camera State (starts flat without tilt)
-  readonly cameraZoom = signal<number>(12.1);
+  readonly cameraZoom = signal<number>(11.7);
   readonly cameraPitch = signal<number>(0);
   readonly cameraBearing = signal<number>(0);
   readonly cameraControlsOpen = signal<boolean>(false);
@@ -63,6 +57,7 @@ export class AppStateService {
     this.selectedPinId.set(null);
     this.selectedWeirId.set(null);
     this.selectedSegment.set(null);
+    this.selectedFloodPoint.set(null);
     this.currentView.set(view);
   }
 
@@ -78,19 +73,6 @@ export class AppStateService {
     } catch {
       // ignore storage errors
     }
-  }
-
-  toggleSilesiaFacility(id: string): void {
-    this.silesiaActiveIds.update(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  enableAllSilesiaFacilities(): void {
-    this.silesiaActiveIds.set(new Set(SILESIA_FACILITIES.map(f => f.id)));
   }
 
   togglePlaying(): void {
@@ -118,10 +100,6 @@ export class AppStateService {
         const next = Math.round((this.floodTimelineStep() + 0.5) * 10) / 10;
         if (next > 100) this.floodTimelineStep.set(0);
         else this.floodTimelineStep.set(next);
-      } else if (view === 'silesia') {
-        const next = Math.round((this.silesiaWaveStep() + 0.8) * 10) / 10;
-        if (next > 100) this.silesiaWaveStep.set(0);
-        else this.silesiaWaveStep.set(next);
       } else if (view === 'history') {
         const years = [1241, 1897, 1903, 1917, 1939, 1997, 2024];
         const cur = this.historyYear();

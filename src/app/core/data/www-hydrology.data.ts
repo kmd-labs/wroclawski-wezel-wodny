@@ -94,8 +94,9 @@ export const CANAL_SEGMENTS: CanalSegment[] = [
       [17.141, 51.135],
       [17.125, 51.150],
       [17.075, 51.163],
-      [17.015, 51.168],
-      [16.940, 51.174]
+      [17.015, 51.174],
+      [16.968, 51.190],
+      [16.912, 51.203]
     ],
     halfWidthM: 38,
     maxCapacityM3s: 300,
@@ -239,14 +240,16 @@ export const CANAL_SEGMENTS: CanalSegment[] = [
   },
   {
     id: 'odra-redzin',
-    nameEn: 'Lower Wrocław Odra (Osobowice → Rędzin Weir)',
-    namePl: 'Dolna Odra Wrocławska (Osobowice → Stopień Rędzin)',
+    nameEn: 'Lower Wrocław Odra (Osobowice → Rędzin → Pracze Odrzańskie)',
+    namePl: 'Dolna Odra Wrocławska (Osobowice → Rędzin → Pracze Odrzańskie)',
     coords: [
       [17.011, 51.124],
       [16.995, 51.129],
       [16.979, 51.139],
       [16.960, 51.150],
-      [16.939, 51.163]
+      [16.939, 51.163],
+      [16.916, 51.184],
+      [16.906, 51.204]
     ],
     halfWidthM: 72,
     maxCapacityM3s: 3100,
@@ -294,13 +297,13 @@ export const CANAL_SEGMENTS: CanalSegment[] = [
   },
   {
     id: 'bystrzyca-river',
-    nameEn: 'Bystrzyca River (Marszowice / Stabłowice)',
-    namePl: 'Rzeka Bystrzyca (Marszowice / Stabłowice)',
+    nameEn: 'Bystrzyca River (Marszowice → Pracze Odrzańskie)',
+    namePl: 'Rzeka Bystrzyca (Marszowice → Pracze Odrzańskie)',
     coords: [
       [16.885, 51.128],
       [16.901, 51.145],
-      [16.919, 51.158],
-      [16.935, 51.168]
+      [16.912, 51.164],
+      [16.917, 51.183]
     ],
     halfWidthM: 20,
     maxCapacityM3s: 210,
@@ -473,14 +476,30 @@ export const EMBANKMENT_SEGMENTS: EmbankmentSegment[] = [
     coords: [
       [16.889, 51.130],
       [16.904, 51.146],
-      [16.921, 51.158]
+      [16.914, 51.164]
     ],
     halfWidthM: 12,
     crestHeightM: 5.6,
     elevationMasl: 116.8,
     builtYear: 1932,
     modernizedYear: 2018,
-    protectsZoneId: 'kozanow-pilczyce'
+    protectsZoneId: 'pracze-odrzanskie'
+  },
+  {
+    id: 'wal-pracze',
+    nameEn: 'Pracze Odrzańskie–Janówek–Osobowice Embankment',
+    namePl: 'Wał Praczy Odrzańskich, Janówka i Osobowic',
+    coords: [
+      [16.938, 51.162],
+      [16.924, 51.178],
+      [16.912, 51.196]
+    ],
+    halfWidthM: 13,
+    crestHeightM: 6.8,
+    elevationMasl: 114.2,
+    builtYear: 1928,
+    modernizedYear: 2016,
+    protectsZoneId: 'pracze-odrzanskie'
   }
 ];
 
@@ -624,6 +643,23 @@ export const DEPRESSED_ZONES: DepressedZone[] = [
     riverFloodMasl: 123.3,
     depressionDepthM: -4.8,
     triggerBranches: ['odra-upper']
+  },
+  {
+    id: 'pracze-odrzanskie',
+    nameEn: 'Pracze Odrzańskie, Janówek & Rędzin–Świniary',
+    namePl: 'Pracze Odrzańskie, Janówek i Rędzin–Świniary',
+    polygon: [
+      [16.885, 51.162],
+      [16.925, 51.164],
+      [16.985, 51.182],
+      [16.968, 51.206],
+      [16.905, 51.206],
+      [16.885, 51.162]
+    ],
+    groundMasl: 110.5,
+    riverFloodMasl: 114.2,
+    depressionDepthM: -3.7,
+    triggerBranches: ['odra-redzin', 'bystrzyca-river', 'przewal-widawski']
   }
 ];
 
@@ -761,10 +797,10 @@ export const WEIR_NODES: WeirNode[] = [
 ];
 
 export const DEFAULT_GATE_OPENINGS: Record<GateId, number> = {
-  bartoszowice: 90,
-  opatowice: 85,
-  szczytniki: 80,
-  widawa: 45,
+  bartoszowice: 100,
+  opatowice: 90,
+  szczytniki: 100,
+  widawa: 100,
   'psie-pole': 0,
   redzin: 100
 };

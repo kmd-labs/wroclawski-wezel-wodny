@@ -11,7 +11,6 @@ export const EN: Dict = {
   viewEquilibrium: 'How It Works',
   viewFloods: 'Historic Floods',
   viewHistory: 'History & Construction',
-  viewSilesia: 'Lower Silesia Polders',
   stageAriaLabel: 'Wrocławski Węzeł Wodny 3D Hydrological Map',
 
   // Bottom Dock & Playback
@@ -39,9 +38,6 @@ export const EN: Dict = {
 
   // Hydrological Telemetry & Readouts
   readoutTrestno: 'Trestno Q',
-  readoutNodeLoad: 'WWW Load',
-  readoutWidawa: 'Widawa',
-  readoutDowntown: 'Downtown',
   readoutStaraOdra: 'Stara Odra',
   readoutCapacity: 'Capacity',
   readoutPeak: 'Peak Q',
@@ -49,7 +45,6 @@ export const EN: Dict = {
   readoutYear: 'Era',
   readoutRetention: 'Retention',
   readoutReducedFlow: 'At Wrocław',
-  readoutFloodLevel: 'Flood Level',
   segmentCapacity: 'Max capacity',
   segmentLoad: 'Load',
 
@@ -57,27 +52,31 @@ export const EN: Dict = {
   weirPanelTitle: 'Weir & Floodgate Controls',
   weirPanelSubtitle: 'Adjust gate apertures (0–100%) to route the Odra wave safely.',
   weirToggleBtn: 'Gates',
-  autoEquilibriumBtn: 'RZGW Auto-Balance',
-  presetNormalBtn: 'Normal (450 m³/s)',
-  preset1997Btn: 'Extreme Wave (3,640 m³/s)',
-  presetMisuseBtn: 'Gate Error Demo',
+  autoEquilibriumBtn: 'Auto-Balance',
   polderShavingLabel: 'Upstream Polders (-260 m³/s)',
   statusSafe: 'Flow Safe',
   statusWarning: 'Near Capacity',
-  statusOverflow: 'Overtopping!',
+  statusOverflow: 'Overflowing!',
   floodedDistrictsLabel: 'Inundated basins',
   noFloodingLabel: 'All embankments holding',
   gateClosed: 'Closed',
   gateOpen: 'Open',
   gateOpeningLabel: 'Gate opening',
 
+  // Map Click Flood Level Popup
+  floodPopupTitle: 'Flood Level',
+  floodPopupGround: 'Terrain (DEM)',
+  floodPopupWaterLevel: 'Flood level',
+  floodPopupDepth: 'Water depth',
+  floodPopupDry: 'Dry',
+  floodPopupProtected: 'Protected by dyke',
+  floodPopupFloodway: 'Inter-dyke floodway',
+  floodPopupUpland: 'Dry',
+
   // Historical Floods View
   scenario1997: '1997',
   scenario2012: '2010 / 2012',
   scenario2024: '2024',
-  scenario1997Subtitle: 'July 1997 Millennium Flood · 3,640 m³/s peak wave',
-  scenario2012Subtitle: 'May 2010 Kozanów breach (2,160 m³/s) & 2012 POPDO launch',
-  scenario2024Subtitle: 'Sept 2024 flood · 1,750 m³/s peak at Trestno',
   wwwStatePreModern: 'WWW before modernization (~2,350 m³/s)',
   wwwStateModern: 'Modernized WWW + Racibórz (3,100 m³/s)',
   pinPendingLabel: 'Upcoming on timeline (50% opacity)',
@@ -93,14 +92,6 @@ export const EN: Dict = {
   historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',
   historyNoBuildingsNote: '3D modern buildings hidden in History view',
 
-  // Lower Silesia View
-  silesiaSubtitle: 'Upper & Middle Odra dry reservoirs and floodplain polders protecting Wrocław',
-  silesiaToggleAll: 'Enable All',
-  silesiaWaveLabel: 'Flood wave propagation',
-  silesiaInflowPeak: 'Upper Odra Peak',
-  silesiaAtWroclaw: 'Shaved at Trestno',
-  silesiaCapacityUnit: 'mln m³',
-
   // Settings Popup (Layers & Theme)
   settingsTitle: 'Map Layers & Appearance',
   layersLabel: 'Map Layers',
@@ -114,7 +105,7 @@ export const EN: Dict = {
   // Map Legend & Depression Callout
   legendNormal: 'Safe (<75%)',
   legendHigh: 'High (75–100%)',
-  legendOvertop: 'Overtopping (>100%)',
+  legendOvertop: 'Overflowing (>100%)',
   legendEmbankment: '3D Embankment',
   legendDepressed: 'Below Flood Crest',
   legendFlooded: 'Flooded Volume',
@@ -125,7 +116,7 @@ export const EN: Dict = {
   sourcesLiteratureTitle: 'Scientific & Hydrotechnical Literature',
   sourcesArticlesTitle: 'Timeline News & Report Citations',
   sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
-  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, osiedle basins, and Lower Silesia reservoirs are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie, Opolskie, Śląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
+  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, and osiedle basins are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
   sourcesBuiltTitle: 'Attribution & Citation',
   sourcesBuiltBy: 'Built by kmd-labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
   citeStyleLabel: 'Citation style',

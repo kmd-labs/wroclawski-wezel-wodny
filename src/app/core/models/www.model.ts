@@ -1,4 +1,4 @@
-export type ViewMode = 'equilibrium' | 'floods' | 'history' | 'silesia';
+export type ViewMode = 'equilibrium' | 'floods' | 'history';
 
 export type GateId =
   | 'bartoszowice'
@@ -138,22 +138,6 @@ export interface HistoryEra {
     sourceOutlet: string;
     sourceUrl: string;
   };
-}
-
-export interface SilesiaFacility {
-  id: string;
-  kind: 'reservoir' | 'polder' | 'bypass';
-  nameEn: string;
-  namePl: string;
-  river: string;
-  lngLat: [number, number];
-  polygon: [number, number][];
-  capacityMlnM3: number;
-  peakReductionM3s: number;
-  commissionedYear: number;
-  waveArrivalStep: number;
-  descEn: string;
-  descPl: string;
 }
 
 export interface BranchHydrology {

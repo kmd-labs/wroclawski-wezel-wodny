@@ -1,15 +1,13 @@
 import type { LngLatBoundsLike, LngLatLike } from 'maplibre-gl';
 
-export const WROCLAW_CENTER: LngLatLike = [17.048, 51.113];
-export const SILESIA_CENTER: LngLatLike = [17.35, 50.62];
+export const WROCLAW_CENTER: LngLatLike = [17.028, 51.128];
 
 export const WROCLAW_BOUNDS: LngLatBoundsLike = [
   [15.65, 49.75],
   [18.65, 51.55]
 ];
 
-export const MAP_DEFAULT_ZOOM = 12.1;
-export const MAP_SILESIA_ZOOM = 8.1;
+export const MAP_DEFAULT_ZOOM = 11.7;
 export const MAP_MIN_ZOOM = 6.5;
 export const MAP_MAX_ZOOM = 18;
 
@@ -27,6 +25,4 @@ export const SRC_INUNDATION = 'www-inundation';
 export const SRC_CANALS = 'www-canals';
 export const SRC_EMBANKMENTS = 'www-embankments';
 export const SRC_WEIRS = 'www-weirs';
-export const SRC_SILESIA = 'www-silesia';
-export const SRC_SILESIA_RIVERS = 'www-silesia-rivers';
 export const SRC_HISTORY_URBAN = 'www-history-urban';

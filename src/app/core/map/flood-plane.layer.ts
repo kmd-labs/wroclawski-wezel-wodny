@@ -1,16 +1,30 @@
 import { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap, MercatorCoordinate } from 'maplibre-gl';
+import {
+  DEM_BASIN_IDS,
+  DEM_GRID_COLS,
+  DEM_GRID_ELEV_DM,
+  DEM_GRID_REL_ELEV_DM,
+  DEM_GRID_ROWS,
+  DEM_GRID_ZONE_CODE,
+  DEM_MAX_LAT,
+  DEM_MAX_LNG,
+  DEM_MIN_LAT,
+  DEM_MIN_LNG
+} from '../data/www-dem-grid.data';
+import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service';
 
-const GRID_COLS = 28;
-const GRID_ROWS = 20;
-const MIN_LNG = 16.86;
-const MAX_LNG = 17.18;
-const MIN_LAT = 51.04;
-const MAX_LAT = 51.18;
+// Relative-To-Center (RTC) Mercator origin computed in 64-bit float so WebGL Float32 vertex
+// attributes retain sub-millimetre precision at every zoom level (z=6.5..18) without jitter.
+const RTC_ORIGIN = MercatorCoordinate.fromLngLat([17.02, 51.13], 115.0);
 
 /**
- * Custom 3D WebGL layer rendering a real-elevation (1:1 m a.s.l., zero vertical exaggeration)
- * flood water rectangle across Wrocław that intersects the MapLibre EU-DEM terrain via the
- * shared WebGL depth buffer.
+ * Custom 3D WebGL layer rendering embankment-aware, zoom-invariant progressive ISOK-inspired
+ * flood inundation from the pre-baked `96x72` EU-DEM + OSM embankment barrier grid:
+ *  - Unembanked `międzywale` vertices (`zoneCode >= 10`) flood first above `3,100 m³/s` between
+ *    rivers and embankments, stopping right at the 3D dyke walls.
+ *  - Embanked `zawale` basins (`zoneCode 0..8`) remain 100% dry while their protecting
+ *    embankment holds, and fill progressively across real DEM depressions only after that specific
+ *    embankment overtops or breaches.
  */
 export class FloodWaterPlaneLayer implements CustomLayerInterface {
   readonly id = 'flood-water-plane';
@@ -24,42 +38,57 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
   private indexCount = 0;
 
   private active = false;
-  private trestnoMasl = 95;
-  private redzinMasl = 95;
+  private basins: FloodBasinLevel[] = [];
+  private miedzywaleDepths: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
+  private signature = '';
   private dirty = true;
 
-  private readonly vertexData = new Float32Array((GRID_COLS + 1) * (GRID_ROWS + 1) * 3);
+  // 4 floats per vertex: [rtcX, rtcY, rtcZ, waterDepthM]
+  private readonly vertexData = new Float32Array((DEM_GRID_COLS + 1) * (DEM_GRID_ROWS + 1) * 4);
   private readonly matrix32 = new Float32Array(16);
 
-  setWaterLevel(active: boolean, trestnoMasl: number, redzinMasl: number): void {
-    const changed =
-      this.active !== active ||
-      Math.abs(this.trestnoMasl - trestnoMasl) > 0.02 ||
-      Math.abs(this.redzinMasl - redzinMasl) > 0.02;
-    this.active = active;
-    this.trestnoMasl = trestnoMasl;
-    this.redzinMasl = redzinMasl;
-    if (changed) {
-      this.dirty = true;
-      this.map?.triggerRepaint();
-    }
+  setFloodState(state: FloodPlaneState): void {
+    const sig = state.active
+      ? `${state.basins.map(b => `${b.id}:${b.depthM.toFixed(2)}`).join('|')}#${state.miedzywaleDepths.map(d => d.toFixed(2)).join(',')}`
+      : 'inactive';
+    if (sig === this.signature) return;
+
+    this.signature = sig;
+    this.active = state.active;
+    this.basins = state.basins;
+    this.miedzywaleDepths = state.miedzywaleDepths;
+    this.dirty = true;
+    this.map?.triggerRepaint();
   }
 
   onAdd(map: MapLibreMap, gl: WebGL2RenderingContext): void {
     this.map = map;
 
     const vertSrc = `
+      precision highp float;
       uniform mat4 u_matrix;
       attribute vec3 a_pos;
+      attribute float a_depth;
+      varying float v_depth;
       void main() {
+        v_depth = a_depth;
         gl_Position = u_matrix * vec4(a_pos, 1.0);
       }
     `;
     const fragSrc = `
-      precision mediump float;
-      uniform vec4 u_color;
+      precision highp float;
+      varying float v_depth;
       void main() {
-        gl_FragColor = u_color;
+        if (v_depth <= 0.0) discard;
+        // Feather shoreline smoothly over the first 12 cm of depth
+        float edge = smoothstep(0.0, 0.12, v_depth);
+        // Depth-graduated inundation palette: shallow sky-blue -> deep flood cobalt
+        float deepT = clamp((v_depth - 0.15) / 2.6, 0.0, 1.0);
+        vec3 shallowCol = vec3(0.18, 0.62, 0.96);
+        vec3 deepCol    = vec3(0.06, 0.28, 0.78);
+        vec3 col = mix(shallowCol, deepCol, deepT);
+        float alpha = mix(0.38, 0.68, deepT) * edge;
+        gl_FragColor = vec4(col * alpha, alpha);
       }
     `;
 
@@ -84,9 +113,9 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
     this.idxBuffer = gl.createBuffer();
 
     const indices: number[] = [];
-    const stride = GRID_COLS + 1;
-    for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
+    const stride = DEM_GRID_COLS + 1;
+    for (let r = 0; r < DEM_GRID_ROWS; r++) {
+      for (let c = 0; c < DEM_GRID_COLS; c++) {
         const i0 = r * stride + c;
         const i1 = i0 + 1;
         const i2 = i0 + stride;
@@ -126,22 +155,37 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
     gl.useProgram(this.program);
 
+    const floatBytes = 4;
+    const strideBytes = 4 * floatBytes;
     const aPos = gl.getAttribLocation(this.program, 'a_pos');
+    const aDepth = gl.getAttribLocation(this.program, 'a_depth');
     gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, strideBytes, 0);
+    gl.enableVertexAttribArray(aDepth);
+    gl.vertexAttribPointer(aDepth, 1, gl.FLOAT, false, strideBytes, 3 * floatBytes);
+
+    // Compute RTC translation column in 64-bit JS double precision before Float32 uniform upload
+    const rawMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
+    for (let i = 0; i < 12; i++) {
+      this.matrix32[i] = rawMatrix[i];
+    }
+    const ox = RTC_ORIGIN.x;
+    const oy = RTC_ORIGIN.y;
+    const oz = RTC_ORIGIN.z;
+    for (let r = 0; r < 4; r++) {
+      this.matrix32[12 + r] =
+        rawMatrix[r] * ox +
+        rawMatrix[4 + r] * oy +
+        rawMatrix[8 + r] * oz +
+        rawMatrix[12 + r];
+    }
 
     const uMatrix = gl.getUniformLocation(this.program, 'u_matrix');
-    const rawMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
-    for (let i = 0; i < 16; i++) this.matrix32[i] = rawMatrix[i];
     gl.uniformMatrix4fv(uMatrix, false, this.matrix32);
 
-    // Premultiplied alpha blue flood water sheet (alpha = 0.52)
-    const uColor = gl.getUniformLocation(this.program, 'u_color');
-    const a = 0.52;
-    gl.uniform4f(uColor, 0.08 * a, 0.42 * a, 0.92 * a, a);
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
+    // Disable depth-buffer fighting against zoom-dependent DEM tiles; this layer is ordered below
+    // canals-3d / embankments-3d / buildings-3d so 3D infrastructure draws cleanly on top.
+    gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -149,24 +193,62 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.idxBuffer);
     gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
 
+    gl.enable(gl.DEPTH_TEST);
     gl.depthMask(true);
     gl.disableVertexAttribArray(aPos);
+    gl.disableVertexAttribArray(aDepth);
   }
 
   private rebuildVertices(): void {
+    const active = this.active;
+    const basinById = new Map<string, FloodBasinLevel>();
+    for (const b of this.basins) {
+      basinById.set(b.id, b);
+    }
+
+    const ox = RTC_ORIGIN.x;
+    const oy = RTC_ORIGIN.y;
+    const oz = RTC_ORIGIN.z;
     let ptr = 0;
-    for (let r = 0; r <= GRID_ROWS; r++) {
-      const lat = MIN_LAT + (r / GRID_ROWS) * (MAX_LAT - MIN_LAT);
-      for (let c = 0; c <= GRID_COLS; c++) {
-        const lng = MIN_LNG + (c / GRID_COLS) * (MAX_LNG - MIN_LNG);
-        // Natural SE -> NW slope from Trestno (17.14°E, 51.07°N) to Rędzin (16.92°E, 51.16°N)
-        const tRaw = ((17.14 - lng) * 0.7 + (lat - 51.07) * 0.6) / 0.24;
-        const t = Math.max(0, Math.min(1, tRaw));
-        const elevMasl = this.trestnoMasl + (this.redzinMasl - this.trestnoMasl) * t;
+    let idx = 0;
+
+    for (let r = 0; r <= DEM_GRID_ROWS; r++) {
+      const lat = DEM_MIN_LAT + (r / DEM_GRID_ROWS) * (DEM_MAX_LAT - DEM_MIN_LAT);
+      for (let c = 0; c <= DEM_GRID_COLS; c++) {
+        const lng = DEM_MIN_LNG + (c / DEM_GRID_COLS) * (DEM_MAX_LNG - DEM_MIN_LNG);
+        const groundMasl = DEM_GRID_ELEV_DM[idx] / 10;
+        const zoneCode = DEM_GRID_ZONE_CODE[idx];
+        const relElevM = DEM_GRID_REL_ELEV_DM[idx] / 10;
+        idx++;
+
+        let depthM = -1.8;
+        let elevMasl = groundMasl;
+
+        if (active && zoneCode >= 0) {
+          if (zoneCode >= 10) {
+            // Unembanked międzywale floodway sector: wets between rivers and dykes above 3,100 m³/s
+            const sectorDepth = this.miedzywaleDepths[zoneCode - 10] ?? 0;
+            if (sectorDepth > 0) {
+              depthM = Math.max(-1.8, sectorDepth - relElevM);
+            }
+          } else {
+            // Protected embanked zawale basin: 100% dry until this exact basin's embankment overtops
+            const basinId = DEM_BASIN_IDS[zoneCode];
+            const basin = basinById.get(basinId);
+            if (basin && basin.depthM > 0) {
+              depthM = Math.max(-1.8, basin.depthM - relElevM);
+            }
+          }
+          if (depthM > 0) {
+            elevMasl = groundMasl + depthM;
+          }
+        }
+
         const mc = MercatorCoordinate.fromLngLat([lng, lat], elevMasl);
-        this.vertexData[ptr++] = mc.x;
-        this.vertexData[ptr++] = mc.y;
-        this.vertexData[ptr++] = mc.z;
+        this.vertexData[ptr++] = mc.x - ox;
+        this.vertexData[ptr++] = mc.y - oy;
+        this.vertexData[ptr++] = mc.z - oz;
+        this.vertexData[ptr++] = depthM;
       }
     }
   }
