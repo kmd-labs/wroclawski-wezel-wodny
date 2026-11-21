@@ -14,7 +14,8 @@ import {
   Compass,
   Plus,
   Minus,
-  RotateCcw
+  RotateCcw,
+  MapPin
 } from 'lucide-angular';
 import {
   BreakpointService,
@@ -71,6 +72,7 @@ export class MapDockComponent {
   readonly plusIcon = Plus;
   readonly minusIcon = Minus;
   readonly resetIcon = RotateCcw;
+  readonly pinIcon = MapPin;
 
   readonly controllableWeirs = WEIR_NODES.filter(w => w.controllable && w.gateId);
   readonly historyEras = HISTORY_ERAS;
@@ -136,12 +138,24 @@ export class MapDockComponent {
     return [];
   });
 
-  readonly floodedZoneNames = computed(() => {
+  readonly floodedBasins = computed(() => {
     const ids = this.hydro.floodedZoneIds();
     const lang = this.i18n.lang();
-    return DEPRESSED_ZONES.filter(z => ids.has(z.id) && z.id !== 'polder-blizanowice-trestno')
-      .map(z => (lang === 'pl' ? z.namePl : z.nameEn));
+    return DEPRESSED_ZONES.filter(z => ids.has(z.id) && z.id !== 'polder-blizanowice-trestno').map(z => {
+      const ring = z.polygon.length > 1 ? z.polygon.slice(0, -1) : z.polygon;
+      const lng = ring.reduce((s, p) => s + p[0], 0) / (ring.length || 1);
+      const lat = ring.reduce((s, p) => s + p[1], 0) / (ring.length || 1);
+      return {
+        id: z.id,
+        name: lang === 'pl' ? z.namePl : z.nameEn,
+        center: [lng, lat] as [number, number]
+      };
+    });
   });
+
+  navigateToBasin(center: [number, number]): void {
+    this.mapService.flyTo(center, 13.6);
+  }
 
   readonly sliderTrackGradient = computed<string | undefined>(() => {
     if (this.state.currentView() !== 'floods') return undefined;

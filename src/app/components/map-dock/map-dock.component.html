@@ -145,10 +145,10 @@
           </div>
 
           <div class="dock__drawer-foot">
-            @if (floodedZoneNames().length > 0) {
+            @if (floodedBasins().length > 0) {
               <div class="dock__alert dock__alert--danger">
                 <lucide-icon [img]="warnIcon" [size]="13"></lucide-icon>
-                <span>{{ t.floodedDistrictsLabel }}: {{ floodedZoneNames().join(', ') }}</span>
+                <span>{{ t.floodedDistrictsLabel }}: {{ floodedBasins().length }}</span>
               </div>
             } @else {
               <div class="dock__alert dock__alert--safe">
@@ -282,6 +282,21 @@
             <span class="readout__val">{{ era.capacityM3s }} m³/s</span>
           </div>
           <span class="dock__note">{{ t.historyNoBuildingsNote }}</span>
+        }
+
+        @if (view !== 'history' && floodedBasins().length > 0) {
+          <div class="flooded-basins" role="group" [attr.aria-label]="t.floodedDistrictsLabel">
+            <span class="flooded-basins__label">{{ t.floodedDistrictsLabel }}:</span>
+            @for (basin of floodedBasins(); track basin.id) {
+              <button
+                type="button"
+                class="basin-pill"
+                (click)="navigateToBasin(basin.center)">
+                <lucide-icon [img]="pinIcon" [size]="11" aria-hidden="true"></lucide-icon>
+                <span>{{ basin.name }}</span>
+              </button>
+            }
+          </div>
         }
       </div>
 
