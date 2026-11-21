@@ -1,15 +1,17 @@
 /**
- * Fetches z=12 AWS Terrarium DEM PNG tiles across the Wrocław Water Node corridor and combines
- * them with real OSM river channels, OSM embankments, and OSM floodplain basins (`www-lod1.json`)
- * to pre-bake:
+ * Fetches z=12 AWS Terrarium DEM PNG tiles + official PGW Wody Polskie ISOK Flood Hazard Maps
+ * (MZP INSPIRE WFS `nz-core:HazardArea`, Q10% / Q1% / Q0.2% / levee-breach) across the Wrocław
+ * Water Node corridor, combining them with OSM river channels, embankments, and floodplain basins
+ * (`www-lod1.json`) to pre-bake:
  *   1. `DEM_GRID_ELEV_DM`     — smooth 96x72 EU-DEM ground elevation (dm a.s.l.)
  *   2. `DEM_GRID_ZONE_CODE`   — hydrological barrier zone per vertex:
- *        -1     : upland / dry outside floodplain
+ *        -1     : upland / dry outside ISOK floodplain (incl. Maślice)
  *        0..8   : embanked protected basin (`zawale`) — stays dry while embankment holds
  *        10..17 : inter-embankment floodway (`międzywale`) — wets immediately above 3,100 m³/s
- *   3. `DEM_GRID_REL_ELEV_DM` — height above local zone/floodway floor (dm) for continuous filling
+ *   3. `DEM_GRID_REL_ELEV_DM` — ISOK-weighted height above local zone/floodway floor (dm)
  */
 import fs from 'node:fs';
+import path from 'node:path';
 import zlib from 'node:zlib';
 
 const GRID_COLS = 96;
@@ -19,6 +21,9 @@ const MAX_LNG = 17.18;
 const MIN_LAT = 51.045;
 const MAX_LAT = 51.215;
 const DEM_ZOOM = 12;
+
+const ISOK_WFS_BASE = 'https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS';
+const ISOK_CACHE_PATH = '/workspace/tools/pipeline/data/isok-mzp-wroclaw.json';
 
 export const BASIN_IDS = [
   'polder-blizanowice-trestno', // 0
@@ -191,6 +196,114 @@ function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
     ccw(ax, ay, bx, by, cx, cy) !== ccw(ax, ay, bx, by, dx, dy);
 }
 
+function computeGeomBbox(geom) {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const polys = geom?.type === 'Polygon' ? [geom.coordinates] : geom?.type === 'MultiPolygon' ? geom.coordinates : [];
+  for (const poly of polys) {
+    for (const pt of poly[0] || []) {
+      if (pt[0] < minX) minX = pt[0];
+      if (pt[0] > maxX) maxX = pt[0];
+      if (pt[1] < minY) minY = pt[1];
+      if (pt[1] > maxY) maxY = pt[1];
+    }
+  }
+  return [minX, minY, maxX, maxY];
+}
+
+async function loadIsokHazardFeatures() {
+  if (fs.existsSync(ISOK_CACHE_PATH)) {
+    const cached = JSON.parse(fs.readFileSync(ISOK_CACHE_PATH, 'utf8'));
+    console.log(`Loaded ${cached.features.length} cached ISOK MZP HazardArea features (${cached.acquiredDate})`);
+    return cached;
+  }
+
+  console.log('Fetching official PGW Wody Polskie ISOK MZP HazardArea features via INSPIRE WFS...');
+  const pageSize = 100;
+  let startIndex = 0;
+  let totalExpected = Infinity;
+  const rawFeatures = [];
+
+  while (startIndex < totalExpected) {
+    const url =
+      `${ISOK_WFS_BASE}?service=WFS&version=2.0.0&request=GetFeature` +
+      `&typeNames=nz-core:HazardArea` +
+      `&bbox=${MIN_LAT},${MIN_LNG},${MAX_LAT},${MAX_LNG},urn:ogc:def:crs:EPSG::4258` +
+      `&count=${pageSize}&startIndex=${startIndex}&outputFormat=application/json`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`ISOK WFS HTTP ${resp.status}`);
+    const page = await resp.json();
+    const total = Number(page.totalFeatures ?? page.numberMatched ?? page.features?.length ?? 0);
+    if (Number.isFinite(total) && total > 0) totalExpected = total;
+    const batch = page.features || [];
+    if (batch.length === 0) break;
+    rawFeatures.push(...batch);
+    if (batch.length < pageSize) break;
+    startIndex += batch.length;
+  }
+
+  const seenIds = new Set();
+  const compactFeatures = rawFeatures.flatMap(f => {
+    const id = f.properties?.identifier?.value ?? f.id;
+    if (seenIds.has(id)) return [];
+    seenIds.add(id);
+    const lo = f.properties?.likelihoodOfOccurrence?.LikelihoodOfOccurrence;
+    const ql = String(lo?.qualitativeLikelihood ?? '');
+    const rp = Number(lo?.quantitativeLikelihood?.QuantitativeLikelihood?.returnPeriod ?? 0);
+    let tier = 'q100-breach';
+    if (ql.includes('Q 10%')) tier = 'q10';
+    else if (ql.includes('Q 0,2%')) tier = 'q500';
+    else if (ql.includes('Q 1%') && !ql.includes('zniszczenia')) tier = 'q100-intact';
+    return [{
+      id,
+      tier,
+      returnPeriod: rp,
+      qualitativeLikelihood: ql,
+      geometry: f.geometry
+    }];
+  });
+
+  const payload = {
+    sourceUrl: ISOK_WFS_BASE,
+    namespace: 'PL.ZIPGW.6453/MZP-MRP',
+    acquiredDate: new Date().toISOString().slice(0, 10),
+    features: compactFeatures
+  };
+  fs.mkdirSync(path.dirname(ISOK_CACHE_PATH), { recursive: true });
+  fs.writeFileSync(ISOK_CACHE_PATH, JSON.stringify(payload));
+  console.log(`✔ Cached ${compactFeatures.length} ISOK MZP HazardArea features to ${ISOK_CACHE_PATH}`);
+  return payload;
+}
+
+const isokData = await loadIsokHazardFeatures();
+const isokByTier = {
+  q10: [],
+  'q100-intact': [],
+  q500: [],
+  'q100-breach': []
+};
+for (const f of isokData.features) {
+  if (!f.geometry || !isokByTier[f.tier]) continue;
+  if (/budowli/i.test(f.qualitativeLikelihood || '')) continue;
+  const bbox = computeGeomBbox(f.geometry);
+  if (bbox[2] < MIN_LNG || bbox[0] > MAX_LNG || bbox[3] < MIN_LAT || bbox[1] > MAX_LAT) continue;
+  isokByTier[f.tier].push({ bbox, geometry: f.geometry });
+}
+console.log(
+  `ISOK tiers in Wrocław grid -> Q10%: ${isokByTier.q10.length}, Q1% intact: ${isokByTier['q100-intact'].length}, Q0.2%: ${isokByTier.q500.length}, Q1% breach: ${isokByTier['q100-breach'].length}`
+);
+
+function inIsokTier(lng, lat, list) {
+  for (const item of list) {
+    const b = item.bbox;
+    if (lng < b[0] || lng > b[2] || lat < b[1] || lat > b[3]) continue;
+    if (pointInGeometry(lng, lat, item.geometry)) return true;
+  }
+  return false;
+}
+
 // 1. Fetch & decode z=12 Terrarium DEM tiles
 const topLeft = lngLatToTileFrac(MIN_LNG, MAX_LAT, DEM_ZOOM);
 const botRight = lngLatToTileFrac(MAX_LNG, MIN_LAT, DEM_ZOOM);
@@ -295,9 +408,22 @@ const basinGeoms = BASIN_IDS.map(id =>
 );
 
 const zoneCode = new Int8Array(totalVerts).fill(-1);
+const isokTierOffsetDm = new Int16Array(totalVerts).fill(14);
 for (let i = 0; i < totalVerts; i++) {
   const lng = vertLng[i];
   const lat = vertLat[i];
+
+  // Official ISOK MZP hazard tier lookup at this vertex
+  const inQ10 = inIsokTier(lng, lat, isokByTier.q10);
+  const inQ100Intact = inQ10 || inIsokTier(lng, lat, isokByTier['q100-intact']);
+  const inQ500 = inQ100Intact || inIsokTier(lng, lat, isokByTier.q500);
+  const inQ100Breach = inIsokTier(lng, lat, isokByTier['q100-breach']);
+  const inAnyIsok = inQ500 || inQ100Breach;
+
+  if (inQ10) isokTierOffsetDm[i] = 0;
+  else if (inQ100Intact) isokTierOffsetDm[i] = 2;
+  else if (inQ500) isokTierOffsetDm[i] = 5;
+  else if (inQ100Breach) isokTierOffsetDm[i] = 9;
 
   // Find nearest river channel point + sector
   let bestDist2 = Infinity;
@@ -321,6 +447,10 @@ for (let i = 0; i < totalVerts; i++) {
       break;
     }
   }
+  // shortcut: clip western tail of OSM Pilczyce boundary instead of splitting district relation manually
+  if (inBasinIdx === 5 && (lng < 16.968 || lat > 51.140)) {
+    inBasinIdx = -1;
+  }
 
   // Retention polder Blizanowice-Trestno behaves as a controlled polder zone (code 0)
   if (inBasinIdx === 0) {
@@ -332,21 +462,22 @@ for (let i = 0; i < totalVerts; i++) {
 
   if (inBasinIdx > 0) {
     // Inside a Wrocław floodplain district:
-    // If very close to the river (<160 m) WITHOUT a dyke between vertex & river, it lies in
-    // the riverfront międzywale / quay; otherwise it is protected on the zawale side behind dykes.
-    if (!protectedByDyke && distToRiverM <= 165 && inBasinIdx !== 4) {
+    // If on the riverfront międzywale (no dyke between vertex & river and inside ISOK Q10%/Q1% or <165 m),
+    // classify as unembanked międzywale; otherwise classify as embanked zawale basin (0..8)
+    // when inside official ISOK flood hazard extent (Q0.2% or levee-breach) or close floodplain floor.
+    if (!protectedByDyke && inBasinIdx !== 4 && (distToRiverM <= 165 || inQ100Intact)) {
       zoneCode[i] = 10 + nearestRiver[2];
-    } else {
+    } else if (inAnyIsok || distToRiverM <= 650) {
       zoneCode[i] = inBasinIdx;
     }
-  } else if (!protectedByDyke && distToRiverM <= 520) {
-    // Outside city basins, between rivers and dykes (międzywale corridor along Widawa, Odra, Bystrzyca)
+  } else if (!protectedByDyke && (inQ100Intact || distToRiverM <= 95)) {
+    // Inter-dyke floodway corridor along Widawa, Odra, Bystrzyca defined by official ISOK Q10%/Q1%
     zoneCode[i] = 10 + nearestRiver[2];
   }
 }
 
-// Compute local zone floor elevation (10th percentile ground elevation inside each zone/sector)
-// so spillover depth fills the lowest DEM depressions smoothly inside each protected basin or floodway.
+// Compute local zone floor elevation (12th percentile ground elevation inside each zone/sector)
+// and combine with ISOK return-period tier offset (dm) so inundation progresses Q10% -> Q1% -> Q0.2%.
 const zoneElevs = new Map();
 for (let i = 0; i < totalVerts; i++) {
   const zc = zoneCode[i];
@@ -368,7 +499,7 @@ for (let i = 0; i < totalVerts; i++) {
     relElevDm[i] = 999;
   } else {
     const floor = zoneFloorDm.get(zc) ?? elevDm[i];
-    relElevDm[i] = Math.max(0, elevDm[i] - floor);
+    relElevDm[i] = Math.max(0, elevDm[i] - floor) + isokTierOffsetDm[i];
   }
 }
 
@@ -390,7 +521,14 @@ for (let s = 0; s < 8; s++) {
   console.log(`  Międzywale [${10 + s}] sector ${s}: ${cnt} verts, floor=${fl} m`);
 }
 
-const ts = `// Auto-generated by tools/pipeline/src/build-dem-grid.mjs from z=${DEM_ZOOM} AWS Terrarium EU-DEM + OSM embankments
+const ts = `// Auto-generated by tools/pipeline/src/build-dem-grid.mjs from z=${DEM_ZOOM} AWS Terrarium EU-DEM + PGW Wody Polskie ISOK MZP WFS (${isokData.acquiredDate}) + OSM embankments
+export const ISOK_MZP_METADATA = {
+  sourceUrl: '${isokData.sourceUrl}',
+  namespace: '${isokData.namespace}',
+  featureCount: ${isokData.features.length},
+  acquiredDate: '${isokData.acquiredDate}'
+} as const;
+
 export const DEM_GRID_COLS = ${GRID_COLS};
 export const DEM_GRID_ROWS = ${GRID_ROWS};
 export const DEM_MIN_LNG = ${MIN_LNG};

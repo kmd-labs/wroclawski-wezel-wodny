@@ -439,8 +439,8 @@ export const EMBANKMENT_SEGMENTS: EmbankmentSegment[] = [
   },
   {
     id: 'wal-maslice',
-    nameEn: 'Pilczyce–Maślice–Janówek Embankment',
-    namePl: 'Wał Pilczycko-Maślicki (Rędzin)',
+    nameEn: 'Pilczyce–Rędzin Embankment',
+    namePl: 'Wał Pilczycko-Rędziński',
     coords: [
       [16.975, 51.138],
       [16.957, 51.148],

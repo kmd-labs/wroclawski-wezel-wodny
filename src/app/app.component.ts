@@ -60,7 +60,7 @@ export class AppComponent {
   constructor() {
     this.seo.update({
       title: 'KMD · Wrocławski Węzeł Wodny',
-      description: 'Interactive 3D hydrotechnical visualization of the Wrocław Water Node, historical floods (1997, 2010/2012, 2024), and channel evolution.',
+      description: 'Interactive 3D hydrotechnical visualization of the Wrocław Water Node, historical floods (1997, 2010, 2024), and channel evolution.',
       image: 'assets/design-system/og-image.png'
     });
   }

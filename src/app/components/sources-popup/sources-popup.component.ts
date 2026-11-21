@@ -91,7 +91,7 @@ export class SourcesPopupComponent {
     const lang = this.i18n.lang();
     const allPins = [
       ...FLOOD_SCENARIOS['1997'].pins,
-      ...FLOOD_SCENARIOS['2012'].pins,
+      ...FLOOD_SCENARIOS['2010'].pins,
       ...FLOOD_SCENARIOS['2024'].pins
     ];
     const seen = new Set<string>();

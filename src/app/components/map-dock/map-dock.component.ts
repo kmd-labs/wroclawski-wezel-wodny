@@ -81,7 +81,7 @@ export class MapDockComponent {
     const t = this.i18n.t();
     return [
       { value: '1997', label: t.scenario1997 },
-      { value: '2012', label: t.scenario2012 },
+      { value: '2010', label: t.scenario2010 },
       { value: '2024', label: t.scenario2024 }
     ];
   });

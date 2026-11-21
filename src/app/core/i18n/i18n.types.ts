@@ -94,7 +94,7 @@ export interface Dict {
 
   // Historical Floods View
   scenario1997: string;
-  scenario2012: string;
+  scenario2010: string;
   scenario2024: string;
   wwwStatePreModern: string;
   wwwStateModern: string;

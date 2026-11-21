@@ -36,7 +36,6 @@ const OSIEDLE_TO_ZONE = new Map([
   [2336794, 'wielka-wyspa'],          // Biskupin-Sępolno-Dąbie-Bartoszowice
   [2338689, 'wielka-wyspa'],          // Zacisze-Zalesie-Szczytniki
   [2341617, 'kozanow-pilczyce'],      // Pilczyce-Kozanów-Popowice Północne
-  [2341613, 'kozanow-pilczyce'],      // Maślice
   [2341618, 'pracze-odrzanskie'],     // Pracze Odrzańskie (Janówek / Bystrzyca confluence)
   [2341615, 'pracze-odrzanskie'],     // Osobowice-Rędzin
   [2341621, 'pracze-odrzanskie'],     // Świniary (Widawa confluence corridor)
@@ -629,7 +628,7 @@ for (const dataset of [opolskie, slaskie]) {
 // D. Assemble Depressed District Basins from real official OSM Wrocław osiedla
 const DEPRESSED_META = {
   'wielka-wyspa': { nameEn: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', namePl: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', deficit: '-3.6 m', depthM: 3.6 },
-  'kozanow-pilczyce': { nameEn: 'Kozanów, Pilczyce & Maślice Basin', namePl: 'Niecka Kozanowa, Pilczyc i Maślic', deficit: '-4.2 m', depthM: 4.2 },
+  'kozanow-pilczyce': { nameEn: 'Kozanów & Pilczyce Basin', namePl: 'Niecka Kozanowa i Pilczyc', deficit: '-4.2 m', depthM: 4.2 },
   'pracze-odrzanskie': { nameEn: 'Pracze Odrzańskie, Janówek & Rędzin–Świniary', namePl: 'Pracze Odrzańskie, Janówek i Rędzin–Świniary', deficit: '-3.7 m', depthM: 3.7 },
   'przedmiescie-olawskie': { nameEn: 'Przedmieście Oławskie & Niskie Łąki', namePl: 'Przedmieście Oławskie i Niskie Łąki', deficit: '-3.4 m', depthM: 3.4 },
   'nadodrze-olbin': { nameEn: 'Nadodrze, Ołbin & Kleczków', namePl: 'Nadodrze, Ołbin i Kleczków', deficit: '-3.8 m', depthM: 3.8 },

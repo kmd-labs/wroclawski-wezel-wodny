@@ -75,7 +75,7 @@ export const PL: Dict = {
 
   // Historical Floods View
   scenario1997: '1997',
-  scenario2012: '2010 / 2012',
+  scenario2010: '2010',
   scenario2024: '2024',
   wwwStatePreModern: 'WWW sprzed przebudowy (limit ok. 2350 m³/s)',
   wwwStateModern: 'Zmodernizowany WWW + Racibórz (3100 m³/s)',
@@ -115,10 +115,10 @@ export const PL: Dict = {
   sourcesTitle: 'Literatura hydrologiczna i źródła medialne',
   sourcesLiteratureTitle: 'Publikacje naukowe i dokumentacja techniczna',
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
-  sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
-  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy i granice osiedli pochodzą bezpośrednio z paczki OpenStreetMap Geofabrik (Dolnośląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
+  sourcesMethodologyTitle: 'Założenia modelu i oficjalne dane ISOK',
+  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały, jazy i granice osiedli pochodzą z OpenStreetMap Geofabrik (Dolnośląskie) w 3 poziomach LOD, połączonych z oficjalnymi Mapami Zagrożenia Powodziowego ISOK (PGW Wody Polskie, INSPIRE WFS PL.ZIPGW.6453/MZP-MRP Q10%/Q1%/Q0,2%, pobrano 2026-11-21) oraz NMT EU-DEM. Wizualizacja ma charakter wyłącznie poglądowy — nie stanowi dokumentu urzędowego.',
   sourcesBuiltTitle: 'Atrybucja i cytowanie',
-  sourcesBuiltBy: 'Stworzone przez kmd-labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
+  sourcesBuiltBy: 'Stworzone przez kmd-labs na danych PGW Wody Polskie ISOK MZP (pobrano 2026-11-21), OpenStreetMap / OpenFreeMap i MapLibre GL 3D.',
   citeStyleLabel: 'Styl cytowania',
   citeCopyBtn: 'Kopiuj cytat',
   citeCopiedBtn: 'Skopiowano',
@@ -148,6 +148,14 @@ export const PL: Dict = {
       license: 'Raport publiczny',
       url: 'https://www.nik.gov.pl/aktualnosci/modernizacja-wroclawskiego-wezla-wodnego.html',
       desc: 'Weryfikacja przebudowy Starej Odry, Kanału Powodziowego, stopni Rędzin i Psie Pole oraz bajpasu Widawy.'
+    },
+    {
+      name: 'Mapy Zagrożenia Powodziowego ISOK (MZP · II cykl, PL.ZIPGW.6453/MZP-MRP)',
+      authors: 'PGW Wody Polskie · Hydroportal (wody.isok.gov.pl)',
+      year: '2022–2025 (pobr. 2026-11-21)',
+      license: 'Otwarte dane publiczne (HVD / INSPIRE)',
+      url: 'https://wody.isok.gov.pl/hydroportal.html',
+      desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% wykorzystane do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
     }
   ],
   glossaryEntries: [
@@ -182,5 +190,5 @@ export const PL: Dict = {
       desc: 'Podpiętrzenie wody w górę rzeki lub dopływu wywołane zdławieniem odpływu (np. przy stopniu Rędzin lub na ujściach Ślęzy i Oławy).'
     }
   ],
-  osmAttribution: '© Współtwórcy OpenStreetMap · OpenFreeMap'
+  osmAttribution: '© Współtwórcy OpenStreetMap · PGW Wody Polskie (ISOK MZP)'
 };

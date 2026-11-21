@@ -75,7 +75,7 @@ export const EN: Dict = {
 
   // Historical Floods View
   scenario1997: '1997',
-  scenario2012: '2010 / 2012',
+  scenario2010: '2010',
   scenario2024: '2024',
   wwwStatePreModern: 'WWW before modernization (~2,350 m³/s)',
   wwwStateModern: 'Modernized WWW + Racibórz (3,100 m³/s)',
@@ -115,10 +115,10 @@ export const EN: Dict = {
   sourcesTitle: 'Hydrological Literature & Event Sources',
   sourcesLiteratureTitle: 'Scientific & Hydrotechnical Literature',
   sourcesArticlesTitle: 'Timeline News & Report Citations',
-  sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
-  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, and osiedle basins are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
+  sourcesMethodologyTitle: 'Hydrological Model & Official ISOK Data Notes',
+  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, and osiedle basins are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie) across 3 LOD tiers, combined with official PGW Wody Polskie ISOK Flood Hazard Maps (MZP, INSPIRE WFS PL.ZIPGW.6453/MZP-MRP Q10%/Q1%/Q0.2%, acquired 2026-11-21) and AWS Terrarium EU-DEM elevation. Illustrative/informational visualization only — not an official administrative document.',
   sourcesBuiltTitle: 'Attribution & Citation',
-  sourcesBuiltBy: 'Built by kmd-labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
+  sourcesBuiltBy: 'Built by kmd-labs using PGW Wody Polskie ISOK MZP (acquired 2026-11-21), OpenStreetMap / OpenFreeMap & MapLibre GL 3D.',
   citeStyleLabel: 'Citation style',
   citeCopyBtn: 'Copy citation',
   citeCopiedBtn: 'Copied',
@@ -148,6 +148,14 @@ export const EN: Dict = {
       license: 'Public Report',
       url: 'https://www.nik.gov.pl/aktualnosci/modernizacja-wroclawskiego-wezla-wodnego.html',
       desc: 'Technical verification of Stara Odra, Kanał Powodziowy, Rędzin, Psie Pole, and Widawa bypass works.'
+    },
+    {
+      name: 'ISOK Flood Hazard Maps (MZP · Cycle II, PL.ZIPGW.6453/MZP-MRP)',
+      authors: 'PGW Wody Polskie · Hydroportal (wody.isok.gov.pl)',
+      year: '2022–2025 (acq. 2026-11-21)',
+      license: 'Open Public Data (HVD / INSPIRE)',
+      url: 'https://wody.isok.gov.pl/hydroportal.html',
+      desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
     }
   ],
   glossaryEntries: [
@@ -182,5 +190,5 @@ export const EN: Dict = {
       desc: 'Upstream rise in water surface when downstream outflow is throttled (e.g., at Rędzin or tributary mouths of Ślęza and Oława).'
     }
   ],
-  osmAttribution: '© OpenStreetMap contributors · OpenFreeMap'
+  osmAttribution: '© OpenStreetMap · PGW Wody Polskie (ISOK MZP)'
 };

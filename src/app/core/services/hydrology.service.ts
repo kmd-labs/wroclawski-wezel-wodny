@@ -160,8 +160,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
   },
   {
     id: 'kozanow-pilczyce',
-    center: [16.985, 51.124],
-    radii: [0.032, 0.020],
+    center: [16.988, 51.123],
+    radii: [0.022, 0.014],
     bankfullMasl: 110.6,
     maxRiseM: 5.6,
     critLoadRatio: 1.122,
@@ -462,7 +462,7 @@ export class HydrologyService {
       'odra-redzin': qRedzin,
       'olawa-river': 22 + Math.max(0, effectiveTrestno - 2000) * 0.11,
       'sleza-river':
-        (view === 'floods' && scenarioId === '2012' && step >= 45 ? 165 : 18) +
+        (view === 'floods' && scenarioId === '2010' && step >= 45 ? 165 : 18) +
         Math.max(0, effectiveTrestno - 2000) * 0.04,
       'bystrzyca-river':
         view === 'floods' && scenarioId === '2024' && step >= 35 && step <= 70 ? 195 : 26
