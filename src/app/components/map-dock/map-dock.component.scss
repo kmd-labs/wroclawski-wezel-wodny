@@ -217,8 +217,26 @@
   &__flood-meta {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
+  }
+
+  &__lozenge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: radius("pill");
+    background: color("success-soft");
+    border: 1px solid color("line");
+    color: color("success-text");
+    font-size: font-size("xxs");
+    font-weight: font-weight("semibold");
+    white-space: nowrap;
+
+    &--premod {
+      background: color("warning-soft");
+      color: color("warning-text");
+    }
   }
 
   &__era-badge {

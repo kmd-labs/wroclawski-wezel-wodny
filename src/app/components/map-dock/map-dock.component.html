@@ -181,6 +181,11 @@
               [ariaLabel]="t.chooseView"
               (valueChange)="state.floodScenario.set($event ?? '1997'); state.floodTimelineStep.set(55)">
             </app-switcher>
+            <span
+              class="dock__lozenge"
+              [class.dock__lozenge--premod]="state.floodScenario() !== '2024'">
+              {{ state.floodScenario() === '2024' ? t.wwwStateModern : t.wwwStatePreModern }}
+            </span>
             <span class="dock__subtitle">
               {{
                 state.floodScenario() === '1997'
