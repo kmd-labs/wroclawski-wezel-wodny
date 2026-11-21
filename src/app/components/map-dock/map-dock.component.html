@@ -282,6 +282,12 @@
               <span class="readout__label">{{ t.readoutWidawa }}</span>
               <span class="readout__val">{{ eq.widawaFlow }} m³/s</span>
             </div>
+            @if (hydro.floodPlaneState().active) {
+              <div class="readout">
+                <span class="readout__label">{{ t.readoutFloodLevel }}</span>
+                <span class="readout__val">{{ hydro.floodPlaneState().displayMasl }} m</span>
+              </div>
+            }
           } @else if (view === 'floods') {
             @let kf = hydro.activeFloodKeyframe();
             <span class="status-pill status-pill--accent">

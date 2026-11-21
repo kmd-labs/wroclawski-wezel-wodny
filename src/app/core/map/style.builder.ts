@@ -4,10 +4,12 @@ import type { ThemeMode } from '@kmd/design-system';
 import {
   BASEMAP_GLYPHS_URL,
   BASEMAP_TILEJSON_URL,
+  DEM_TILES_URL,
   MAP_FONT_ITALIC,
   MAP_FONT_REGULAR,
   SRC_BASEMAP,
   SRC_CANALS,
+  SRC_DEM,
   SRC_DEPRESSIONS,
   SRC_EMBANKMENTS,
   SRC_HISTORY_URBAN,
@@ -181,14 +183,14 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
           }
         });
       }
-      if (flooded) {
+      if (flooded && zoneId === 'polder-blizanowice-trestno') {
         const depthM = Number(f.properties?.['depthM'] ?? 3.0);
         inundationFeatures.push({
           type: 'Feature',
           geometry: f.geometry,
           properties: {
             id: zoneId,
-            isPolder: zoneId === 'polder-blizanowice-trestno',
+            isPolder: true,
             height: Math.max(1.2, depthM * 0.65)
           }
         });
@@ -285,6 +287,16 @@ export function buildBaseWwwStyle(
 
   const layers: LayerSpecification[] = [
     { id: 'bg', type: 'background', paint: { 'background-color': bg } },
+    {
+      id: 'base-hillshade',
+      type: 'hillshade',
+      source: SRC_DEM,
+      paint: {
+        'hillshade-exaggeration': 0.28,
+        'hillshade-shadow-color': dark ? '#000000' : '#475569',
+        'hillshade-highlight-color': dark ? '#334155' : '#ffffff'
+      }
+    },
     {
       id: 'base-park',
       type: 'fill',
@@ -538,6 +550,13 @@ export function buildBaseWwwStyle(
     glyphs: BASEMAP_GLYPHS_URL,
     sources: {
       [SRC_BASEMAP]: { type: 'vector', url: BASEMAP_TILEJSON_URL },
+      [SRC_DEM]: {
+        type: 'raster-dem',
+        tiles: [DEM_TILES_URL],
+        tileSize: 256,
+        encoding: 'terrarium',
+        maxzoom: 15
+      },
       [SRC_DEPRESSIONS]: { type: 'geojson', data: initialSources.depressions, tolerance: 0.25 },
       [SRC_INUNDATION]: { type: 'geojson', data: initialSources.inundation, tolerance: 0.25 },
       [SRC_CANALS]: { type: 'geojson', data: initialSources.canals, tolerance: 0.2 },
@@ -546,6 +565,10 @@ export function buildBaseWwwStyle(
       [SRC_SILESIA]: { type: 'geojson', data: initialSources.silesia, tolerance: 0.25 },
       [SRC_SILESIA_RIVERS]: { type: 'geojson', data: initialSources.silesiaRivers, tolerance: 0.25 },
       [SRC_HISTORY_URBAN]: { type: 'geojson', data: initialSources.historyUrban, tolerance: 0.25 }
+    },
+    terrain: {
+      source: SRC_DEM,
+      exaggeration: 1.0
     },
     light: {
       anchor: 'viewport',

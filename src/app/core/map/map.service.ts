@@ -36,6 +36,7 @@ import {
   buildBaseWwwStyle,
   buildDynamicSources
 } from './style.builder';
+import { FloodWaterPlaneLayer } from './flood-plane.layer';
 import { I18nService } from '../i18n/i18n.service';
 import { AppStateService } from '../services/app-state.service';
 import { HydrologyService } from '../services/hydrology.service';
@@ -69,6 +70,7 @@ export class MapService {
 
   private map: MapLibreMap | null = null;
   private readonly styleLoaded = signal(false);
+  private readonly floodPlaneLayer = new FloodWaterPlaneLayer();
 
   readonly mapReady = signal(false);
   readonly projectedPins = signal<MapPinViewModel[]>([]);
@@ -181,6 +183,23 @@ export class MapService {
         else this.tooltip.hide();
       });
     });
+
+    // 7. Sync real-DEM 1:1 flood water plane upon failure
+    effect(() => {
+      const plane = this.hydro.floodPlaneState();
+      const ready = this.styleLoaded();
+      const map = this.map;
+      if (!map || !ready) return;
+      untracked(() => {
+        this.zone.runOutsideAngular(() => {
+          this.floodPlaneLayer.setWaterLevel(
+            plane.active,
+            plane.trestnoMasl,
+            plane.redzinMasl
+          );
+        });
+      });
+    });
   }
 
   init(container: HTMLElement): void {
@@ -255,8 +274,16 @@ export class MapService {
 
     map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
 
-    map.once('style.load', () => {
-      this.zone.run(() => this.styleLoaded.set(true));
+    map.on('style.load', () => {
+      this.zone.run(() => {
+        if (!map.getLayer(this.floodPlaneLayer.id)) {
+          const beforeId = map.getLayer('canals-3d') ? 'canals-3d' : undefined;
+          map.addLayer(this.floodPlaneLayer, beforeId);
+        }
+        const plane = untracked(() => this.hydro.floodPlaneState());
+        this.floodPlaneLayer.setWaterLevel(plane.active, plane.trestnoMasl, plane.redzinMasl);
+        this.styleLoaded.set(true);
+      });
     });
 
     map.once('load', () => {

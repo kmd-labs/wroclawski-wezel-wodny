@@ -448,4 +448,49 @@ export class HydrologyService {
       totalEmbankments: EMBANKMENT_SEGMENTS.length
     };
   });
+
+  /**
+   * Real-elevation (1:1 m a.s.l., zero vertical exaggeration) flood water plane upon failure.
+   * Raised from below the real DEM terrain up to the overtopping flood level when embankments
+   * breach or branch capacity is exceeded.
+   */
+  readonly floodPlaneState = computed(() => {
+    const view = this.state.currentView();
+    if (view === 'history' || view === 'silesia') {
+      return { active: false, trestnoMasl: 95, redzinMasl: 95, displayMasl: 0 };
+    }
+
+    const flooded = this.floodedZoneIds();
+    const nonPolderFlooded = [...flooded].filter(id => id !== 'polder-blizanowice-trestno');
+    const breaches = this.breachedEmbankmentIds();
+    const eq = this.equilibriumSummary();
+
+    let severity = 0;
+    if (view === 'floods') {
+      if (nonPolderFlooded.length > 0 || breaches.size > 0) {
+        const kf = this.activeFloodKeyframe();
+        const overFlowRatio = Math.max(0.15, (kf.flowTrestnoM3s - 2000) / 1700);
+        severity = Math.min(1, Math.max(0.25, overFlowRatio * 0.55 + nonPolderFlooded.length * 0.1));
+      }
+    } else if (eq.status === 'overflow') {
+      const loadExcess = Math.max(0.15, (eq.maxLoadPct - 100) / 60);
+      severity = Math.min(1, Math.max(0.25, loadExcess * 0.5 + eq.floodedCount * 0.12));
+    }
+
+    if (severity <= 0) {
+      return { active: false, trestnoMasl: 95, redzinMasl: 95, displayMasl: 0 };
+    }
+
+    // Real EU-DEM valley baseline across Wrocław: ~117.5 m a.s.l. at Trestno -> ~111.5 m at Rędzin.
+    // Upon failure, flood plane rises +1.5 m to +5.0 m above valley floor at 1:1 true elevation.
+    const riseM = 1.5 + severity * 3.5;
+    const trestnoMasl = Math.round((117.5 + riseM) * 10) / 10;
+    const redzinMasl = Math.round((111.5 + riseM) * 10) / 10;
+    return {
+      active: true,
+      trestnoMasl,
+      redzinMasl,
+      displayMasl: Math.round(((trestnoMasl + redzinMasl) / 2) * 10) / 10
+    };
+  });
 }
