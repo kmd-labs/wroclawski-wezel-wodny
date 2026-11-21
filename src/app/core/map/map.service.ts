@@ -192,11 +192,7 @@ export class MapService {
       if (!map || !ready) return;
       untracked(() => {
         this.zone.runOutsideAngular(() => {
-          this.floodPlaneLayer.setWaterLevel(
-            plane.active,
-            plane.trestnoMasl,
-            plane.redzinMasl
-          );
+          this.floodPlaneLayer.setFloodState(plane);
         });
       });
     });
@@ -281,7 +277,7 @@ export class MapService {
           map.addLayer(this.floodPlaneLayer, beforeId);
         }
         const plane = untracked(() => this.hydro.floodPlaneState());
-        this.floodPlaneLayer.setWaterLevel(plane.active, plane.trestnoMasl, plane.redzinMasl);
+        this.floodPlaneLayer.setFloodState(plane);
         this.styleLoaded.set(true);
       });
     });

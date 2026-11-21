@@ -1,16 +1,19 @@
 import { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap, MercatorCoordinate } from 'maplibre-gl';
+import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service';
 
-const GRID_COLS = 28;
-const GRID_ROWS = 20;
-const MIN_LNG = 16.86;
-const MAX_LNG = 17.18;
-const MIN_LAT = 51.04;
-const MAX_LAT = 51.18;
+const GRID_COLS = 72;
+const GRID_ROWS = 52;
+const MIN_LNG = 16.92;
+const MAX_LNG = 17.17;
+const MIN_LAT = 51.045;
+const MAX_LAT = 51.165;
+const HIDDEN_ELEV_MASL = 85.0;
 
 /**
- * Custom 3D WebGL layer rendering a real-elevation (1:1 m a.s.l., zero vertical exaggeration)
- * flood water rectangle across Wrocław that intersects the MapLibre EU-DEM terrain via the
- * shared WebGL depth buffer.
+ * Custom 3D WebGL layer rendering a spatially localized, real-elevation (1:1 m a.s.l., zero
+ * vertical exaggeration) flood water surface across Wrocław's hydrotechnical basins.
+ * Only overtopped or breached basins rise above the MapLibre EU-DEM terrain; safe sectors stay
+ * buried below ground at 85 m a.s.l. so inundation spreads stage-by-stage across real topography.
  */
 export class FloodWaterPlaneLayer implements CustomLayerInterface {
   readonly id = 'flood-water-plane';
@@ -24,25 +27,24 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
   private indexCount = 0;
 
   private active = false;
-  private trestnoMasl = 95;
-  private redzinMasl = 95;
+  private basins: FloodBasinLevel[] = [];
+  private signature = '';
   private dirty = true;
 
   private readonly vertexData = new Float32Array((GRID_COLS + 1) * (GRID_ROWS + 1) * 3);
   private readonly matrix32 = new Float32Array(16);
 
-  setWaterLevel(active: boolean, trestnoMasl: number, redzinMasl: number): void {
-    const changed =
-      this.active !== active ||
-      Math.abs(this.trestnoMasl - trestnoMasl) > 0.02 ||
-      Math.abs(this.redzinMasl - redzinMasl) > 0.02;
-    this.active = active;
-    this.trestnoMasl = trestnoMasl;
-    this.redzinMasl = redzinMasl;
-    if (changed) {
-      this.dirty = true;
-      this.map?.triggerRepaint();
-    }
+  setFloodState(state: FloodPlaneState): void {
+    const sig = state.active
+      ? state.basins.map(b => `${b.id}:${b.waterMasl.toFixed(2)}`).join('|')
+      : 'inactive';
+    if (sig === this.signature) return;
+
+    this.signature = sig;
+    this.active = state.active;
+    this.basins = state.basins;
+    this.dirty = true;
+    this.map?.triggerRepaint();
   }
 
   onAdd(map: MapLibreMap, gl: WebGL2RenderingContext): void {
@@ -154,15 +156,45 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
   }
 
   private rebuildVertices(): void {
+    const active = this.active && this.basins.length > 0;
     let ptr = 0;
+
     for (let r = 0; r <= GRID_ROWS; r++) {
       const lat = MIN_LAT + (r / GRID_ROWS) * (MAX_LAT - MIN_LAT);
       for (let c = 0; c <= GRID_COLS; c++) {
         const lng = MIN_LNG + (c / GRID_COLS) * (MAX_LNG - MIN_LNG);
-        // Natural SE -> NW slope from Trestno (17.14°E, 51.07°N) to Rędzin (16.92°E, 51.16°N)
-        const tRaw = ((17.14 - lng) * 0.7 + (lat - 51.07) * 0.6) / 0.24;
-        const t = Math.max(0, Math.min(1, tRaw));
-        const elevMasl = this.trestnoMasl + (this.redzinMasl - this.trestnoMasl) * t;
+
+        let elevMasl = HIDDEN_ELEV_MASL;
+        if (active) {
+          let totalWeight = 0;
+          let weightedWaterMasl = 0;
+          let maxInfluence = 0;
+
+          for (const b of this.basins) {
+            const dx = (lng - b.center[0]) / b.radii[0];
+            const dy = (lat - b.center[1]) / b.radii[1];
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist >= 1.55) continue;
+
+            // Flat plateau inside the basin (dist <= 0.8), smooth cosine skirt out to 1.55
+            const raw = dist <= 0.8 ? 1.0 : 0.5 * (1 + Math.cos(Math.PI * ((dist - 0.8) / 0.75)));
+            const w = raw * raw;
+            if (w > 0.001) {
+              totalWeight += w;
+              weightedWaterMasl += w * b.waterMasl;
+              if (raw > maxInfluence) maxInfluence = raw;
+            }
+          }
+
+          if (totalWeight > 0.001) {
+            const localWaterMasl = weightedWaterMasl / totalWeight;
+            // Inside the basin (maxInfluence >= 0.75) hold horizontal true m a.s.l. so EU-DEM terrain
+            // naturally shapes the flooded contours; drop rapidly underground outside the skirt.
+            const levelFactor = maxInfluence >= 0.75 ? 1.0 : maxInfluence / 0.75;
+            elevMasl = HIDDEN_ELEV_MASL + (localWaterMasl - HIDDEN_ELEV_MASL) * levelFactor;
+          }
+        }
+
         const mc = MercatorCoordinate.fromLngLat([lng, lat], elevMasl);
         this.vertexData[ptr++] = mc.x;
         this.vertexData[ptr++] = mc.y;

@@ -283,9 +283,10 @@
               <span class="readout__val">{{ eq.widawaFlow }} m³/s</span>
             </div>
             @if (hydro.floodPlaneState().active) {
+              @let fp = hydro.floodPlaneState();
               <div class="readout">
                 <span class="readout__label">{{ t.readoutFloodLevel }}</span>
-                <span class="readout__val">{{ hydro.floodPlaneState().displayMasl }} m</span>
+                <span class="readout__val">+{{ fp.maxDepthM.toFixed(1) }} m ({{ fp.submergedCount }}/{{ fp.totalZonesCount }})</span>
               </div>
             }
           } @else if (view === 'floods') {

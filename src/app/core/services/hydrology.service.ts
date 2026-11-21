@@ -38,6 +38,125 @@ const BRANCH_LAG_HOURS: Record<string, number> = {
   'bystrzyca-river': 18
 };
 
+export interface FloodBasinLevel {
+  id: string;
+  center: [number, number];
+  radii: [number, number];
+  waterMasl: number;
+  depthM: number;
+  excessRatio: number;
+}
+
+export interface FloodPlaneState {
+  active: boolean;
+  trestnoMasl: number;
+  redzinMasl: number;
+  displayMasl: number;
+  maxDepthM: number;
+  submergedCount: number;
+  totalZonesCount: number;
+  basins: FloodBasinLevel[];
+}
+
+interface IsokBasinProfile {
+  id: string;
+  center: [number, number];
+  radii: [number, number];
+  bankfullMasl: number;
+  maxRiseM: number;
+  /** Critical load ratio above 1.0 (3,100 m³/s baseline) at which embankment overtopping begins */
+  critLoadRatio: number;
+  /** Specific local breach triggers that immediately flood this basin upon gate misuse */
+  directBreachTriggers?: Array<{ branchId: string; ratio: number }>;
+  triggers: string[];
+}
+
+const OVERTOP_TOLERANCE = 1.005;
+
+/**
+ * ISOK-inspired spatially localized flood hazard basin definitions calibrated against
+ * real EU-DEM valley elevations in Wrocław (m a.s.l.) and progressive failure thresholds.
+ */
+const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
+  {
+    id: 'polder-blizanowice-trestno',
+    center: [17.135, 51.062],
+    radii: [0.028, 0.018],
+    bankfullMasl: 118.2,
+    maxRiseM: 3.2,
+    critLoadRatio: 0.99,
+    triggers: ['odra-upper']
+  },
+  {
+    id: 'opatowice-bierdzany',
+    center: [17.090, 51.088],
+    radii: [0.030, 0.018],
+    bankfullMasl: 117.8,
+    maxRiseM: 3.4,
+    critLoadRatio: 1.008,
+    triggers: ['odra-upper', 'odra-miejska-upper']
+  },
+  {
+    id: 'przedmiescie-olawskie',
+    center: [17.059, 51.095],
+    radii: [0.024, 0.015],
+    bankfullMasl: 116.4,
+    maxRiseM: 3.5,
+    critLoadRatio: 1.032,
+    triggers: ['odra-miejska-upper', 'srodmiescie', 'olawa-river']
+  },
+  {
+    id: 'kowale-swojczyce',
+    center: [17.098, 51.116],
+    radii: [0.028, 0.020],
+    bankfullMasl: 116.8,
+    maxRiseM: 3.1,
+    critLoadRatio: 1.045,
+    triggers: ['kanal-powodziowy', 'przewal-widawski', 'kanal-zeglugowy']
+  },
+  {
+    id: 'ostrow-tumski',
+    center: [17.038, 51.112],
+    radii: [0.022, 0.010],
+    bankfullMasl: 115.6,
+    maxRiseM: 3.2,
+    critLoadRatio: 1.062,
+    triggers: ['srodmiescie', 'przekop-szczytnicki']
+  },
+  {
+    id: 'kozanow-pilczyce',
+    center: [16.985, 51.124],
+    radii: [0.032, 0.020],
+    bankfullMasl: 112.4,
+    maxRiseM: 3.8,
+    critLoadRatio: 1.078,
+    directBreachTriggers: [
+      { branchId: 'odra-redzin', ratio: 1.008 },
+      { branchId: 'sleza-river', ratio: 1.008 }
+    ],
+    triggers: ['odra-redzin', 'stara-odra', 'sleza-river']
+  },
+  {
+    id: 'nadodrze-olbin',
+    center: [17.042, 51.121],
+    radii: [0.022, 0.012],
+    bankfullMasl: 114.8,
+    maxRiseM: 3.4,
+    critLoadRatio: 1.105,
+    directBreachTriggers: [{ branchId: 'kanal-miejski', ratio: 1.008 }],
+    triggers: ['kanal-miejski', 'stara-odra', 'srodmiescie']
+  },
+  {
+    id: 'wielka-wyspa',
+    center: [17.078, 51.110],
+    radii: [0.022, 0.015],
+    bankfullMasl: 116.9,
+    maxRiseM: 3.0,
+    critLoadRatio: 1.145,
+    triggers: ['kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki']
+  }
+];
+
 export interface InterpolatedFloodState {
   step: number;
   hoursFromStart: number;
@@ -246,40 +365,51 @@ export class HydrologyService {
   ): Record<string, number> {
     const gates = this.state.gateOpenings();
 
+    // Post-POPDO Odra–Widawa transfer (Przewał Widawski) takes up to 300 m³/s at 3,100 m³/s
+    const widawaDemand =
+      effectiveTrestno > 1100 ? ((effectiveTrestno - 1100) / 2000) * 300 : 0;
     const widawaShare =
       view === 'equilibrium'
-        ? Math.min(350, (gates.widawa / 100) * Math.max(0, effectiveTrestno - 1100) * 0.28)
+        ? Math.min(390, Math.round((gates.widawa / 100) * widawaDemand))
         : view === 'floods' && scenarioId === '1997'
           ? Math.min(210, Math.max(0, effectiveTrestno - 1400) * 0.14)
-          : Math.min(300, Math.max(0, effectiveTrestno - 1300) * 0.25);
+          : Math.min(300, Math.max(0, effectiveTrestno - 1100) * 0.15);
 
     const remainingCity = Math.max(200, effectiveTrestno - widawaShare);
 
-    const bOpen = view === 'equilibrium' ? Math.max(0.05, gates.bartoszowice / 100) : 0.9;
-    const oOpen = view === 'equilibrium' ? Math.max(0.05, gates.opatowice / 100) : 0.85;
-    const bWeight = bOpen * 1170;
-    const oWeight = oOpen * 1630;
+    // At 3,100 m³/s design capacity (remainingCity = 2,800 m³/s):
+    // Bartoszowice complex = 1,195 m³/s (1,110 Powodziowy + 85 Żeglugowy),
+    // Opatowice / Górna Odra Miejska = 1,605 m³/s.
+    const bOpen = view === 'equilibrium' ? Math.max(0.05, gates.bartoszowice / 100) : 1.0;
+    const oRaw = view === 'equilibrium' ? gates.opatowice / 100 : 0.9;
+    const oEff = oRaw >= 0.85 ? 1.0 + (oRaw - 0.9) * 0.25 : Math.max(0.05, oRaw / 0.85);
+    const bWeight = bOpen * 1195;
+    const oWeight = oEff * 1605;
     const weightSum = bWeight + oWeight || 1;
 
     const qBartoszowiceTotal = remainingCity * (bWeight / weightSum);
-    const qKanalPowodziowy = qBartoszowiceTotal * 0.93;
-    const qKanalZeglugowy = qBartoszowiceTotal * 0.07;
-    const qOdraMiejskaUpper = remainingCity - qBartoszowiceTotal;
+    const qOdraMiejskaUpper = Math.max(0, remainingCity - qBartoszowiceTotal);
 
-    const szOpen = view === 'equilibrium' ? gates.szczytniki / 100 : 0.85;
-    const qSzczytniki = qOdraMiejskaUpper * (0.44 * szOpen);
-    const qAfterSzczytniki = qOdraMiejskaUpper - qSzczytniki;
-
-    const qStaraOdraTotal = qKanalPowodziowy + qKanalZeglugowy + qSzczytniki;
     const ppOpen =
       view === 'equilibrium'
         ? gates['psie-pole'] / 100
         : scenarioId === '1997' && step > 65
           ? 0.85
-          : 0.02;
-    const qKanalMiejski = Math.min(420, qStaraOdraTotal * 0.22 * ppOpen);
-    const qStaraOdra = qStaraOdraTotal - qKanalMiejski;
-    const qSrodmiescie = qAfterSzczytniki;
+          : 0.0;
+    const qKanalMiejski =
+      view === 'equilibrium'
+        ? ppOpen * Math.min(480, qBartoszowiceTotal * 0.34)
+        : Math.min(420, qBartoszowiceTotal * 0.28 * ppOpen);
+
+    const qKanalZeglugowyBase = Math.min(95, qBartoszowiceTotal * (85 / 1195));
+    const qKanalZeglugowy = qKanalZeglugowyBase + qKanalMiejski;
+    const qKanalPowodziowy = Math.max(0, qBartoszowiceTotal - qKanalZeglugowy);
+
+    // At 3,100 m³/s, Szczytniki diverts 655 m³/s (655/1605 = 0.4081) -> Stara Odra = 1,850 m³/s, Śródmieście = 950 m³/s
+    const szOpen = view === 'equilibrium' ? gates.szczytniki / 100 : 1.0;
+    const qSzczytniki = qOdraMiejskaUpper * ((655 / 1605) * szOpen);
+    const qSrodmiescie = Math.max(0, qOdraMiejskaUpper - qSzczytniki);
+    const qStaraOdra = Math.max(0, qKanalPowodziowy + qKanalZeglugowyBase + qSzczytniki);
 
     const redzinCap =
       view === 'equilibrium'
@@ -301,7 +431,7 @@ export class HydrologyService {
       'srodmiescie': qSrodmiescie,
       'kanal-miejski': qKanalMiejski,
       'odra-redzin': qRedzin * backwaterFactor,
-      'olawa-river': 22 + Math.max(0, effectiveTrestno - 2000) * 0.12,
+      'olawa-river': 22 + Math.max(0, effectiveTrestno - 2000) * 0.11,
       'sleza-river':
         (view === 'floods' && scenarioId === '2012' && step >= 45 ? 165 : 18) +
         (backwaterFactor - 1) * 180,
@@ -340,8 +470,8 @@ export class HydrologyService {
     } else {
       let inflow = this.state.inflowM3s();
       let polderShave =
-        this.state.polderRetentionActive() && inflow > 1800
-          ? Math.min(260, (inflow - 1800) * 0.35)
+        this.state.polderRetentionActive() && inflow > 2100
+          ? Math.min(260, (inflow - 2100) * 0.26)
           : 0;
 
       if (view === 'silesia') {
@@ -374,10 +504,115 @@ export class HydrologyService {
         loadRatio,
         stageM,
         freeboardM,
-        overtopped: loadRatio > 1.0
+        overtopped: loadRatio > OVERTOP_TOLERANCE
       };
     }
     return result;
+  });
+
+  /**
+   * Computes spatially localized ISOK-inspired basin flood depths (0 -> maxRiseM)
+   * so submergence begins progressively in vulnerable riverside sectors right above 3,100 m³/s
+   * or under specific gate failures, rather than flooding the whole city in one binary jump.
+   */
+  readonly floodBasinLevels = computed<FloodBasinLevel[]>(() => {
+    const view = this.state.currentView();
+    if (view === 'history' || view === 'silesia') return [];
+
+    const branches = this.branchHydrology();
+    const polderOn = this.state.polderRetentionActive();
+    const inflow = this.state.inflowM3s();
+    const basins: FloodBasinLevel[] = [];
+
+    if (view === 'floods') {
+      const kf = this.activeFloodKeyframe();
+      const kfZones = new Set(kf.floodedZones);
+      const cap = this.activeFloodScenario().systemCapacityM3s;
+      const waveExcess = Math.max(0, (kf.flowTrestnoM3s - cap) / 1300);
+
+      for (const profile of ISOK_BASIN_PROFILES) {
+        if (!kfZones.has(profile.id)) continue;
+        if (profile.id === 'polder-blizanowice-trestno') {
+          basins.push({
+            id: profile.id,
+            center: profile.center,
+            radii: profile.radii,
+            waterMasl: Math.round((profile.bankfullMasl + 1.8) * 100) / 100,
+            depthM: 1.8,
+            excessRatio: 0.4
+          });
+          continue;
+        }
+        let maxTriggerLoad = 0;
+        for (const bId of profile.triggers) {
+          maxTriggerLoad = Math.max(maxTriggerLoad, branches[bId]?.loadRatio ?? 0);
+        }
+        const branchExcess = Math.max(0, maxTriggerLoad - 0.96);
+        const excessRatio = Math.min(1, Math.max(0.08, waveExcess * 0.65 + branchExcess * 0.55));
+        const depthM = Math.round((0.25 + excessRatio * (profile.maxRiseM - 0.25)) * 100) / 100;
+        basins.push({
+          id: profile.id,
+          center: profile.center,
+          radii: profile.radii,
+          waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
+          depthM,
+          excessRatio
+        });
+      }
+      return basins;
+    }
+
+    for (const profile of ISOK_BASIN_PROFILES) {
+      if (profile.id === 'polder-blizanowice-trestno') {
+        const odraLoad = branches['odra-upper']?.loadRatio ?? 0;
+        if ((polderOn && inflow > 2100) || odraLoad > 1.005) {
+          const norm = polderOn
+            ? Math.min(1, Math.max(0.15, (inflow - 2100) / 1000))
+            : Math.min(1, (odraLoad - 1.0) / 0.25);
+          const depthM = Math.round((0.35 + norm * 2.4) * 100) / 100;
+          basins.push({
+            id: profile.id,
+            center: profile.center,
+            radii: profile.radii,
+            waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
+            depthM,
+            excessRatio: norm
+          });
+        }
+        continue;
+      }
+
+      let maxOverCrit = 0;
+      if (profile.directBreachTriggers) {
+        for (const dt of profile.directBreachTriggers) {
+          const r = branches[dt.branchId]?.loadRatio ?? 0;
+          if (r > dt.ratio) {
+            maxOverCrit = Math.max(maxOverCrit, r - dt.ratio);
+          }
+        }
+      }
+      for (const bId of profile.triggers) {
+        const r = branches[bId]?.loadRatio ?? 0;
+        if (r > profile.critLoadRatio) {
+          maxOverCrit = Math.max(maxOverCrit, r - profile.critLoadRatio);
+        }
+      }
+
+      if (maxOverCrit > 0) {
+        const excessRatio = Math.min(1, Math.pow(maxOverCrit / 0.24, 0.85));
+        const depthM = Math.round((0.2 + excessRatio * (profile.maxRiseM - 0.2)) * 100) / 100;
+        basins.push({
+          id: profile.id,
+          center: profile.center,
+          radii: profile.radii,
+          waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
+          depthM,
+          excessRatio
+        });
+      }
+    }
+
+    return basins;
   });
 
   readonly floodedZoneIds = computed<Set<string>>(() => {
@@ -388,23 +623,7 @@ export class HydrologyService {
     if (view === 'history' || view === 'silesia') {
       return new Set();
     }
-
-    const branches = this.branchHydrology();
-    const flooded = new Set<string>();
-    for (const zone of DEPRESSED_ZONES) {
-      if (zone.id === 'polder-blizanowice-trestno') {
-        if (this.state.polderRetentionActive() && this.state.inflowM3s() > 1950) {
-          flooded.add(zone.id);
-        }
-        continue;
-      }
-      for (const bId of zone.triggerBranches) {
-        if (branches[bId]?.overtopped) {
-          flooded.add(zone.id);
-        }
-      }
-    }
-    return flooded;
+    return new Set(this.floodBasinLevels().map(b => b.id));
   });
 
   readonly breachedEmbankmentIds = computed<Set<string>>(() => {
@@ -432,7 +651,7 @@ export class HydrologyService {
 
     const nonPolderFlooded = [...flooded].filter(id => id !== 'polder-blizanowice-trestno');
     const status: 'safe' | 'warning' | 'overflow' =
-      nonPolderFlooded.length > 0 || maxLoad > 1.0
+      nonPolderFlooded.length > 0 || maxLoad > OVERTOP_TOLERANCE
         ? 'overflow'
         : maxLoad > 0.8
           ? 'warning'
@@ -450,47 +669,59 @@ export class HydrologyService {
   });
 
   /**
-   * Real-elevation (1:1 m a.s.l., zero vertical exaggeration) flood water plane upon failure.
-   * Raised from below the real DEM terrain up to the overtopping flood level when embankments
-   * breach or branch capacity is exceeded.
+   * Real-elevation (1:1 m a.s.l., zero vertical exaggeration) localized flood water surface upon failure.
+   * Each active basin rises continuously above its real EU-DEM bankfull floor only in the affected sectors.
    */
-  readonly floodPlaneState = computed(() => {
+  readonly floodPlaneState = computed<FloodPlaneState>(() => {
+    const totalZonesCount = ISOK_BASIN_PROFILES.length - 1; // exclude upstream retention polder
     const view = this.state.currentView();
     if (view === 'history' || view === 'silesia') {
-      return { active: false, trestnoMasl: 95, redzinMasl: 95, displayMasl: 0 };
+      return {
+        active: false,
+        trestnoMasl: 85,
+        redzinMasl: 85,
+        displayMasl: 0,
+        maxDepthM: 0,
+        submergedCount: 0,
+        totalZonesCount,
+        basins: []
+      };
     }
 
-    const flooded = this.floodedZoneIds();
-    const nonPolderFlooded = [...flooded].filter(id => id !== 'polder-blizanowice-trestno');
-    const breaches = this.breachedEmbankmentIds();
-    const eq = this.equilibriumSummary();
+    const activeBasins = this.floodBasinLevels().filter(
+      b => b.id !== 'polder-blizanowice-trestno'
+    );
 
-    let severity = 0;
-    if (view === 'floods') {
-      if (nonPolderFlooded.length > 0 || breaches.size > 0) {
-        const kf = this.activeFloodKeyframe();
-        const overFlowRatio = Math.max(0.15, (kf.flowTrestnoM3s - 2000) / 1700);
-        severity = Math.min(1, Math.max(0.25, overFlowRatio * 0.55 + nonPolderFlooded.length * 0.1));
-      }
-    } else if (eq.status === 'overflow') {
-      const loadExcess = Math.max(0.15, (eq.maxLoadPct - 100) / 60);
-      severity = Math.min(1, Math.max(0.25, loadExcess * 0.5 + eq.floodedCount * 0.12));
+    if (activeBasins.length === 0) {
+      return {
+        active: false,
+        trestnoMasl: 85,
+        redzinMasl: 85,
+        displayMasl: 0,
+        maxDepthM: 0,
+        submergedCount: 0,
+        totalZonesCount,
+        basins: []
+      };
     }
 
-    if (severity <= 0) {
-      return { active: false, trestnoMasl: 95, redzinMasl: 95, displayMasl: 0 };
+    let maxDepthM = 0;
+    let sumMasl = 0;
+    for (const b of activeBasins) {
+      maxDepthM = Math.max(maxDepthM, b.depthM);
+      sumMasl += b.waterMasl;
     }
 
-    // Real EU-DEM valley baseline across Wrocław: ~117.5 m a.s.l. at Trestno -> ~111.5 m at Rędzin.
-    // Upon failure, flood plane rises +1.5 m to +5.0 m above valley floor at 1:1 true elevation.
-    const riseM = 1.5 + severity * 3.5;
-    const trestnoMasl = Math.round((117.5 + riseM) * 10) / 10;
-    const redzinMasl = Math.round((111.5 + riseM) * 10) / 10;
+    const displayMasl = Math.round((sumMasl / activeBasins.length) * 10) / 10;
     return {
       active: true,
-      trestnoMasl,
-      redzinMasl,
-      displayMasl: Math.round(((trestnoMasl + redzinMasl) / 2) * 10) / 10
+      trestnoMasl: activeBasins[0].waterMasl,
+      redzinMasl: activeBasins[activeBasins.length - 1].waterMasl,
+      displayMasl,
+      maxDepthM: Math.round(maxDepthM * 10) / 10,
+      submergedCount: activeBasins.length,
+      totalZonesCount,
+      basins: activeBasins
     };
   });
 }

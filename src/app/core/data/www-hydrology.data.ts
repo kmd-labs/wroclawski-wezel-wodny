@@ -761,10 +761,10 @@ export const WEIR_NODES: WeirNode[] = [
 ];
 
 export const DEFAULT_GATE_OPENINGS: Record<GateId, number> = {
-  bartoszowice: 90,
-  opatowice: 85,
-  szczytniki: 80,
-  widawa: 45,
+  bartoszowice: 100,
+  opatowice: 90,
+  szczytniki: 100,
+  widawa: 100,
   'psie-pole': 0,
   redzin: 100
 };
