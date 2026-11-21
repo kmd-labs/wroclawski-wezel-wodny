@@ -305,15 +305,6 @@
         @if (view === 'history') {
           @let activeEra = hydro.activeHistoryEra();
           <div class="history-steps">
-            <app-button
-              variant="play"
-              [iconOnly]="true"
-              [active]="state.isPlaying()"
-              [ariaLabel]="state.isPlaying() ? t.playStop : t.playStart"
-              (btnClick)="state.togglePlaying()">
-              <lucide-icon [img]="state.isPlaying() ? pauseIcon : playIcon" [size]="15"></lucide-icon>
-            </app-button>
-
             <div class="history-steps__track" role="radiogroup" [attr.aria-label]="t.timelineLabel">
               @for (era of historyEras; track era.year; let idx = $index) {
                 @let isActive = activeEra.year === era.year;

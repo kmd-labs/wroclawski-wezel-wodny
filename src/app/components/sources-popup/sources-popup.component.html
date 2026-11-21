@@ -36,10 +36,6 @@
       @for (ds of t.dataSourcesList; track ds.url) {
         <article class="sources__card">
           <div class="sources__card-top">
-            <a [href]="ds.url" target="_blank" rel="noopener noreferrer" class="sources__link">
-              <span>{{ ds.name }}</span>
-              <lucide-icon [img]="externalLinkIcon" [size]="12"></lucide-icon>
-            </a>
             <a
               [href]="ds.licenseUrl"
               target="_blank"
@@ -47,6 +43,10 @@
               class="sources__badge sources__badge--link">
               <span>{{ ds.license }}</span>
               <lucide-icon [img]="externalLinkIcon" [size]="10"></lucide-icon>
+            </a>
+            <a [href]="ds.url" target="_blank" rel="noopener noreferrer" class="sources__link">
+              <span>{{ ds.name }}</span>
+              <lucide-icon [img]="externalLinkIcon" [size]="12"></lucide-icon>
             </a>
           </div>
           <div class="sources__meta">{{ ds.provider }}</div>
@@ -64,11 +64,11 @@
         @let formatted = formatSourceCitation(s);
         <article class="sources__card">
           <div class="sources__card-top">
+            <span class="sources__badge">{{ s.license }}</span>
             <a [href]="s.url" target="_blank" rel="noopener noreferrer" class="sources__link">
               <span>{{ s.name }}</span>
               <lucide-icon [img]="externalLinkIcon" [size]="12"></lucide-icon>
             </a>
-            <span class="sources__badge">{{ s.license }}</span>
           </div>
           <div class="sources__meta">{{ s.authors }} · {{ s.year }}</div>
           <p class="sources__desc">{{ s.desc }}</p>
