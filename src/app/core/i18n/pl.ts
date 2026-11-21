@@ -8,14 +8,15 @@ export const PL: Dict = {
   // Top HUD & Navigation
   changeLanguage: 'Język',
   chooseView: 'Widok',
-  viewEquilibrium: 'Jak działa (Równowaga)',
-  viewFloods: 'Powodzie: 1997 · 2012 · 2024',
+  viewEquilibrium: 'Jak działa system',
+  viewFloods: 'Historyczne powodzie',
   viewHistory: 'Historia i budowa WWW',
   viewSilesia: 'Poldery Dolnego Śląska',
   stageAriaLabel: 'Wizualizacja 3D Wrocławskiego Węzła Wodnego',
 
   // Bottom Dock & Playback
   timelineLabel: 'Oś czasu symulacji',
+  dischargeSliderLabel: 'Dopływ Q w Trestnie (m³/s)',
   playStart: 'Odtwórz symulację',
   playStop: 'Wstrzymaj symulację',
   glossary: 'Słowniczek',
@@ -51,16 +52,16 @@ export const PL: Dict = {
   segmentCapacity: 'Przepustowość',
   segmentLoad: 'Obciążenie',
 
-  // Equilibrium View (Weir & Gate Controls)
+  // How It Works View (Weir & Gate Controls)
   weirPanelTitle: 'Sterowanie jazami i zasuwami',
   weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
   weirToggleBtn: 'Zasuwy',
-  autoEquilibriumBtn: 'Auto-równowaga RZGW',
+  autoEquilibriumBtn: 'Auto-sterowanie RZGW',
   presetNormalBtn: 'Norma (450 m³/s)',
-  preset1997Btn: 'Fala 1997 (3640 m³/s)',
+  preset1997Btn: 'Ekstremalna fala (3640 m³/s)',
   presetMisuseBtn: 'Błąd sterowania',
   polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
-  statusSafe: 'Równowaga bezpieczna',
+  statusSafe: 'Przepływ bezpieczny',
   statusWarning: 'Blisko limitu',
   statusOverflow: 'Przelanie wałów!',
   floodedDistrictsLabel: 'Zalane niecki',
@@ -69,12 +70,14 @@ export const PL: Dict = {
   gateOpen: 'Otwarta',
 
   // Historical Floods View
-  scenario1997: '1997 (Przed mod.)',
+  scenario1997: '1997',
   scenario2012: '2010 / 2012',
-  scenario2024: '2024 (Po mod.)',
-  scenario1997Subtitle: 'Powódź Tysiąclecia 1997 · Stan przed modernizacją (limit 2350 m³/s vs fala 3640 m³/s)',
-  scenario2012Subtitle: 'Przerwanie wału na Kozanowie (2010, 2160 m³/s) i start modernizacji POPDO 2012',
-  scenario2024Subtitle: 'Powódź wrzesień 2024 · Racibórz Dolny + zmodernizowany WWW (3100 m³/s)',
+  scenario2024: '2024',
+  scenario1997Subtitle: 'Powódź Tysiąclecia w lipcu 1997 · kulminacja 3640 m³/s',
+  scenario2012Subtitle: 'Przerwanie wału na Kozanowie (2010, 2160 m³/s) i start POPDO 2012',
+  scenario2024Subtitle: 'Powódź we wrześniu 2024 · 1750 m³/s w Trestnie',
+  wwwStatePreModern: 'WWW sprzed przebudowy (limit ok. 2350 m³/s)',
+  wwwStateModern: 'Zmodernizowany WWW + Racibórz (3100 m³/s)',
   pinPendingLabel: 'Przed wydarzeniem na osi czasu (50% przezroczystości)',
   pinOccurredLabel: 'Wydarzenie nastąpiło (100% widoczności)',
   readArticleBtn: 'Czytaj źródło / artykuł',
