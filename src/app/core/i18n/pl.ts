@@ -68,6 +68,7 @@ export const PL: Dict = {
   noFloodingLabel: 'Wszystkie wały bezpieczne',
   gateClosed: 'Zamknięta',
   gateOpen: 'Otwarta',
+  gateOpeningLabel: 'Otwarcie zasuwy',
 
   // Historical Floods View
   scenario1997: '1997',

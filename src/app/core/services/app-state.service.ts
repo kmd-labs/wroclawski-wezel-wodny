@@ -24,7 +24,7 @@ export class AppStateService {
   readonly inflowM3s = signal<number>(2400);
   readonly gateOpenings = signal<Record<GateId, number>>({ ...DEFAULT_GATE_OPENINGS });
   readonly polderRetentionActive = signal<boolean>(true);
-  readonly weirPanelOpen = signal<boolean>(true);
+  readonly weirPanelOpen = signal<boolean>(false);
 
   // 2. Floods View State
   readonly floodScenario = signal<FloodScenarioId>('1997');
@@ -61,6 +61,7 @@ export class AppStateService {
   setView(view: ViewMode): void {
     this.stopPlaying();
     this.selectedPinId.set(null);
+    this.selectedWeirId.set(null);
     this.selectedSegment.set(null);
     this.currentView.set(view);
   }

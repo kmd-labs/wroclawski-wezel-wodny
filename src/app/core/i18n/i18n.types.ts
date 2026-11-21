@@ -87,6 +87,7 @@ export interface Dict {
   noFloodingLabel: string;
   gateClosed: string;
   gateOpen: string;
+  gateOpeningLabel: string;
 
   // Historical Floods View
   scenario1997: string;

@@ -68,6 +68,7 @@ export const EN: Dict = {
   noFloodingLabel: 'All embankments holding',
   gateClosed: 'Closed',
   gateOpen: 'Open',
+  gateOpeningLabel: 'Gate opening',
 
   // Historical Floods View
   scenario1997: '1997',

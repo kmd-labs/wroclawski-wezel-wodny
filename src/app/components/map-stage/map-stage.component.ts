@@ -4,6 +4,7 @@ import {
   ElementRef,
   OnDestroy,
   ViewChild,
+  computed,
   inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,13 +14,15 @@ import {
   Waves,
   Landmark,
   ShieldCheck,
-  SlidersHorizontal
+  SlidersHorizontal,
+  X,
+  Gauge
 } from 'lucide-angular';
 import { TooltipDirective } from '@kmd/design-system';
 import { MapService, ProjectedWeirBadge } from '../../core/map/map.service';
 import { AppStateService } from '../../core/services/app-state.service';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { MapPinViewModel } from '../../core/models/www.model';
+import { GateId, MapPinViewModel } from '../../core/models/www.model';
 
 @Component({
   selector: 'app-map-stage',
@@ -40,6 +43,14 @@ export class MapStageComponent implements AfterViewInit, OnDestroy {
   readonly milestoneIcon = Landmark;
   readonly defenseIcon = ShieldCheck;
   readonly weirIcon = SlidersHorizontal;
+  readonly closeIcon = X;
+  readonly gaugeIcon = Gauge;
+
+  readonly activeGate = computed<ProjectedWeirBadge | null>(() => {
+    const gateId = this.state.selectedWeirId();
+    if (!gateId || this.state.currentView() !== 'equilibrium') return null;
+    return this.mapService.projectedWeirs().find(b => b.weir.gateId === gateId) ?? null;
+  });
 
   ngAfterViewInit(): void {
     this.mapService.init(this.mapContainer.nativeElement);
@@ -50,17 +61,32 @@ export class MapStageComponent implements AfterViewInit, OnDestroy {
   }
 
   selectPin(pin: MapPinViewModel): void {
-    this.state.selectedWeirId.set(null);
     this.state.selectedPinId.set(this.state.selectedPinId() === pin.id ? null : pin.id);
     this.mapService.flyTo(pin.lngLat, this.state.currentView() === 'silesia' ? 9.5 : 13.5);
   }
 
-  selectWeir(badge: ProjectedWeirBadge): void {
+  selectWeir(badge: ProjectedWeirBadge, event: MouseEvent): void {
+    event.stopPropagation();
     if (!badge.weir.gateId) return;
     this.state.selectedPinId.set(null);
     this.state.selectedWeirId.set(badge.weir.gateId);
-    this.state.weirPanelOpen.set(true);
-    this.mapService.flyTo(badge.weir.lngLat, 13.4);
+  }
+
+  onGateRange(gateId: GateId, event: Event): void {
+    const val = parseFloat((event.target as HTMLInputElement).value);
+    if (!isNaN(val)) {
+      this.state.setGateOpening(gateId, val);
+    }
+  }
+
+  setGatePreset(gateId: GateId, pct: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.state.setGateOpening(gateId, pct);
+  }
+
+  closeGatePopup(event: MouseEvent): void {
+    event.stopPropagation();
+    this.state.selectedWeirId.set(null);
   }
 
   pinIcon(category: MapPinViewModel['category']) {
