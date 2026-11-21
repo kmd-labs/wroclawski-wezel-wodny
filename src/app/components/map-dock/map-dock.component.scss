@@ -283,12 +283,13 @@
     color: color("text-dim");
   }
 
-  &__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
+  &__level {
+    padding-bottom: 10px;
+    border-bottom: 1px solid color("line");
+
+    @include respond-to("mobile") {
+      padding-bottom: 8px;
+    }
   }
 
   &__readouts {
