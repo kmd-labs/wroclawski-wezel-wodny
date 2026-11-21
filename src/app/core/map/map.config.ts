@@ -1,6 +1,6 @@
 import type { LngLatBoundsLike, LngLatLike } from 'maplibre-gl';
 
-export const WROCLAW_CENTER: LngLatLike = [17.048, 51.113];
+export const WROCLAW_CENTER: LngLatLike = [17.028, 51.128];
 export const SILESIA_CENTER: LngLatLike = [17.35, 50.62];
 
 export const WROCLAW_BOUNDS: LngLatBoundsLike = [
@@ -8,7 +8,7 @@ export const WROCLAW_BOUNDS: LngLatBoundsLike = [
   [18.65, 51.55]
 ];
 
-export const MAP_DEFAULT_ZOOM = 12.1;
+export const MAP_DEFAULT_ZOOM = 11.7;
 export const MAP_SILESIA_ZOOM = 8.1;
 export const MAP_MIN_ZOOM = 6.5;
 export const MAP_MAX_ZOOM = 18;

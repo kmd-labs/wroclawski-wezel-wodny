@@ -26,8 +26,8 @@ const RAW_DIR = '/workspace/tools/pipeline/data/raw';
 const OUT_DIR = '/workspace/src/assets/data';
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-// Wrocław Water Node bounding box (Trestno -> Janówek/Paniowice, Ślęza -> Widawa)
-const WRO_BBOX = [16.855, 51.040, 17.195, 51.188];
+// Wrocław Water Node bounding box (Trestno -> Pracze Odrzańskie / Janówek / Paniowice, Ślęza -> Widawa)
+const WRO_BBOX = [16.835, 51.040, 17.205, 51.218];
 // Regional Lower Silesia + Upper Odra bbox for main river corridors
 const SILESIA_BBOX = [15.80, 49.85, 18.45, 51.45];
 
@@ -37,6 +37,9 @@ const OSIEDLE_TO_ZONE = new Map([
   [2338689, 'wielka-wyspa'],          // Zacisze-Zalesie-Szczytniki
   [2341617, 'kozanow-pilczyce'],      // Pilczyce-Kozanów-Popowice Północne
   [2341613, 'kozanow-pilczyce'],      // Maślice
+  [2341618, 'pracze-odrzanskie'],     // Pracze Odrzańskie (Janówek / Bystrzyca confluence)
+  [2341615, 'pracze-odrzanskie'],     // Osobowice-Rędzin
+  [2341621, 'pracze-odrzanskie'],     // Świniary (Widawa confluence corridor)
   [2336763, 'przedmiescie-olawskie'], // Przedmieście Oławskie
   [2341614, 'nadodrze-olbin'],        // Nadodrze
   [2341612, 'nadodrze-olbin'],        // Kleczków
@@ -44,6 +47,8 @@ const OSIEDLE_TO_ZONE = new Map([
   [2341619, 'ostrow-tumski'],         // Stare Miasto
   [2338685, 'kowale-swojczyce'],      // Kowale
   [2336724, 'kowale-swojczyce'],      // Strachocin-Swojczyce-Wojnów
+  [2338688, 'kowale-swojczyce'],      // Sołtysowice
+  [2339137, 'kowale-swojczyce'],      // Widawa
   [2336576, 'opatowice-bierdzany']    // Księże
 ]);
 
@@ -108,8 +113,12 @@ function classifyWroclawBranch(cx, cy, name = '') {
   if (n.includes('stara odra')) return 'stara-odra';
 
   // Spatial classification along Wrocław Water Node hydrotechnical boundaries
-  if (cy > 51.142 && cx > 16.95) return 'przewal-widawski'; // Widawa valley north of Wrocław
-  if (cx < 16.935 && cy < 51.158) return 'bystrzyca-river';
+  if (n.includes('odra') && !n.includes('stara')) {
+    if (cx < 17.011 && cy >= 51.122) return 'odra-redzin';
+  }
+  const widawaBoundaryLat = 51.142 + Math.max(0, (17.05 - cx) * 0.48);
+  if (cy > widawaBoundaryLat && cx > 16.925) return 'przewal-widawski'; // Widawa valley north of Wrocław
+  if (cx < 16.930 && cy < 51.182 && !(cx >= 16.890 && cy >= 51.160)) return 'bystrzyca-river';
   if (cx < 16.985 && cy < 51.132) return 'sleza-river';
   if (cx > 17.048 && cx < 17.105 && cy < 51.097) return 'olawa-river';
 
@@ -151,6 +160,7 @@ function classifyWroclawBranch(cx, cy, name = '') {
  */
 function classifyEmbankment(cx, cy) {
   if (cx > 17.115 && cy < 51.080) return { id: 'wal-blizanowice', builtYear: 1935, crestHeightM: 6.4 };
+  if (cy >= 51.158 && cx < 16.985) return { id: 'wal-pracze', builtYear: 1928, crestHeightM: 6.8 };
   if (cx < 16.925 && cy >= 51.120) return { id: 'wal-marszowice', builtYear: 1932, crestHeightM: 5.8 };
   if (cx < 16.970 && cy >= 51.132) return { id: 'wal-maslice', builtYear: 1917, crestHeightM: 7.2 };
   if (cx < 17.012 && cy >= 51.105 && cy <= 51.142) return { id: 'wal-kozanow', builtYear: 1930, crestHeightM: 7.0 };
@@ -558,6 +568,7 @@ for (const dataset of [opolskie, slaskie]) {
 const DEPRESSED_META = {
   'wielka-wyspa': { nameEn: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', namePl: 'Wielka Wyspa (Biskupin / Sępolno / Zalesie)', deficit: '-3.6 m', depthM: 3.6 },
   'kozanow-pilczyce': { nameEn: 'Kozanów, Pilczyce & Maślice Basin', namePl: 'Niecka Kozanowa, Pilczyc i Maślic', deficit: '-4.2 m', depthM: 4.2 },
+  'pracze-odrzanskie': { nameEn: 'Pracze Odrzańskie, Janówek & Rędzin–Świniary', namePl: 'Pracze Odrzańskie, Janówek i Rędzin–Świniary', deficit: '-3.7 m', depthM: 3.7 },
   'przedmiescie-olawskie': { nameEn: 'Przedmieście Oławskie & Niskie Łąki', namePl: 'Przedmieście Oławskie i Niskie Łąki', deficit: '-3.4 m', depthM: 3.4 },
   'nadodrze-olbin': { nameEn: 'Nadodrze, Ołbin & Kleczków', namePl: 'Nadodrze, Ołbin i Kleczków', deficit: '-3.8 m', depthM: 3.8 },
   'ostrow-tumski': { nameEn: 'Stare Miasto & Ostrów Tumski', namePl: 'Stare Miasto i Ostrów Tumski', deficit: '-2.5 m', depthM: 2.5 },

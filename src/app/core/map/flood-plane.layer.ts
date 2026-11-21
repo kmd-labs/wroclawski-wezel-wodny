@@ -1,12 +1,12 @@
 import { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap, MercatorCoordinate } from 'maplibre-gl';
 import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service';
 
-const GRID_COLS = 72;
-const GRID_ROWS = 52;
-const MIN_LNG = 16.92;
-const MAX_LNG = 17.17;
+const GRID_COLS = 80;
+const GRID_ROWS = 60;
+const MIN_LNG = 16.86;
+const MAX_LNG = 17.18;
 const MIN_LAT = 51.045;
-const MAX_LAT = 51.165;
+const MAX_LAT = 51.215;
 const HIDDEN_ELEV_MASL = 85.0;
 
 /**

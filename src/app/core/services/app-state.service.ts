@@ -44,7 +44,7 @@ export class AppStateService {
   private playTimer: ReturnType<typeof setInterval> | null = null;
 
   // Map Camera State (starts flat without tilt)
-  readonly cameraZoom = signal<number>(12.1);
+  readonly cameraZoom = signal<number>(11.7);
   readonly cameraPitch = signal<number>(0);
   readonly cameraBearing = signal<number>(0);
   readonly cameraControlsOpen = signal<boolean>(false);

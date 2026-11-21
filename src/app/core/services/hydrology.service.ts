@@ -147,6 +147,19 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     triggers: ['kanal-miejski', 'stara-odra', 'srodmiescie']
   },
   {
+    id: 'pracze-odrzanskie',
+    center: [16.932, 51.182],
+    radii: [0.045, 0.028],
+    bankfullMasl: 110.4,
+    maxRiseM: 3.7,
+    critLoadRatio: 1.088,
+    directBreachTriggers: [
+      { branchId: 'odra-redzin', ratio: 1.025 },
+      { branchId: 'bystrzyca-river', ratio: 1.008 }
+    ],
+    triggers: ['odra-redzin', 'bystrzyca-river', 'przewal-widawski']
+  },
+  {
     id: 'wielka-wyspa',
     center: [17.078, 51.110],
     radii: [0.022, 0.015],
