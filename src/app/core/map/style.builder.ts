@@ -12,6 +12,7 @@ import {
   SRC_DEM,
   SRC_DEPRESSIONS,
   SRC_EMBANKMENTS,
+  SRC_HILLSHADE_DEM,
   SRC_HISTORY_URBAN,
   SRC_INUNDATION,
   SRC_WEIRS
@@ -233,7 +234,7 @@ export function buildBaseWwwStyle(
     {
       id: 'base-hillshade',
       type: 'hillshade',
-      source: SRC_DEM,
+      source: SRC_HILLSHADE_DEM,
       paint: {
         'hillshade-exaggeration': 0.28,
         'hillshade-shadow-color': dark ? '#000000' : '#475569',
@@ -451,6 +452,13 @@ export function buildBaseWwwStyle(
     sources: {
       [SRC_BASEMAP]: { type: 'vector', url: BASEMAP_TILEJSON_URL },
       [SRC_DEM]: {
+        type: 'raster-dem',
+        tiles: [DEM_TILES_URL],
+        tileSize: 256,
+        encoding: 'terrarium',
+        maxzoom: 15
+      },
+      [SRC_HILLSHADE_DEM]: {
         type: 'raster-dem',
         tiles: [DEM_TILES_URL],
         tileSize: 256,
