@@ -57,6 +57,8 @@ export interface FloodPlaneState {
   submergedCount: number;
   totalZonesCount: number;
   basins: FloodBasinLevel[];
+  /** Overbank flood depth (m above floor) inside unembanked międzywale sectors 0..7 (zone codes 10..17). */
+  miedzywaleDepths: number[];
 }
 
 interface IsokBasinProfile {
@@ -65,7 +67,7 @@ interface IsokBasinProfile {
   radii: [number, number];
   bankfullMasl: number;
   maxRiseM: number;
-  /** Critical load ratio above 1.0 (3,100 m³/s baseline) at which embankment overtopping begins */
+  /** Critical load ratio above 1.0 at which protecting embankment crest is overtopped */
   critLoadRatio: number;
   /** Specific local breach triggers that immediately flood this basin upon gate misuse */
   directBreachTriggers?: Array<{ branchId: string; ratio: number }>;
@@ -74,16 +76,27 @@ interface IsokBasinProfile {
 
 const OVERTOP_TOLERANCE = 1.005;
 
+const MIEDZYWALE_SECTOR_BRANCHES: string[][] = [
+  ['odra-upper'],                           // 10: Trestno -> Bartoszowice międzywale
+  ['przewal-widawski'],                     // 11: Strachocin -> Widawa -> Świniary floodway
+  ['kanal-powodziowy', 'kanal-zeglugowy'],  // 12: Kanał Powodziowy / Żeglugowy międzywale
+  ['odra-miejska-upper', 'olawa-river'],    // 13: Opatowice / Oława floodway
+  ['przekop-szczytnicki', 'stara-odra'],    // 14: Stara Odra / Szczytniki międzywale
+  ['srodmiescie', 'kanal-miejski'],         // 15: Downtown quays & boulevards
+  ['odra-redzin', 'sleza-river'],           // 16: Osobowice -> Rędzin / Ślęza międzywale
+  ['bystrzyca-river']                       // 17: Marszowice / Bystrzyca floodway
+];
+
 /**
  * ISOK-inspired spatially localized flood hazard basin definitions calibrated against
- * real EU-DEM valley elevations in Wrocław (m a.s.l.) and progressive failure thresholds.
+ * real EU-DEM floodplain floors (m a.s.l.) and embankment crest overtopping thresholds.
  */
 const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
   {
     id: 'polder-blizanowice-trestno',
     center: [17.135, 51.062],
     radii: [0.028, 0.018],
-    bankfullMasl: 117.5,
+    bankfullMasl: 116.5,
     maxRiseM: 3.6,
     critLoadRatio: 0.99,
     triggers: ['odra-upper']
@@ -92,50 +105,64 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'opatowice-bierdzany',
     center: [17.090, 51.088],
     radii: [0.030, 0.018],
-    bankfullMasl: 116.5,
+    bankfullMasl: 116.3,
     maxRiseM: 5.0,
-    critLoadRatio: 1.008,
+    critLoadRatio: 1.045,
     triggers: ['odra-upper', 'odra-miejska-upper']
-  },
-  {
-    id: 'przedmiescie-olawskie',
-    center: [17.059, 51.095],
-    radii: [0.024, 0.015],
-    bankfullMasl: 117.0,
-    maxRiseM: 5.2,
-    critLoadRatio: 1.032,
-    triggers: ['odra-miejska-upper', 'srodmiescie', 'olawa-river']
   },
   {
     id: 'kowale-swojczyce',
     center: [17.098, 51.116],
     radii: [0.028, 0.020],
-    bankfullMasl: 115.2,
+    bankfullMasl: 112.9,
     maxRiseM: 4.8,
-    critLoadRatio: 1.045,
+    critLoadRatio: 1.068,
     triggers: ['kanal-powodziowy', 'przewal-widawski', 'kanal-zeglugowy']
+  },
+  {
+    id: 'przedmiescie-olawskie',
+    center: [17.059, 51.095],
+    radii: [0.024, 0.015],
+    bankfullMasl: 117.2,
+    maxRiseM: 5.2,
+    critLoadRatio: 1.088,
+    directBreachTriggers: [{ branchId: 'olawa-river', ratio: 1.02 }],
+    triggers: ['odra-miejska-upper', 'srodmiescie', 'olawa-river']
   },
   {
     id: 'ostrow-tumski',
     center: [17.038, 51.112],
     radii: [0.022, 0.010],
-    bankfullMasl: 113.5,
+    bankfullMasl: 112.8,
     maxRiseM: 5.8,
-    critLoadRatio: 1.062,
+    critLoadRatio: 1.105,
     triggers: ['srodmiescie', 'przekop-szczytnicki']
   },
   {
     id: 'kozanow-pilczyce',
     center: [16.985, 51.124],
     radii: [0.032, 0.020],
-    bankfullMasl: 112.8,
+    bankfullMasl: 110.6,
     maxRiseM: 5.6,
-    critLoadRatio: 1.078,
+    critLoadRatio: 1.122,
     directBreachTriggers: [
-      { branchId: 'odra-redzin', ratio: 1.008 },
-      { branchId: 'sleza-river', ratio: 1.008 }
+      { branchId: 'odra-redzin', ratio: 1.015 },
+      { branchId: 'sleza-river', ratio: 1.015 }
     ],
     triggers: ['odra-redzin', 'stara-odra', 'sleza-river']
+  },
+  {
+    id: 'pracze-odrzanskie',
+    center: [16.932, 51.182],
+    radii: [0.045, 0.028],
+    bankfullMasl: 108.5,
+    maxRiseM: 5.4,
+    critLoadRatio: 1.135,
+    directBreachTriggers: [
+      { branchId: 'odra-redzin', ratio: 1.03 },
+      { branchId: 'bystrzyca-river', ratio: 1.015 }
+    ],
+    triggers: ['odra-redzin', 'bystrzyca-river', 'przewal-widawski']
   },
   {
     id: 'nadodrze-olbin',
@@ -143,30 +170,17 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     radii: [0.022, 0.012],
     bankfullMasl: 114.2,
     maxRiseM: 5.2,
-    critLoadRatio: 1.105,
-    directBreachTriggers: [{ branchId: 'kanal-miejski', ratio: 1.008 }],
+    critLoadRatio: 1.152,
+    directBreachTriggers: [{ branchId: 'kanal-miejski', ratio: 1.015 }],
     triggers: ['kanal-miejski', 'stara-odra', 'srodmiescie']
-  },
-  {
-    id: 'pracze-odrzanskie',
-    center: [16.932, 51.182],
-    radii: [0.045, 0.028],
-    bankfullMasl: 108.8,
-    maxRiseM: 5.4,
-    critLoadRatio: 1.088,
-    directBreachTriggers: [
-      { branchId: 'odra-redzin', ratio: 1.025 },
-      { branchId: 'bystrzyca-river', ratio: 1.008 }
-    ],
-    triggers: ['odra-redzin', 'bystrzyca-river', 'przewal-widawski']
   },
   {
     id: 'wielka-wyspa',
     center: [17.078, 51.110],
     radii: [0.022, 0.015],
-    bankfullMasl: 116.2,
+    bankfullMasl: 116.5,
     maxRiseM: 4.8,
-    critLoadRatio: 1.145,
+    critLoadRatio: 1.175,
     triggers: ['kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki']
   }
 ];
@@ -655,8 +669,20 @@ export class HydrologyService {
   });
 
   readonly breachedEmbankmentIds = computed<Set<string>>(() => {
-    if (this.state.currentView() !== 'floods') return new Set();
-    return new Set(this.activeFloodKeyframe().breachedEmbankments);
+    const view = this.state.currentView();
+    if (view === 'floods') {
+      return new Set(this.activeFloodKeyframe().breachedEmbankments);
+    }
+    if (view !== 'equilibrium') return new Set();
+
+    const floodedZones = this.floodedZoneIds();
+    const breached = new Set<string>();
+    for (const emb of EMBANKMENT_SEGMENTS) {
+      if (emb.protectsZoneId !== 'polder-blizanowice-trestno' && floodedZones.has(emb.protectsZoneId)) {
+        breached.add(emb.id);
+      }
+    }
+    return breached;
   });
 
   readonly equilibriumSummary = computed(() => {
@@ -697,12 +723,16 @@ export class HydrologyService {
   });
 
   /**
-   * Real-elevation (1:1 m a.s.l., zero vertical exaggeration) localized flood water surface upon failure.
-   * Each active basin rises continuously above its real EU-DEM bankfull floor only in the affected sectors.
+   * Real-elevation (1:1 m a.s.l., zero vertical exaggeration) embankment-aware flood water surface:
+   *  - Between 3,100 m³/s and an embankment crest threshold, ONLY the unembanked międzywale
+   *    corridors wet between rivers and dykes.
+   *  - Protected zawale basins behind holding embankments stay 100% dry until their specific
+   *    embankment overtops or breaches.
    */
   readonly floodPlaneState = computed<FloodPlaneState>(() => {
     const totalZonesCount = ISOK_BASIN_PROFILES.length - 1; // exclude upstream retention polder
     const view = this.state.currentView();
+    const zeroSectors = [0, 0, 0, 0, 0, 0, 0, 0];
     if (view === 'history' || view === 'silesia') {
       return {
         active: false,
@@ -712,15 +742,28 @@ export class HydrologyService {
         maxDepthM: 0,
         submergedCount: 0,
         totalZonesCount,
-        basins: []
+        basins: [],
+        miedzywaleDepths: zeroSectors
       };
     }
 
-    const activeBasins = this.floodBasinLevels().filter(
-      b => b.id !== 'polder-blizanowice-trestno'
-    );
+    const branches = this.branchHydrology();
+    const miedzywaleDepths = MIEDZYWALE_SECTOR_BRANCHES.map(sectorBranches => {
+      let maxSectorLoad = 0;
+      for (const bId of sectorBranches) {
+        maxSectorLoad = Math.max(maxSectorLoad, branches[bId]?.loadRatio ?? 0);
+      }
+      if (maxSectorLoad <= OVERTOP_TOLERANCE) return 0;
+      const excess = maxSectorLoad - OVERTOP_TOLERANCE;
+      const norm = Math.min(1, Math.pow(excess / 0.24, 0.8));
+      return Math.round((0.25 + norm * 3.35) * 100) / 100;
+    });
 
-    if (activeBasins.length === 0) {
+    const allBasins = this.floodBasinLevels();
+    const urbanBasins = allBasins.filter(b => b.id !== 'polder-blizanowice-trestno');
+    const maxMiedzywale = Math.max(...miedzywaleDepths);
+
+    if (allBasins.length === 0 && maxMiedzywale <= 0) {
       return {
         active: false,
         trestnoMasl: 85,
@@ -729,13 +772,14 @@ export class HydrologyService {
         maxDepthM: 0,
         submergedCount: 0,
         totalZonesCount,
-        basins: []
+        basins: [],
+        miedzywaleDepths: zeroSectors
       };
     }
 
-    let maxDepthM = 0;
+    let maxDepthM = maxMiedzywale;
     let maxMasl = 0;
-    for (const b of activeBasins) {
+    for (const b of urbanBasins) {
       maxDepthM = Math.max(maxDepthM, b.depthM);
       maxMasl = Math.max(maxMasl, b.waterMasl);
     }
@@ -743,13 +787,14 @@ export class HydrologyService {
     const displayMasl = Math.round(maxMasl * 10) / 10;
     return {
       active: true,
-      trestnoMasl: activeBasins[0].waterMasl,
-      redzinMasl: activeBasins[activeBasins.length - 1].waterMasl,
+      trestnoMasl: urbanBasins[0]?.waterMasl ?? 117.5,
+      redzinMasl: urbanBasins[urbanBasins.length - 1]?.waterMasl ?? 111.5,
       displayMasl,
       maxDepthM: Math.round(maxDepthM * 10) / 10,
-      submergedCount: activeBasins.length,
+      submergedCount: urbanBasins.length,
       totalZonesCount,
-      basins: activeBasins
+      basins: allBasins,
+      miedzywaleDepths
     };
   });
 }

@@ -1,7 +1,13 @@
 /**
- * Fetches z=12 AWS Terrarium DEM PNG tiles across the Wrocław Water Node corridor
- * and pre-bakes a 97x73 real EU-DEM heightfield (`DEM_GRID_ELEV_DM`) aligned with
- * `FloodWaterPlaneLayer`, eliminating zoom-level DEM LOD jitter and clipping.
+ * Fetches z=12 AWS Terrarium DEM PNG tiles across the Wrocław Water Node corridor and combines
+ * them with real OSM river channels, OSM embankments, and OSM floodplain basins (`www-lod1.json`)
+ * to pre-bake:
+ *   1. `DEM_GRID_ELEV_DM`     — smooth 96x72 EU-DEM ground elevation (dm a.s.l.)
+ *   2. `DEM_GRID_ZONE_CODE`   — hydrological barrier zone per vertex:
+ *        -1     : upland / dry outside floodplain
+ *        0..8   : embanked protected basin (`zawale`) — stays dry while embankment holds
+ *        10..17 : inter-embankment floodway (`międzywale`) — wets immediately above 3,100 m³/s
+ *   3. `DEM_GRID_REL_ELEV_DM` — height above local zone/floodway floor (dm) for continuous filling
  */
 import fs from 'node:fs';
 import zlib from 'node:zlib';
@@ -14,6 +20,36 @@ const MIN_LAT = 51.045;
 const MAX_LAT = 51.215;
 const DEM_ZOOM = 12;
 
+export const BASIN_IDS = [
+  'polder-blizanowice-trestno', // 0
+  'opatowice-bierdzany',        // 1
+  'przedmiescie-olawskie',      // 2
+  'kowale-swojczyce',           // 3
+  'ostrow-tumski',              // 4
+  'kozanow-pilczyce',           // 5
+  'nadodrze-olbin',             // 6
+  'pracze-odrzanskie',          // 7
+  'wielka-wyspa'                // 8
+];
+const BASIN_INDEX = new Map(BASIN_IDS.map((id, i) => [id, i]));
+
+// Map river/canal branch ID -> międzywale sector index (0..7) -> stored as 10 + idx
+const BRANCH_TO_MIEDZYWALE_SECTOR = new Map([
+  ['odra-upper', 0],
+  ['przewal-widawski', 1],
+  ['kanal-powodziowy', 2],
+  ['kanal-zeglugowy', 2],
+  ['odra-miejska-upper', 3],
+  ['olawa-river', 3],
+  ['przekop-szczytnicki', 4],
+  ['stara-odra', 4],
+  ['srodmiescie', 5],
+  ['kanal-miejski', 5],
+  ['odra-redzin', 6],
+  ['sleza-river', 6],
+  ['bystrzyca-river', 7]
+]);
+
 function paethPredictor(a, b, c) {
   const p = a + b - c;
   const pa = Math.abs(p - a);
@@ -25,7 +61,7 @@ function paethPredictor(a, b, c) {
 }
 
 function decodePng(buf) {
-  let offset = 8; // skip PNG signature
+  let offset = 8;
   let width = 0;
   let height = 0;
   let colorType = 2;
@@ -95,7 +131,6 @@ function sampleTileElev(tile, px, py) {
     const i = (cy * width + cx) * bpp;
     return pixels[i] * 256 + pixels[i + 1] + pixels[i + 2] / 256 - 32768;
   };
-  // Light 3x3 binomial smoothing suppresses rooftop/canopy SRTM spikes while keeping true valley shape
   const smoothAt = (x, y) =>
     (elevAt(x - 1, y - 1) + 2 * elevAt(x, y - 1) + elevAt(x + 1, y - 1) +
       2 * elevAt(x - 1, y) + 4 * elevAt(x, y) + 2 * elevAt(x + 1, y) +
@@ -110,6 +145,53 @@ function sampleTileElev(tile, px, py) {
   return e0 + (e1 - e0) * ty;
 }
 
+function pointInRing(lng, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+    const intersect = yi > lat !== yj > lat && lng < ((xj - xi) * (lat - yi)) / (yj - yi + 1e-12) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function pointInGeometry(lng, lat, geom) {
+  if (!geom) return false;
+  if (geom.type === 'Polygon') {
+    if (!pointInRing(lng, lat, geom.coordinates[0])) return false;
+    for (let h = 1; h < geom.coordinates.length; h++) {
+      if (pointInRing(lng, lat, geom.coordinates[h])) return false;
+    }
+    return true;
+  }
+  if (geom.type === 'MultiPolygon') {
+    for (const poly of geom.coordinates) {
+      if (pointInRing(lng, lat, poly[0])) {
+        let inHole = false;
+        for (let h = 1; h < poly.length; h++) {
+          if (pointInRing(lng, lat, poly[h])) {
+            inHole = true;
+            break;
+          }
+        }
+        if (!inHole) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function segmentsIntersect(ax, ay, bx, by, cx, cy, dx, dy) {
+  const ccw = (p1x, p1y, p2x, p2y, p3x, p3y) =>
+    (p3y - p1y) * (p2x - p1x) > (p2y - p1y) * (p3x - p1x);
+  return ccw(ax, ay, cx, cy, dx, dy) !== ccw(bx, by, cx, cy, dx, dy) &&
+    ccw(ax, ay, bx, by, cx, cy) !== ccw(ax, ay, bx, by, dx, dy);
+}
+
+// 1. Fetch & decode z=12 Terrarium DEM tiles
 const topLeft = lngLatToTileFrac(MIN_LNG, MAX_LAT, DEM_ZOOM);
 const botRight = lngLatToTileFrac(MAX_LNG, MIN_LAT, DEM_ZOOM);
 const txMin = Math.floor(topLeft.fx);
@@ -128,13 +210,13 @@ for (let ty = tyMin; ty <= tyMax; ty++) {
     tiles.set(`${tx}/${ty}`, decodePng(buf));
   }
 }
-console.log(`Decoded ${tiles.size} DEM tiles.`);
 
-const elevDm = new Int16Array((GRID_COLS + 1) * (GRID_ROWS + 1));
-let minM = 9999;
-let maxM = -9999;
+const totalVerts = (GRID_COLS + 1) * (GRID_ROWS + 1);
+const elevDm = new Int16Array(totalVerts);
+const vertLng = new Float64Array(totalVerts);
+const vertLat = new Float64Array(totalVerts);
+
 let ptr = 0;
-
 for (let r = 0; r <= GRID_ROWS; r++) {
   const lat = MIN_LAT + (r / GRID_ROWS) * (MAX_LAT - MIN_LAT);
   for (let c = 0; c <= GRID_COLS; c++) {
@@ -145,45 +227,170 @@ for (let r = 0; r <= GRID_ROWS; r++) {
     const tile = tiles.get(`${tx}/${ty}`);
     const px = (fx - tx) * tile.width;
     const py = (fy - ty) * tile.height;
-    const m = sampleTileElev(tile, px, py);
-    minM = Math.min(minM, m);
-    maxM = Math.max(maxM, m);
-    elevDm[ptr++] = Math.round(m * 10);
+    elevDm[ptr] = Math.round(sampleTileElev(tile, px, py) * 10);
+    vertLng[ptr] = lng;
+    vertLat[ptr] = lat;
+    ptr++;
   }
 }
 
-console.log(`Sampled ${elevDm.length} vertices (elev ${minM.toFixed(1)} m .. ${maxM.toFixed(1)} m a.s.l.)`);
+// 2. Load real OSM vectors from www-lod1.json for embankment barrier & floodplain classification
+const lod1 = JSON.parse(fs.readFileSync('/workspace/src/assets/data/www-lod1.json', 'utf8'));
 
-// Inspect actual minimum / 15th-percentile elevation around each ISOK flood basin
-const BASINS = [
-  { id: 'opatowice-bierdzany', center: [17.090, 51.088], radii: [0.030, 0.018] },
-  { id: 'przedmiescie-olawskie', center: [17.059, 51.095], radii: [0.024, 0.015] },
-  { id: 'kowale-swojczyce', center: [17.098, 51.116], radii: [0.028, 0.020] },
-  { id: 'ostrow-tumski', center: [17.038, 51.112], radii: [0.022, 0.010] },
-  { id: 'kozanow-pilczyce', center: [16.985, 51.124], radii: [0.032, 0.020] },
-  { id: 'nadodrze-olbin', center: [17.042, 51.121], radii: [0.022, 0.012] },
-  { id: 'pracze-odrzanskie', center: [16.932, 51.182], radii: [0.045, 0.028] },
-  { id: 'wielka-wyspa', center: [17.078, 51.110], radii: [0.022, 0.015] }
-];
-for (const b of BASINS) {
-  const vals = [];
-  for (let r = 0; r <= GRID_ROWS; r++) {
-    const lat = MIN_LAT + (r / GRID_ROWS) * (MAX_LAT - MIN_LAT);
-    for (let c = 0; c <= GRID_COLS; c++) {
-      const lng = MIN_LNG + (c / GRID_COLS) * (MAX_LNG - MIN_LNG);
-      const dx = (lng - b.center[0]) / b.radii[0];
-      const dy = (lat - b.center[1]) / b.radii[1];
-      if (dx * dx + dy * dy <= 0.85) vals.push(elevDm[r * (GRID_COLS + 1) + c] / 10);
+// Sample river channel points (excluding small isolated urban fountains)
+const riverPts = [];
+for (const cf of lod1.canals.features) {
+  if (/fontanna/i.test(cf.properties?.name || '')) continue;
+  const branchId = cf.properties?.id || 'odra-upper';
+  const sectorIdx = BRANCH_TO_MIEDZYWALE_SECTOR.get(branchId) ?? 0;
+  const rings = cf.geometry.type === 'Polygon' ? [cf.geometry.coordinates[0]] : cf.geometry.coordinates.map(p => p[0]);
+  for (const ring of rings) {
+    const step = Math.max(1, Math.floor(ring.length / 18));
+    for (let i = 0; i < ring.length; i += step) {
+      riverPts.push([ring[i][0], ring[i][1], sectorIdx]);
     }
   }
-  vals.sort((x, y) => x - y);
-  const p15 = vals[Math.floor(vals.length * 0.15)];
-  const p50 = vals[Math.floor(vals.length * 0.50)];
-  const p90 = vals[Math.floor(vals.length * 0.90)];
-  console.log(`Basin ${b.id}: n=${vals.length}, min=${vals[0].toFixed(1)}, p15=${p15.toFixed(1)}, med=${p50.toFixed(1)}, p90=${p90.toFixed(1)}`);
 }
 
-const ts = `// Auto-generated by tools/pipeline/src/build-dem-grid.mjs from z=${DEM_ZOOM} AWS Terrarium EU-DEM tiles
+// Build flat array of OSM embankment boundary edges [ax, ay, bx, by, minX, minY, maxX, maxY]
+const dykeEdges = [];
+for (const ef of lod1.embankments.features) {
+  const rings = ef.geometry.type === 'Polygon' ? [ef.geometry.coordinates[0]] : ef.geometry.coordinates.map(p => p[0]);
+  for (const ring of rings) {
+    for (let i = 0; i < ring.length - 1; i++) {
+      const a = ring[i];
+      const b = ring[i + 1];
+      dykeEdges.push([
+        a[0],
+        a[1],
+        b[0],
+        b[1],
+        Math.min(a[0], b[0]),
+        Math.min(a[1], b[1]),
+        Math.max(a[0], b[0]),
+        Math.max(a[1], b[1])
+      ]);
+    }
+  }
+}
+
+function segmentCrossesDyke(px, py, rx, ry) {
+  const minX = Math.min(px, rx);
+  const maxX = Math.max(px, rx);
+  const minY = Math.min(py, ry);
+  const maxY = Math.max(py, ry);
+  for (const e of dykeEdges) {
+    if (e[6] < minX || e[4] > maxX || e[7] < minY || e[5] > maxY) continue;
+    if (segmentsIntersect(px, py, rx, ry, e[0], e[1], e[2], e[3])) return true;
+  }
+  return false;
+}
+
+const mPerLon = 111195 * Math.cos((51.12 * Math.PI) / 180);
+const mPerLat = 111195;
+
+// Index basin features in BASIN_IDS order
+const basinGeoms = BASIN_IDS.map(id =>
+  lod1.depressions.features.find(f => f.properties?.id === id)?.geometry ?? null
+);
+
+const zoneCode = new Int8Array(totalVerts).fill(-1);
+for (let i = 0; i < totalVerts; i++) {
+  const lng = vertLng[i];
+  const lat = vertLat[i];
+
+  // Find nearest river channel point + sector
+  let bestDist2 = Infinity;
+  let nearestRiver = riverPts[0];
+  for (const rp of riverPts) {
+    const dx = (lng - rp[0]) * mPerLon;
+    const dy = (lat - rp[1]) * mPerLat;
+    const d2 = dx * dx + dy * dy;
+    if (d2 < bestDist2) {
+      bestDist2 = d2;
+      nearestRiver = rp;
+    }
+  }
+  const distToRiverM = Math.sqrt(bestDist2);
+
+  // Check OSM depressed basin membership
+  let inBasinIdx = -1;
+  for (let b = 0; b < BASIN_IDS.length; b++) {
+    if (pointInGeometry(lng, lat, basinGeoms[b])) {
+      inBasinIdx = b;
+      break;
+    }
+  }
+
+  // Retention polder Blizanowice-Trestno behaves as a controlled polder zone (code 0)
+  if (inBasinIdx === 0) {
+    zoneCode[i] = 0;
+    continue;
+  }
+
+  const protectedByDyke = segmentCrossesDyke(lng, lat, nearestRiver[0], nearestRiver[1]);
+
+  if (inBasinIdx > 0) {
+    // Inside a Wrocław floodplain district:
+    // If very close to the river (<160 m) WITHOUT a dyke between vertex & river, it lies in
+    // the riverfront międzywale / quay; otherwise it is protected on the zawale side behind dykes.
+    if (!protectedByDyke && distToRiverM <= 165 && inBasinIdx !== 4) {
+      zoneCode[i] = 10 + nearestRiver[2];
+    } else {
+      zoneCode[i] = inBasinIdx;
+    }
+  } else if (!protectedByDyke && distToRiverM <= 520) {
+    // Outside city basins, between rivers and dykes (międzywale corridor along Widawa, Odra, Bystrzyca)
+    zoneCode[i] = 10 + nearestRiver[2];
+  }
+}
+
+// Compute local zone floor elevation (10th percentile ground elevation inside each zone/sector)
+// so spillover depth fills the lowest DEM depressions smoothly inside each protected basin or floodway.
+const zoneElevs = new Map();
+for (let i = 0; i < totalVerts; i++) {
+  const zc = zoneCode[i];
+  if (zc < 0) continue;
+  if (!zoneElevs.has(zc)) zoneElevs.set(zc, []);
+  zoneElevs.get(zc).push(elevDm[i]);
+}
+const zoneFloorDm = new Map();
+for (const [zc, arr] of zoneElevs.entries()) {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const floor = sorted[Math.floor(sorted.length * 0.12)] ?? sorted[0];
+  zoneFloorDm.set(zc, floor);
+}
+
+const relElevDm = new Int16Array(totalVerts);
+for (let i = 0; i < totalVerts; i++) {
+  const zc = zoneCode[i];
+  if (zc < 0) {
+    relElevDm[i] = 999;
+  } else {
+    const floor = zoneFloorDm.get(zc) ?? elevDm[i];
+    relElevDm[i] = Math.max(0, elevDm[i] - floor);
+  }
+}
+
+let miedzywaleVerts = 0;
+let zawaleVerts = 0;
+for (let i = 0; i < totalVerts; i++) {
+  if (zoneCode[i] >= 10) miedzywaleVerts++;
+  else if (zoneCode[i] >= 0) zawaleVerts++;
+}
+console.log(`Classified ${totalVerts} vertices -> międzywale: ${miedzywaleVerts}, zawale (embanked): ${zawaleVerts}, upland: ${totalVerts - miedzywaleVerts - zawaleVerts}`);
+for (let b = 0; b < BASIN_IDS.length; b++) {
+  const cnt = zoneElevs.get(b)?.length ?? 0;
+  const fl = ((zoneFloorDm.get(b) ?? 1150) / 10).toFixed(1);
+  console.log(`  Zawale [${b}] ${BASIN_IDS[b]}: ${cnt} verts, floor=${fl} m`);
+}
+for (let s = 0; s < 8; s++) {
+  const cnt = zoneElevs.get(10 + s)?.length ?? 0;
+  const fl = ((zoneFloorDm.get(10 + s) ?? 1150) / 10).toFixed(1);
+  console.log(`  Międzywale [${10 + s}] sector ${s}: ${cnt} verts, floor=${fl} m`);
+}
+
+const ts = `// Auto-generated by tools/pipeline/src/build-dem-grid.mjs from z=${DEM_ZOOM} AWS Terrarium EU-DEM + OSM embankments
 export const DEM_GRID_COLS = ${GRID_COLS};
 export const DEM_GRID_ROWS = ${GRID_ROWS};
 export const DEM_MIN_LNG = ${MIN_LNG};
@@ -191,9 +398,21 @@ export const DEM_MAX_LNG = ${MAX_LNG};
 export const DEM_MIN_LAT = ${MIN_LAT};
 export const DEM_MAX_LAT = ${MAX_LAT};
 
-/** Pre-baked real EU-DEM ground elevation in decimetres (m a.s.l. * 10), row-major (MIN_LAT -> MAX_LAT, MIN_LNG -> MAX_LNG). */
+export const DEM_BASIN_IDS = ${JSON.stringify(BASIN_IDS)} as const;
+
+/** Pre-baked real EU-DEM ground elevation in decimetres (m a.s.l. * 10), row-major. */
 export const DEM_GRID_ELEV_DM = new Int16Array([
 ${Array.from(elevDm).join(',')}
+]);
+
+/** Hydrological barrier zone code: -1 = upland, 0..8 = embanked zawale basin, 10..17 = unembanked międzywale sector. */
+export const DEM_GRID_ZONE_CODE = new Int8Array([
+${Array.from(zoneCode).join(',')}
+]);
+
+/** Local ground elevation above each zone's 12th-percentile floor (dm), ensuring smooth progressive basin fill. */
+export const DEM_GRID_REL_ELEV_DM = new Int16Array([
+${Array.from(relElevDm).join(',')}
 ]);
 `;
 

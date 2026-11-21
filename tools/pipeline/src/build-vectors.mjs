@@ -317,11 +317,34 @@ function mergePolygons(geoms) {
 
 // ─── 1. Extract Dolnośląskie (Wrocław Water Node + Lower Silesia) ────────────
 
+const EMBANKMENT_STREET_BLACKLIST = /podwale|wa[lł]brzyska|walecznych|walerego|zawalna|trwa[lł]a|grunwaldzk|kawaleryjsk|wa[lł]owa/i;
+const LEVEE_NAME_REGEX = /\b(grobla|wa[lł]y?\b)/i;
+
+function isLeveeCandidateTags(t) {
+  if (t.man_made === 'dyke') return 'dyke';
+  if (t.railway || t.bridge || t.tunnel) return null;
+  if (/^(motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link|construction|proposed)$/.test(t.highway || '')) {
+    return null;
+  }
+  const n = t.name || '';
+  if (LEVEE_NAME_REGEX.test(n) && !EMBANKMENT_STREET_BLACKLIST.test(n)) {
+    return 'named-levee';
+  }
+  if (t.embankment === 'yes' || t.embankment === 'dyke') {
+    return 'emb-crest';
+  }
+  if (t.man_made === 'embankment') {
+    return 'mm-emb';
+  }
+  return null;
+}
+
 const dolno = await extractFromPbf(path.join(RAW_DIR, 'dolnoslaskie.osm.pbf'), {
   matchWay(w) {
     const t = w.tags || {};
     if (TARGET_WAY_FACILITIES.has(w.id)) return 'silesia-facility';
-    if (t.man_made === 'dyke') return 'dyke';
+    const embRole = isLeveeCandidateTags(t);
+    if (embRole) return embRole;
     if (t.waterway === 'weir' || t.waterway === 'lock_gate' || t.man_made === 'sluice_gate' || (t.waterway === 'dam' && t.name)) return 'weir';
     if (t.natural === 'water' || t.waterway === 'riverbank' || t.water === 'river' || t.water === 'canal' || t.water === 'lock') {
       if (t.name && /mietk/i.test(t.name)) return 'mietkow-water';
@@ -427,6 +450,8 @@ for (const rel of dolno.targetRelations) {
   }
 }
 
+const candidateEmbankments = [];
+
 // B. Process Dolnośląskie ways (Waterways, Water polygons, Dykes, Weirs, Reservoirs)
 const TRIBUTARY_LINE_NAMES = /widawa|o[lł]awa|[sś]l[eę]za|bystrzyca|odp[lł]ywowy|przekop szczytnicki|kana[lł] miejski|kana[lł] [zż]eglugowy|kana[lł] powodziowy/i;
 
@@ -494,25 +519,16 @@ for (const w of dolno.matchedWays.values()) {
         geometry: geom
       });
     }
-  } else if (w.role === 'dyke') {
+  } else if (w.role === 'dyke' || w.role === 'named-levee' || w.role === 'emb-crest' || w.role === 'mm-emb') {
     const closed = w.refs[0] === w.refs[w.refs.length - 1] && coords.length >= 4;
+    // Skip tiny closed mound polygons (< ~30m span)
+    if (closed && Math.abs(signedRingArea(coords)) < 2e-7 && w.role !== 'dyke') continue;
     const geom = closed
       ? { type: 'Polygon', coordinates: [orientRing(coords, true)] }
-      : bufferLineToPolygon(coords, 7.5);
+      : bufferLineToPolygon(coords, w.role === 'dyke' || w.role === 'named-levee' ? 7.5 : 6.0);
     if (!geom) continue;
     const [cx, cy] = centroidOfGeometry(geom);
-    const cls = classifyEmbankment(cx, cy);
-    embankmentFeatures.push({
-      type: 'Feature',
-      properties: {
-        id: cls.id,
-        osmId: `d${w.id}`,
-        name: w.tags.name || '',
-        builtYear: cls.builtYear,
-        crestHeightM: cls.crestHeightM
-      },
-      geometry: geom
-    });
+    candidateEmbankments.push({ role: w.role, way: w, geom, cx, cy });
   } else if (w.role === 'weir') {
     const closed = w.refs[0] === w.refs[w.refs.length - 1] && coords.length >= 4;
     const geom = closed
@@ -534,6 +550,52 @@ for (const w of dolno.matchedWays.values()) {
       geometry: geom
     });
   }
+}
+
+// Filter secondary embankment candidates to river-adjacent flood levees using sampled canal vertices
+const riverSamples = [];
+for (const cf of canalFeatures) {
+  const ring = cf.geometry.type === 'Polygon' ? cf.geometry.coordinates[0] : cf.geometry.coordinates[0]?.[0];
+  if (!ring) continue;
+  const step = Math.max(1, Math.floor(ring.length / 24));
+  for (let i = 0; i < ring.length; i += step) {
+    riverSamples.push(ring[i]);
+  }
+}
+function minDistToRiverM(cx, cy) {
+  let best2 = Infinity;
+  const mPerLon = 111195 * Math.cos((51.12 * Math.PI) / 180);
+  const mPerLat = 111195;
+  for (const [rx, ry] of riverSamples) {
+    const dx = (cx - rx) * mPerLon;
+    const dy = (cy - ry) * mPerLat;
+    const d2 = dx * dx + dy * dy;
+    if (d2 < best2) best2 = d2;
+  }
+  return Math.sqrt(best2);
+}
+for (const item of candidateEmbankments) {
+  let keep = false;
+  if (item.role === 'dyke' || item.role === 'named-levee') {
+    keep = true;
+  } else {
+    const d = minDistToRiverM(item.cx, item.cy);
+    if (item.role === 'emb-crest' && d <= 380) keep = true;
+    else if (item.role === 'mm-emb' && d <= 240) keep = true;
+  }
+  if (!keep) continue;
+  const cls = classifyEmbankment(item.cx, item.cy);
+  embankmentFeatures.push({
+    type: 'Feature',
+    properties: {
+      id: cls.id,
+      osmId: `d${item.way.id}`,
+      name: item.way.tags.name || '',
+      builtYear: cls.builtYear,
+      crestHeightM: cls.crestHeightM
+    },
+    geometry: item.geom
+  });
 }
 
 // C. Process Opolskie & Śląskie Reservoirs/Polders & Regional Rivers
@@ -666,8 +728,8 @@ for (const [yr, idSet] of Object.entries(HISTORY_OSIEDLA)) {
 // ─── G. Generate 3 Multi-LOD Bundles (LOD 0 / LOD 1 / LOD 2) ──────────────────
 
 const LOD_SPECS = [
-  // LOD 0: Overview / Regional (zoom < 11.2) — ~55m simplification, ultra-fast
-  { level: 0, tolCity: 0.00055, tolSilesia: 0.0014, tolRiver: 0.0022, decimals: 5, includeSmallDykes: false },
+  // LOD 0: Overview / Regional (zoom < 11.2) — ~55m simplification, keep all dykes
+  { level: 0, tolCity: 0.00055, tolSilesia: 0.0014, tolRiver: 0.0022, decimals: 5, includeSmallDykes: true },
   // LOD 1: City / Water Node (11.2 <= zoom < 13.8) — ~9m simplification
   { level: 1, tolCity: 0.00010, tolSilesia: 0.00045, tolRiver: 0.0007, decimals: 5, includeSmallDykes: true },
   // LOD 2: Full Hydrotechnical / Street Detail (zoom >= 13.8) — ~0.9m native OSM precision

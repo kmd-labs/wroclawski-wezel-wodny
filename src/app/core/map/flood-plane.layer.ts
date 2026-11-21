@@ -1,13 +1,16 @@
 import { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap, MercatorCoordinate } from 'maplibre-gl';
 import {
+  DEM_BASIN_IDS,
   DEM_GRID_COLS,
   DEM_GRID_ELEV_DM,
+  DEM_GRID_REL_ELEV_DM,
+  DEM_GRID_ROWS,
+  DEM_GRID_ZONE_CODE,
   DEM_MAX_LAT,
   DEM_MAX_LNG,
   DEM_MIN_LAT,
   DEM_MIN_LNG
 } from '../data/www-dem-grid.data';
-import { DEM_GRID_ROWS } from '../data/www-dem-grid.data';
 import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service';
 
 // Relative-To-Center (RTC) Mercator origin computed in 64-bit float so WebGL Float32 vertex
@@ -15,16 +18,13 @@ import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service'
 const RTC_ORIGIN = MercatorCoordinate.fromLngLat([17.02, 51.13], 115.0);
 
 /**
- * Custom 3D WebGL layer rendering progressive, spatially localized ISOK-inspired flood
- * inundation from a pre-baked `96x72` EU-DEM heightfield (`www-dem-grid.data.ts`).
- *
- * Why pre-baked DEM + 64-bit RTC instead of raw WebGL depth-testing against live DEM tiles:
- *  - Live MapLibre DEM tiles swap LOD meshes at each zoom level, shifting local heights by +/-1-4m
- *    and causing water to clip inconsistently on every zoom change.
- *  - Here, sub-cell water depth (`localWaterMasl - prebakedGroundMasl`) is computed in JS and
- *    interpolated smoothly across GPU triangles (`if (v_depth <= 0.0) discard;`), yielding
- *    rock-solid, zoom-invariant topographic flood shorelines rendered cleanly underneath 3D canals,
- *    embankments, weirs, and buildings.
+ * Custom 3D WebGL layer rendering embankment-aware, zoom-invariant progressive ISOK-inspired
+ * flood inundation from the pre-baked `96x72` EU-DEM + OSM embankment barrier grid:
+ *  - Unembanked `międzywale` vertices (`zoneCode >= 10`) flood first above `3,100 m³/s` between
+ *    rivers and embankments, stopping right at the 3D dyke walls.
+ *  - Embanked `zawale` basins (`zoneCode 0..8`) remain 100% dry while their protecting
+ *    embankment holds, and fill progressively across real DEM depressions only after that specific
+ *    embankment overtops or breaches.
  */
 export class FloodWaterPlaneLayer implements CustomLayerInterface {
   readonly id = 'flood-water-plane';
@@ -39,6 +39,7 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
   private active = false;
   private basins: FloodBasinLevel[] = [];
+  private miedzywaleDepths: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
   private signature = '';
   private dirty = true;
 
@@ -48,13 +49,14 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
   setFloodState(state: FloodPlaneState): void {
     const sig = state.active
-      ? state.basins.map(b => `${b.id}:${b.waterMasl.toFixed(2)}`).join('|')
+      ? `${state.basins.map(b => `${b.id}:${b.depthM.toFixed(2)}`).join('|')}#${state.miedzywaleDepths.map(d => d.toFixed(2)).join(',')}`
       : 'inactive';
     if (sig === this.signature) return;
 
     this.signature = sig;
     this.active = state.active;
     this.basins = state.basins;
+    this.miedzywaleDepths = state.miedzywaleDepths;
     this.dirty = true;
     this.map?.triggerRepaint();
   }
@@ -198,44 +200,47 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
   }
 
   private rebuildVertices(): void {
-    const active = this.active && this.basins.length > 0;
+    const active = this.active;
+    const basinById = new Map<string, FloodBasinLevel>();
+    for (const b of this.basins) {
+      basinById.set(b.id, b);
+    }
+
     const ox = RTC_ORIGIN.x;
     const oy = RTC_ORIGIN.y;
     const oz = RTC_ORIGIN.z;
     let ptr = 0;
-    let demIdx = 0;
+    let idx = 0;
 
     for (let r = 0; r <= DEM_GRID_ROWS; r++) {
       const lat = DEM_MIN_LAT + (r / DEM_GRID_ROWS) * (DEM_MAX_LAT - DEM_MIN_LAT);
       for (let c = 0; c <= DEM_GRID_COLS; c++) {
         const lng = DEM_MIN_LNG + (c / DEM_GRID_COLS) * (DEM_MAX_LNG - DEM_MIN_LNG);
-        const groundMasl = DEM_GRID_ELEV_DM[demIdx++] / 10;
+        const groundMasl = DEM_GRID_ELEV_DM[idx] / 10;
+        const zoneCode = DEM_GRID_ZONE_CODE[idx];
+        const relElevM = DEM_GRID_REL_ELEV_DM[idx] / 10;
+        idx++;
 
-        let depthM = -2.0;
+        let depthM = -1.8;
         let elevMasl = groundMasl;
 
-        if (active) {
-          for (const b of this.basins) {
-            const dx = (lng - b.center[0]) / b.radii[0];
-            const dy = (lat - b.center[1]) / b.radii[1];
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist >= 1.35) continue;
-
-            const raw =
-              dist <= 0.78
-                ? 1.0
-                : 0.5 * (1 + Math.cos(Math.PI * ((dist - 0.78) / 0.57)));
-            if (raw <= 0.001) continue;
-
-            // Pointwise envelope (max over active basins) guarantees strict monotonicity:
-            // adding a newly breaching shallow basin never dilutes or lowers adjacent deep water.
-            const rimAtten = raw >= 0.7 ? 1.0 : raw / 0.7;
-            const rawDepth = b.waterMasl - groundMasl;
-            const candidateDepth = rawDepth * rimAtten - (1 - rimAtten) * 1.5;
-            if (candidateDepth > depthM) {
-              depthM = candidateDepth;
-              elevMasl = Math.max(groundMasl, groundMasl + candidateDepth);
+        if (active && zoneCode >= 0) {
+          if (zoneCode >= 10) {
+            // Unembanked międzywale floodway sector: wets between rivers and dykes above 3,100 m³/s
+            const sectorDepth = this.miedzywaleDepths[zoneCode - 10] ?? 0;
+            if (sectorDepth > 0) {
+              depthM = Math.max(-1.8, sectorDepth - relElevM);
             }
+          } else {
+            // Protected embanked zawale basin: 100% dry until this exact basin's embankment overtops
+            const basinId = DEM_BASIN_IDS[zoneCode];
+            const basin = basinById.get(basinId);
+            if (basin && basin.depthM > 0) {
+              depthM = Math.max(-1.8, basin.depthM - relElevM);
+            }
+          }
+          if (depthM > 0) {
+            elevMasl = groundMasl + depthM;
           }
         }
 
