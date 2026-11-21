@@ -14,13 +14,11 @@ import {
   SRC_EMBANKMENTS,
   SRC_HISTORY_URBAN,
   SRC_INUNDATION,
-  SRC_SILESIA,
-  SRC_SILESIA_RIVERS,
   SRC_WEIRS
 } from './map.config';
 import { Lang } from '../i18n/i18n.types';
 import { BranchHydrology, ViewMode } from '../models/www.model';
-import { HISTORY_ERAS, SILESIA_FACILITIES } from '../data/www-events.data';
+import { HISTORY_ERAS } from '../data/www-events.data';
 import { LodLevel, WwwLodBundle } from '../services/vector-data.service';
 
 export const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
@@ -56,8 +54,6 @@ export interface DynamicDataContext {
   floodedZones: Set<string>;
   breachedEmbankments: Set<string>;
   historyYear: number;
-  silesiaWaveStep: number;
-  silesiaActiveIds: Set<string>;
   selectedSegmentKey: string | null;
 }
 
@@ -67,12 +63,8 @@ export interface DynamicSourcesPayload {
   weirs: FeatureCollection;
   depressions: FeatureCollection;
   inundation: FeatureCollection;
-  silesia: FeatureCollection;
-  silesiaRivers: FeatureCollection;
   historyUrban: FeatureCollection;
 }
-
-const SILESIA_FACILITY_MAP = new Map(SILESIA_FACILITIES.map(f => [f.id, f]));
 
 /**
  * Projects dynamic hydrological/timeline state onto the currently active Multi-LOD
@@ -87,8 +79,6 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
       weirs: EMPTY_FC,
       depressions: EMPTY_FC,
       inundation: EMPTY_FC,
-      silesia: EMPTY_FC,
-      silesiaRivers: EMPTY_FC,
       historyUrban: EMPTY_FC
     };
   }
@@ -100,35 +90,33 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
 
   // 1. Real OSM River & Canal Polygons colored/extruded by live Q (m³/s) volume per LOD
   const canalFeatures: Feature[] = [];
-  if (ctx.view !== 'silesia') {
-    for (let i = 0; i < b.canals.features.length; i++) {
-      const f = b.canals.features[i];
-      const branchId = String(f.properties?.['id'] ?? 'odra-upper');
-      if (ctx.view === 'history' && !era.activeCanals.includes(branchId)) continue;
-      const osmId = String(f.properties?.['osmId'] ?? i);
-      const segKey = `${branchId}::${osmId}`;
-      const hydro = ctx.branches[branchId];
-      const flowM3s = hydro?.flowM3s ?? 120;
-      const load = hydro?.loadRatio ?? 0.3;
-      const status = load > 1.0 ? 'overtop' : load > 0.78 ? 'warning' : 'safe';
-      canalFeatures.push({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: {
-          id: branchId,
-          segKey,
-          selected: ctx.selectedSegmentKey === segKey,
-          flowM3s,
-          status,
-          height: computeCanalVolumeHeight(flowM3s, ctx.lod, ctx.riverScale)
-        }
-      });
-    }
+  for (let i = 0; i < b.canals.features.length; i++) {
+    const f = b.canals.features[i];
+    const branchId = String(f.properties?.['id'] ?? 'odra-upper');
+    if (ctx.view === 'history' && !era.activeCanals.includes(branchId)) continue;
+    const osmId = String(f.properties?.['osmId'] ?? i);
+    const segKey = `${branchId}::${osmId}`;
+    const hydro = ctx.branches[branchId];
+    const flowM3s = hydro?.flowM3s ?? 120;
+    const load = hydro?.loadRatio ?? 0.3;
+    const status = load > 1.0 ? 'overtop' : load > 0.78 ? 'warning' : 'safe';
+    canalFeatures.push({
+      type: 'Feature',
+      geometry: f.geometry,
+      properties: {
+        id: branchId,
+        segKey,
+        selected: ctx.selectedSegmentKey === segKey,
+        flowM3s,
+        status,
+        height: computeCanalVolumeHeight(flowM3s, ctx.lod, ctx.riverScale)
+      }
+    });
   }
 
   // 2. Real OSM Flood Embankments (man_made=dyke) at true 1:1 crest heights
   const embankmentFeatures: Feature[] = [];
-  if (ctx.show3dEmbankments && ctx.view !== 'silesia') {
+  if (ctx.show3dEmbankments) {
     for (const f of b.embankments.features) {
       const embId = String(f.properties?.['id'] ?? '');
       const builtYear = Number(f.properties?.['builtYear'] ?? 1917);
@@ -149,87 +137,52 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
 
   // 3. Real OSM Weirs, Locks & Floodgates at true structure heights
   const weirFeatures: Feature[] = [];
-  if (ctx.view !== 'silesia') {
-    for (const f of b.weirs.features) {
-      const builtYear = Number(f.properties?.['builtYear'] ?? 1916);
-      if (ctx.view === 'history' && builtYear > ctx.historyYear) continue;
-      weirFeatures.push({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: {
-          controllable: Boolean(f.properties?.['controllable']),
-          height: Number(f.properties?.['structureHeightM'] ?? 7.8)
-        }
-      });
-    }
+  for (const f of b.weirs.features) {
+    const builtYear = Number(f.properties?.['builtYear'] ?? 1916);
+    if (ctx.view === 'history' && builtYear > ctx.historyYear) continue;
+    weirFeatures.push({
+      type: 'Feature',
+      geometry: f.geometry,
+      properties: {
+        controllable: Boolean(f.properties?.['controllable']),
+        height: Number(f.properties?.['structureHeightM'] ?? 7.8)
+      }
+    });
   }
 
   // 4. Real Official OSM Wrocław Osiedla Depressed Basins & Inundation Volumes
   const depressionFeatures: Feature[] = [];
   const inundationFeatures: Feature[] = [];
-  if (ctx.view !== 'silesia') {
-    for (const f of b.depressions.features) {
-      const zoneId = String(f.properties?.['id'] ?? '');
-      const flooded = ctx.floodedZones.has(zoneId);
-      if (ctx.showDepressionZones) {
-        depressionFeatures.push({
-          type: 'Feature',
-          geometry: f.geometry,
-          properties: {
-            id: zoneId,
-            name: ctx.lang === 'pl' ? f.properties?.['namePl'] : f.properties?.['nameEn'],
-            deficit: f.properties?.['deficit'] ?? '-3.5 m',
-            flooded
-          }
-        });
-      }
-      if (flooded && zoneId === 'polder-blizanowice-trestno') {
-        const depthM = Number(f.properties?.['depthM'] ?? 3.0);
-        inundationFeatures.push({
-          type: 'Feature',
-          geometry: f.geometry,
-          properties: {
-            id: zoneId,
-            isPolder: true,
-            height: Math.max(1.2, depthM * 0.65)
-          }
-        });
-      }
-    }
-  }
-
-  // 5. Real OSM Lower Silesia & Upper Odra Reservoirs, Polders & Regional Rivers
-  const silesiaFeatures: Feature[] = [];
-  let silesiaRivers: FeatureCollection = EMPTY_FC;
-  if (ctx.view === 'silesia') {
-    silesiaRivers = b.silesiaRivers;
-    for (const f of b.silesia.features) {
-      const facId = String(f.properties?.['id'] ?? '');
-      const meta = SILESIA_FACILITY_MAP.get(facId);
-      const active = meta ? ctx.silesiaActiveIds.has(facId) : true;
-      const arrival = meta?.waveArrivalStep ?? 50;
-      const filledRatio = active
-        ? Math.max(0.2, Math.min(1, (ctx.silesiaWaveStep - (arrival - 20)) / 30))
-        : 0.08;
-      const labelName = meta
-        ? `${ctx.lang === 'pl' ? meta.namePl : meta.nameEn} (${meta.capacityMlnM3} mln m³)`
-        : facId;
-      silesiaFeatures.push({
+  for (const f of b.depressions.features) {
+    const zoneId = String(f.properties?.['id'] ?? '');
+    const flooded = ctx.floodedZones.has(zoneId);
+    if (ctx.showDepressionZones) {
+      depressionFeatures.push({
         type: 'Feature',
         geometry: f.geometry,
         properties: {
-          id: facId,
-          kind: meta?.kind ?? 'polder',
-          active,
-          name: labelName,
-          // Subtle regional basin fill height readable at zoom 7.5–10
-          height: active ? 80 + filledRatio * 240 : 25
+          id: zoneId,
+          name: ctx.lang === 'pl' ? f.properties?.['namePl'] : f.properties?.['nameEn'],
+          deficit: f.properties?.['deficit'] ?? '-3.5 m',
+          flooded
+        }
+      });
+    }
+    if (flooded && zoneId === 'polder-blizanowice-trestno') {
+      const depthM = Number(f.properties?.['depthM'] ?? 3.0);
+      inundationFeatures.push({
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: {
+          id: zoneId,
+          isPolder: true,
+          height: Math.max(1.2, depthM * 0.65)
         }
       });
     }
   }
 
-  // 6. Real Historical Urban Footprint (assembled from official OSM osiedla)
+  // 5. Real Historical Urban Footprint (assembled from official OSM osiedla)
   const historyUrbanFeatures: Feature[] = [];
   if (ctx.view === 'history') {
     const feat = b.historyUrban[String(era.year)];
@@ -242,8 +195,6 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
     weirs: { type: 'FeatureCollection', features: weirFeatures },
     depressions: { type: 'FeatureCollection', features: depressionFeatures },
     inundation: { type: 'FeatureCollection', features: inundationFeatures },
-    silesia: { type: 'FeatureCollection', features: silesiaFeatures },
-    silesiaRivers,
     historyUrban: { type: 'FeatureCollection', features: historyUrbanFeatures }
   };
 }
@@ -377,17 +328,6 @@ export function buildBaseWwwStyle(
       paint: { 'line-color': roadMajor, 'line-width': ['interpolate', ['linear'], ['zoom'], 8, 0.6, 14, 2.8] }
     },
     {
-      id: 'silesia-rivers-line',
-      type: 'line',
-      source: SRC_SILESIA_RIVERS,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: {
-        'line-color': ['match', ['get', 'name'], 'Odra', '#0284c7', '#38bdf8'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 7, 1.8, 10, 3.2],
-        'line-opacity': 0.85
-      }
-    },
-    {
       id: 'inundation-3d',
       type: 'fill-extrusion',
       source: SRC_INUNDATION,
@@ -443,22 +383,6 @@ export function buildBaseWwwStyle(
       }
     },
     {
-      id: 'silesia-facilities-3d',
-      type: 'fill-extrusion',
-      source: SRC_SILESIA,
-      paint: {
-        'fill-extrusion-color': [
-          'case',
-          ['!', ['get', 'active']],
-          '#94a3b8',
-          ['match', ['get', 'kind'], 'reservoir', '#0284c7', 'polder', '#0d9488', '#d37400']
-        ],
-        'fill-extrusion-height': ['get', 'height'],
-        'fill-extrusion-base': 0,
-        'fill-extrusion-opacity': 0.8
-      }
-    },
-    {
       id: 'buildings-3d',
       type: 'fill-extrusion',
       source: SRC_BASEMAP,
@@ -487,22 +411,6 @@ export function buildBaseWwwStyle(
       },
       paint: {
         'text-color': depressedOutline,
-        'text-halo-color': bg,
-        'text-halo-width': 1.5
-      }
-    },
-    {
-      id: 'silesia-labels',
-      type: 'symbol',
-      source: SRC_SILESIA,
-      layout: {
-        'text-field': ['get', 'name'],
-        'text-font': MAP_FONT_REGULAR,
-        'text-size': 11,
-        'text-max-width': 12
-      },
-      paint: {
-        'text-color': textColor,
         'text-halo-color': bg,
         'text-halo-width': 1.5
       }
@@ -562,8 +470,6 @@ export function buildBaseWwwStyle(
       [SRC_CANALS]: { type: 'geojson', data: initialSources.canals, tolerance: 0.2 },
       [SRC_EMBANKMENTS]: { type: 'geojson', data: initialSources.embankments, tolerance: 0.2 },
       [SRC_WEIRS]: { type: 'geojson', data: initialSources.weirs, tolerance: 0.15 },
-      [SRC_SILESIA]: { type: 'geojson', data: initialSources.silesia, tolerance: 0.25 },
-      [SRC_SILESIA_RIVERS]: { type: 'geojson', data: initialSources.silesiaRivers, tolerance: 0.25 },
       [SRC_HISTORY_URBAN]: { type: 'geojson', data: initialSources.historyUrban, tolerance: 0.25 }
     },
     terrain: {

@@ -238,24 +238,6 @@
         </div>
       }
 
-      <!-- 4. Lower Silesia Polders & Reservoirs Bar -->
-      @if (view === 'silesia') {
-        <div class="dock__subbar dock__subbar--wrap">
-          <div class="silesia-chips">
-            @for (fac of silesiaFacilities; track fac.id) {
-              <button
-                type="button"
-                class="silesia-chip"
-                [class.silesia-chip--active]="state.silesiaActiveIds().has(fac.id)"
-                (click)="state.toggleSilesiaFacility(fac.id)">
-                <span>{{ i18n.lang() === 'pl' ? fac.namePl : fac.nameEn }}</span>
-                <span class="silesia-chip__cap">-{{ fac.peakReductionM3s }} m³/s</span>
-              </button>
-            }
-          </div>
-        </div>
-      }
-
       <!-- Telemetry & Status Strip -->
       <div class="dock__top">
         <div class="dock__readouts">
@@ -307,7 +289,7 @@
               <span class="readout__label">{{ t.readoutCapacity }}</span>
               <span class="readout__val">{{ hydro.activeFloodScenario().systemCapacityM3s }} m³/s</span>
             </div>
-          } @else if (view === 'history') {
+          } @else {
             @let era = hydro.activeHistoryEra();
             <span class="status-pill status-pill--accent">{{ state.historyYear() }}</span>
             <div class="readout">
@@ -315,23 +297,6 @@
               <span class="readout__val">{{ era.capacityM3s }} m³/s</span>
             </div>
             <span class="dock__note">{{ t.historyNoBuildingsNote }}</span>
-          } @else {
-            @let sil = hydro.silesiaSummary();
-            <span class="status-pill" [class.status-pill--danger]="!sil.safeForModernWww">
-              {{ sil.safeForModernWww ? t.statusSafe : t.statusOverflow }}
-            </span>
-            <div class="readout">
-              <span class="readout__label">{{ t.silesiaInflowPeak }}</span>
-              <span class="readout__val">{{ sil.rawPeak }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.silesiaAtWroclaw }}</span>
-              <span class="readout__val">{{ sil.atWroclaw }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutRetention }}</span>
-              <span class="readout__val">{{ sil.totalCapacity }} {{ t.silesiaCapacityUnit }}</span>
-            </div>
           }
         </div>
 

@@ -32,7 +32,7 @@ import { AppStateService } from '../../core/services/app-state.service';
 import { HydrologyService } from '../../core/services/hydrology.service';
 import { MapService } from '../../core/map/map.service';
 import { DEPRESSED_ZONES, WEIR_NODES } from '../../core/data/www-hydrology.data';
-import { HISTORY_ERAS, SILESIA_FACILITIES } from '../../core/data/www-events.data';
+import { HISTORY_ERAS } from '../../core/data/www-events.data';
 import { FloodScenarioId, GateId } from '../../core/models/www.model';
 import { SettingsPopupComponent } from '../settings-popup/settings-popup.component';
 import { SourcesPopupComponent } from '../sources-popup/sources-popup.component';
@@ -76,7 +76,6 @@ export class MapDockComponent {
   readonly resetIcon = RotateCcw;
 
   readonly controllableWeirs = WEIR_NODES.filter(w => w.controllable && w.gateId);
-  readonly silesiaFacilities = SILESIA_FACILITIES;
 
   readonly scenarioOptions = computed<SwitcherOption<FloodScenarioId>[]>(() => {
     const t = this.i18n.t();
@@ -113,8 +112,7 @@ export class MapDockComponent {
     const v = this.state.currentView();
     if (v === 'equilibrium') return this.state.inflowM3s();
     if (v === 'floods') return this.state.floodTimelineStep();
-    if (v === 'history') return this.state.historyYear();
-    return this.state.silesiaWaveStep();
+    return this.state.historyYear();
   });
 
   readonly sliderMarkers = computed<TimelineMarker[]>(() => {
@@ -136,20 +134,12 @@ export class MapDockComponent {
         color: p.category === 'breach' ? '#ef4444' : '#d37400'
       }));
     }
-    if (v === 'history') {
-      return HISTORY_ERAS.map(e => ({
-        id: `era-${e.year}`,
-        value: e.year,
-        label: String(e.year),
-        color: e.year === 1997 ? '#ef4444' : '#d37400'
-      }));
-    }
-    return [
-      { id: 'sil-raciborz', value: 15, label: 'Racibórz' },
-      { id: 'sil-nysa', value: 35, label: 'Nysa' },
-      { id: 'sil-olawa', value: 66, label: 'Oława' },
-      { id: 'sil-widawa', value: 86, label: 'Widawa' }
-    ];
+    return HISTORY_ERAS.map(e => ({
+      id: `era-${e.year}`,
+      value: e.year,
+      label: String(e.year),
+      color: e.year === 1997 ? '#ef4444' : '#d37400'
+    }));
   });
 
   readonly floodedZoneNames = computed(() => {
@@ -163,8 +153,7 @@ export class MapDockComponent {
     const v = this.state.currentView();
     if (v === 'equilibrium') this.state.inflowM3s.set(val);
     else if (v === 'floods') this.state.floodTimelineStep.set(val);
-    else if (v === 'history') this.state.historyYear.set(val);
-    else this.state.silesiaWaveStep.set(val);
+    else this.state.historyYear.set(val);
   }
 
   onMarkerClick(m: TimelineMarker): void {

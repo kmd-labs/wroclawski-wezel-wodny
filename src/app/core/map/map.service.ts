@@ -18,15 +18,11 @@ import {
   MAP_DEFAULT_ZOOM,
   MAP_MAX_ZOOM,
   MAP_MIN_ZOOM,
-  MAP_SILESIA_ZOOM,
-  SILESIA_CENTER,
   SRC_CANALS,
   SRC_DEPRESSIONS,
   SRC_EMBANKMENTS,
   SRC_HISTORY_URBAN,
   SRC_INUNDATION,
-  SRC_SILESIA,
-  SRC_SILESIA_RIVERS,
   SRC_WEIRS,
   WROCLAW_BOUNDS,
   WROCLAW_CENTER
@@ -41,7 +37,7 @@ import { I18nService } from '../i18n/i18n.service';
 import { AppStateService } from '../services/app-state.service';
 import { HydrologyService } from '../services/hydrology.service';
 import { VectorDataService } from '../services/vector-data.service';
-import { HISTORY_ERAS, SILESIA_FACILITIES } from '../data/www-events.data';
+import { HISTORY_ERAS } from '../data/www-events.data';
 import { CANAL_SEGMENTS, WEIR_NODES } from '../data/www-hydrology.data';
 import { MapPinViewModel, WeirNode } from '../models/www.model';
 
@@ -148,8 +144,8 @@ export class MapService {
       untracked(() => {
         this.zone.runOutsideAngular(() => {
           map.flyTo({
-            center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
-            zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
+            center: WROCLAW_CENTER,
+            zoom: MAP_DEFAULT_ZOOM,
             pitch: 0,
             bearing: 0,
             duration: 950
@@ -164,8 +160,6 @@ export class MapService {
       this.state.floodScenario();
       this.state.floodTimelineStep();
       this.state.historyYear();
-      this.state.silesiaWaveStep();
-      this.state.silesiaActiveIds();
       this.state.gateOpenings();
       this.i18n.lang();
       this.mapReady();
@@ -450,11 +444,10 @@ export class MapService {
   }
 
   resetCamera(): void {
-    const view = this.state.currentView();
     this.zone.runOutsideAngular(() => {
       this.map?.flyTo({
-        center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
-        zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
+        center: WROCLAW_CENTER,
+        zoom: MAP_DEFAULT_ZOOM,
         pitch: 0,
         bearing: 0,
         duration: 650
@@ -491,8 +484,6 @@ export class MapService {
       floodedZones: this.hydro.floodedZoneIds(),
       breachedEmbankments: this.hydro.breachedEmbankmentIds(),
       historyYear: this.state.historyYear(),
-      silesiaWaveStep: this.state.silesiaWaveStep(),
-      silesiaActiveIds: this.state.silesiaActiveIds(),
       selectedSegmentKey: this.state.selectedSegment()?.segKey ?? null
     });
   }
@@ -504,8 +495,6 @@ export class MapService {
       [SRC_WEIRS, payload.weirs],
       [SRC_DEPRESSIONS, payload.depressions],
       [SRC_INUNDATION, payload.inundation],
-      [SRC_SILESIA, payload.silesia],
-      [SRC_SILESIA_RIVERS, payload.silesiaRivers],
       [SRC_HISTORY_URBAN, payload.historyUrban]
     ];
     for (const [id, data] of entries) {
@@ -587,32 +576,6 @@ export class MapService {
           sourceOutlet: era.pin.sourceOutlet,
           sourceTitle: lang === 'pl' ? era.labelPl : era.labelEn,
           sourceUrl: era.pin.sourceUrl
-        });
-      }
-    } else if (view === 'silesia') {
-      const step = this.state.silesiaWaveStep();
-      const activeIds = this.state.silesiaActiveIds();
-      for (const fac of SILESIA_FACILITIES) {
-        const pt = map.project(fac.lngLat);
-        const active = activeIds.has(fac.id);
-        const reached = active && step >= fac.waveArrivalStep;
-        pins.push({
-          id: fac.id,
-          lngLat: fac.lngLat,
-          screenX: pt.x,
-          screenY: pt.y,
-          visible: pt.x >= -40 && pt.x <= w + 40 && pt.y >= -40 && pt.y <= h + 40,
-          reached,
-          opacity: reached ? 1.0 : 0.5,
-          category: fac.kind === 'reservoir' ? 'reservoir' : 'polder',
-          label: `${fac.capacityMlnM3} mln m³`,
-          dateLabel: `${fac.river} · ${fac.commissionedYear}`,
-          flowM3s: fac.peakReductionM3s,
-          title: lang === 'pl' ? fac.namePl : fac.nameEn,
-          desc: lang === 'pl' ? fac.descPl : fac.descEn,
-          sourceOutlet: 'PGW Wody Polskie',
-          sourceTitle: `${fac.river} · -${fac.peakReductionM3s} m³/s`,
-          sourceUrl: 'https://www.gov.pl/web/wody-polskie-wroclaw'
         });
       }
     }

@@ -11,7 +11,6 @@ export const EN: Dict = {
   viewEquilibrium: 'How It Works',
   viewFloods: 'Historic Floods',
   viewHistory: 'History & Construction',
-  viewSilesia: 'Lower Silesia Polders',
   stageAriaLabel: 'Wrocławski Węzeł Wodny 3D Hydrological Map',
 
   // Bottom Dock & Playback
@@ -93,14 +92,6 @@ export const EN: Dict = {
   historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',
   historyNoBuildingsNote: '3D modern buildings hidden in History view',
 
-  // Lower Silesia View
-  silesiaSubtitle: 'Upper & Middle Odra dry reservoirs and floodplain polders protecting Wrocław',
-  silesiaToggleAll: 'Enable All',
-  silesiaWaveLabel: 'Flood wave propagation',
-  silesiaInflowPeak: 'Upper Odra Peak',
-  silesiaAtWroclaw: 'Shaved at Trestno',
-  silesiaCapacityUnit: 'mln m³',
-
   // Settings Popup (Layers & Theme)
   settingsTitle: 'Map Layers & Appearance',
   layersLabel: 'Map Layers',
@@ -125,7 +116,7 @@ export const EN: Dict = {
   sourcesLiteratureTitle: 'Scientific & Hydrotechnical Literature',
   sourcesArticlesTitle: 'Timeline News & Report Citations',
   sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
-  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, osiedle basins, and Lower Silesia reservoirs are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie, Opolskie, Śląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
+  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, and osiedle basins are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
   sourcesBuiltTitle: 'Attribution & Citation',
   sourcesBuiltBy: 'Built by kmd-labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
   citeStyleLabel: 'Citation style',

@@ -11,7 +11,6 @@ export const PL: Dict = {
   viewEquilibrium: 'Jak działa system',
   viewFloods: 'Historyczne powodzie',
   viewHistory: 'Historia i budowa WWW',
-  viewSilesia: 'Poldery Dolnego Śląska',
   stageAriaLabel: 'Wizualizacja 3D Wrocławskiego Węzła Wodnego',
 
   // Bottom Dock & Playback
@@ -93,14 +92,6 @@ export const PL: Dict = {
   historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',
   historyNoBuildingsNote: 'Współczesne budynki 3D ukryte w widoku historycznym',
 
-  // Lower Silesia View
-  silesiaSubtitle: 'Suche zbiorniki i poldery przeciwpowodziowe Dolnego Śląska i Górnej Odry',
-  silesiaToggleAll: 'Włącz wszystkie',
-  silesiaWaveLabel: 'Przejście fali wezbraniowej',
-  silesiaInflowPeak: 'Fala Górnej Odry',
-  silesiaAtWroclaw: 'Po redukcji w Trestnie',
-  silesiaCapacityUnit: 'mln m³',
-
   // Settings Popup (Layers & Theme)
   settingsTitle: 'Warstwy mapy i motyw',
   layersLabel: 'Warstwy mapy',
@@ -125,7 +116,7 @@ export const PL: Dict = {
   sourcesLiteratureTitle: 'Publikacje naukowe i dokumentacja techniczna',
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
   sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
-  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy, granice osiedli oraz zbiorniki i poldery Dolnego Śląska pochodzą bezpośrednio z paczek OpenStreetMap Geofabrik (Dolnośląskie, Opolskie, Śląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
+  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy i granice osiedli pochodzą bezpośrednio z paczki OpenStreetMap Geofabrik (Dolnośląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
   sourcesBuiltTitle: 'Atrybucja i cytowanie',
   sourcesBuiltBy: 'Stworzone przez kmd-labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
   citeStyleLabel: 'Styl cytowania',

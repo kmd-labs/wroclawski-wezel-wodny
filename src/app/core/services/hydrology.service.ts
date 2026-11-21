@@ -6,8 +6,7 @@ import {
 } from '../data/www-hydrology.data';
 import {
   FLOOD_SCENARIOS,
-  HISTORY_ERAS,
-  SILESIA_FACILITIES
+  HISTORY_ERAS
 } from '../data/www-events.data';
 import {
   BranchHydrology,
@@ -358,33 +357,6 @@ export class HydrologyService {
     return era;
   });
 
-  readonly silesiaSummary = computed(() => {
-    const active = this.state.silesiaActiveIds();
-    const step = this.state.silesiaWaveStep();
-    const rawPeak = 3850;
-    let totalCapacity = 0;
-    let totalReduction = 0;
-
-    for (const f of SILESIA_FACILITIES) {
-      if (active.has(f.id)) {
-        totalCapacity += f.capacityMlnM3;
-        if (step >= f.waveArrivalStep - 10) {
-          const effectiveness = Math.min(1, Math.max(0.2, (step - (f.waveArrivalStep - 15)) / 25));
-          totalReduction += f.peakReductionM3s * effectiveness;
-        }
-      }
-    }
-
-    const atWroclaw = Math.max(950, Math.round(rawPeak - totalReduction));
-    return {
-      rawPeak,
-      totalCapacity: Math.round(totalCapacity * 10) / 10,
-      totalReduction: Math.round(totalReduction),
-      atWroclaw,
-      safeForModernWww: atWroclaw <= 3100
-    };
-  });
-
   private routeWaveFlows(
     effectiveTrestno: number,
     view: string,
@@ -495,10 +467,7 @@ export class HydrologyService {
           ? Math.min(260, (inflow - 2100) * 0.26)
           : 0;
 
-      if (view === 'silesia') {
-        inflow = this.silesiaSummary().atWroclaw;
-        polderShave = 0;
-      } else if (view === 'history') {
+      if (view === 'history') {
         inflow = Math.min(2100, this.activeHistoryEra().capacityM3s * 0.85);
         polderShave = 0;
       }
@@ -555,7 +524,7 @@ export class HydrologyService {
    */
   readonly floodBasinLevels = computed<FloodBasinLevel[]>(() => {
     const view = this.state.currentView();
-    if (view === 'history' || view === 'silesia') return [];
+    if (view === 'history') return [];
 
     const branches = this.branchHydrology();
     const polderOn = this.state.polderRetentionActive();
@@ -662,7 +631,7 @@ export class HydrologyService {
     if (view === 'floods') {
       return new Set(this.activeFloodKeyframe().floodedZones);
     }
-    if (view === 'history' || view === 'silesia') {
+    if (view === 'history') {
       return new Set();
     }
     return new Set(this.floodBasinLevels().map(b => b.id));
@@ -733,7 +702,7 @@ export class HydrologyService {
     const totalZonesCount = ISOK_BASIN_PROFILES.length - 1; // exclude upstream retention polder
     const view = this.state.currentView();
     const zeroSectors = [0, 0, 0, 0, 0, 0, 0, 0];
-    if (view === 'history' || view === 'silesia') {
+    if (view === 'history') {
       return {
         active: false,
         trestnoMasl: 85,

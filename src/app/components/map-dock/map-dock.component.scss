@@ -390,12 +390,6 @@
   }
 }
 
-.silesia-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
 .hydrograph {
   display: flex;
   flex-direction: column;
@@ -441,30 +435,5 @@
     font-family: $font-family-mono;
     font-size: font-size("xxs");
     color: color("text-dim");
-  }
-}
-
-.silesia-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: radius("pill");
-  border: 1px solid color("line");
-  background: color("panel-inset");
-  color: color("text-dim");
-  font-size: font-size("xxs");
-  cursor: pointer;
-  transition: all transition("fast");
-
-  &--active {
-    border-color: color("accent");
-    background: color("surface-muted");
-    color: color("text-bright");
-  }
-
-  &__cap {
-    font-family: $font-family-mono;
-    color: color("accent");
   }
 }

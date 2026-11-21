@@ -30,7 +30,6 @@ export interface Dict {
   viewEquilibrium: string;
   viewFloods: string;
   viewHistory: string;
-  viewSilesia: string;
   stageAriaLabel: string;
 
   // Bottom Dock & Playback
@@ -111,14 +110,6 @@ export interface Dict {
   // History View
   historySubtitle: string;
   historyNoBuildingsNote: string;
-
-  // Lower Silesia View
-  silesiaSubtitle: string;
-  silesiaToggleAll: string;
-  silesiaWaveLabel: string;
-  silesiaInflowPeak: string;
-  silesiaAtWroclaw: string;
-  silesiaCapacityUnit: string;
 
   // Settings Popup (Layers & Theme)
   settingsTitle: string;

@@ -1,7 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ThemeMode, ThemeService } from '@kmd/design-system';
 import { DEFAULT_GATE_OPENINGS } from '../data/www-hydrology.data';
-import { SILESIA_FACILITIES } from '../data/www-events.data';
 import { FloodScenarioId, GateId, ViewMode } from '../models/www.model';
 
 const THEME_STORAGE_KEY = 'wroclawski-wezel-wodny.theme';
@@ -32,12 +31,6 @@ export class AppStateService {
 
   // 3. History View State (1241..2024)
   readonly historyYear = signal<number>(1917);
-
-  // 4. Lower Silesia View State
-  readonly silesiaWaveStep = signal<number>(80);
-  readonly silesiaActiveIds = signal<Set<string>>(
-    new Set(SILESIA_FACILITIES.map(f => f.id))
-  );
 
   // Playback State
   readonly isPlaying = signal<boolean>(false);
@@ -80,19 +73,6 @@ export class AppStateService {
     }
   }
 
-  toggleSilesiaFacility(id: string): void {
-    this.silesiaActiveIds.update(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  enableAllSilesiaFacilities(): void {
-    this.silesiaActiveIds.set(new Set(SILESIA_FACILITIES.map(f => f.id)));
-  }
-
   togglePlaying(): void {
     if (this.isPlaying()) {
       this.stopPlaying();
@@ -118,10 +98,6 @@ export class AppStateService {
         const next = Math.round((this.floodTimelineStep() + 0.5) * 10) / 10;
         if (next > 100) this.floodTimelineStep.set(0);
         else this.floodTimelineStep.set(next);
-      } else if (view === 'silesia') {
-        const next = Math.round((this.silesiaWaveStep() + 0.8) * 10) / 10;
-        if (next > 100) this.silesiaWaveStep.set(0);
-        else this.silesiaWaveStep.set(next);
       } else if (view === 'history') {
         const years = [1241, 1897, 1903, 1917, 1939, 1997, 2024];
         const cur = this.historyYear();
