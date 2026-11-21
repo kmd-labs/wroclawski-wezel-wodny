@@ -67,6 +67,8 @@ export interface Dict {
   readoutYear: string;
   readoutRetention: string;
   readoutReducedFlow: string;
+  segmentCapacity: string;
+  segmentLoad: string;
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: string;

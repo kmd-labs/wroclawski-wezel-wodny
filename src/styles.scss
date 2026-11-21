@@ -34,3 +34,95 @@
     background-color: color("panel-bg");
   }
 }
+
+// ─── Segment Inspection Tooltip (inspired by el-nino globe-tooltip-col) ──────
+
+.www-tooltip-col {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 185px;
+  text-align: left;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 32px;
+    padding: 6px 32px 6px 12px;
+    box-sizing: border-box;
+  }
+
+  &__title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: color("text-bright");
+    line-height: 1.25;
+    max-width: 190px;
+  }
+
+  &__divider {
+    height: 1px;
+    width: 100%;
+    background: color("line");
+    margin: 0;
+    flex: none;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 12px 9px 12px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    white-space: nowrap;
+  }
+
+  &__label-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__icon {
+    display: inline-block;
+    flex-shrink: 0;
+
+    &--water {
+      color: #0284c7;
+    }
+
+    &--load {
+      color: color("accent");
+    }
+
+    &--cap {
+      color: color("text-dim");
+    }
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    color: color("text-main");
+    white-space: nowrap;
+  }
+
+  &__val {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-family: $font-family-mono;
+    color: color("text-bright");
+    white-space: nowrap;
+
+    &--overtop {
+      color: color("danger-text");
+    }
+  }
+}

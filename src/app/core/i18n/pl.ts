@@ -48,6 +48,8 @@ export const PL: Dict = {
   readoutYear: 'Okres',
   readoutRetention: 'Retencja',
   readoutReducedFlow: 'We Wrocławiu',
+  segmentCapacity: 'Przepustowość',
+  segmentLoad: 'Obciążenie',
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: 'Sterowanie jazami i zasuwami',

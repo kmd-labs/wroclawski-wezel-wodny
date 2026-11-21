@@ -14,6 +14,11 @@ export class AppStateService {
   readonly currentView = signal<ViewMode>('equilibrium');
   readonly selectedPinId = signal<string | null>(null);
   readonly selectedWeirId = signal<GateId | null>(null);
+  readonly selectedSegment = signal<{
+    segKey: string;
+    branchId: string;
+    lngLat: [number, number];
+  } | null>(null);
 
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
@@ -56,6 +61,7 @@ export class AppStateService {
   setView(view: ViewMode): void {
     this.stopPlaying();
     this.selectedPinId.set(null);
+    this.selectedSegment.set(null);
     this.currentView.set(view);
   }
 

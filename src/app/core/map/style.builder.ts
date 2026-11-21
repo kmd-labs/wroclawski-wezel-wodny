@@ -51,6 +51,7 @@ export interface DynamicDataContext {
   historyYear: number;
   silesiaWaveStep: number;
   silesiaActiveIds: Set<string>;
+  selectedSegmentKey: string | null;
 }
 
 export interface DynamicSourcesPayload {
@@ -93,9 +94,12 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
   // 1. Real OSM River & Canal Polygons colored/extruded by live Q (m³/s) volume per LOD
   const canalFeatures: Feature[] = [];
   if (ctx.view !== 'silesia') {
-    for (const f of b.canals.features) {
+    for (let i = 0; i < b.canals.features.length; i++) {
+      const f = b.canals.features[i];
       const branchId = String(f.properties?.['id'] ?? 'odra-upper');
       if (ctx.view === 'history' && !era.activeCanals.includes(branchId)) continue;
+      const osmId = String(f.properties?.['osmId'] ?? i);
+      const segKey = `${branchId}::${osmId}`;
       const hydro = ctx.branches[branchId];
       const flowM3s = hydro?.flowM3s ?? 120;
       const load = hydro?.loadRatio ?? 0.3;
@@ -105,6 +109,8 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
         geometry: f.geometry,
         properties: {
           id: branchId,
+          segKey,
+          selected: ctx.selectedSegmentKey === segKey,
           flowM3s,
           status,
           height: computeCanalVolumeHeight(flowM3s, ctx.lod)
@@ -262,6 +268,7 @@ export function buildBaseWwwStyle(
   const safeWater = '#0ea5e9';
   const warnWater = '#d37400';
   const overtopWater = '#ef4444';
+  const selectedWater = dark ? '#a78bfa' : '#7c3aed';
   const embankmentColor = dark ? '#9a8466' : '#78716c';
   const breachedColor = '#dc2626';
   const depressedFill = dark ? 'rgba(99, 102, 241, 0.14)' : 'rgba(99, 102, 241, 0.11)';
@@ -380,15 +387,20 @@ export function buildBaseWwwStyle(
       source: SRC_CANALS,
       paint: {
         'fill-extrusion-color': [
-          'match',
-          ['get', 'status'],
-          'overtop', overtopWater,
-          'warning', warnWater,
-          safeWater
+          'case',
+          ['get', 'selected'],
+          selectedWater,
+          [
+            'match',
+            ['get', 'status'],
+            'overtop', overtopWater,
+            'warning', warnWater,
+            safeWater
+          ]
         ],
         'fill-extrusion-height': ['get', 'height'],
         'fill-extrusion-base': 0,
-        'fill-extrusion-opacity': 0.86
+        'fill-extrusion-opacity': 0.88
       }
     },
     {

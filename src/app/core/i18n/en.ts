@@ -48,6 +48,8 @@ export const EN: Dict = {
   readoutYear: 'Era',
   readoutRetention: 'Retention',
   readoutReducedFlow: 'At Wrocław',
+  segmentCapacity: 'Max capacity',
+  segmentLoad: 'Load',
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: 'Weir & Floodgate Equilibrium',
