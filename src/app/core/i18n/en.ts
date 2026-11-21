@@ -21,7 +21,7 @@ export const EN: Dict = {
   glossary: 'Glossary',
   glossaryDesc: 'Key hydrotechnical terms of the Wrocław Water Node.',
   sourcesBtn: 'Sources',
-  settingsBtn: 'Settings',
+  settingsBtn: 'Layers',
   close: 'Close',
 
   // Map Camera Controls
@@ -96,16 +96,8 @@ export const EN: Dict = {
   silesiaAtWroclaw: 'Shaved at Trestno',
   silesiaCapacityUnit: 'mln m³',
 
-  // Settings Popup (LOD, Layers, Theme)
-  settingsTitle: 'Map Layers & Vector Detail',
-  lodLabel: 'Vector Level of Detail (LOD)',
-  lodDesc: 'Automatically switches OSM vector geometry precision by zoom level: Overview (55 m), City (9 m), and Full OSM Detail (~1 m).',
-  lodAuto: 'Auto',
-  lodLow: 'LOD 0',
-  lodMedium: 'LOD 1',
-  lodHigh: 'LOD 2',
-  riverScaleLabel: 'River Segment Exaggeration (Q Height)',
-  riverScaleDesc: 'Multiplies only the 3D height of river and canal segments (buildings and flood embankments remain 1:1).',
+  // Settings Popup (Layers & Theme)
+  settingsTitle: 'Map Layers & Appearance',
   layersLabel: 'Map Layers',
   layerBuildings3d: '3D OSM Buildings',
   layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',

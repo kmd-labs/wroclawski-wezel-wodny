@@ -148,8 +148,8 @@ export class MapService {
           map.flyTo({
             center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
             zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
-            pitch: view === 'silesia' ? 42 : 52,
-            bearing: view === 'silesia' ? 0 : -14,
+            pitch: 0,
+            bearing: 0,
             duration: 950
           });
         });
@@ -243,8 +243,8 @@ export class MapService {
           style: initialStyle,
           center: WROCLAW_CENTER,
           zoom: MAP_DEFAULT_ZOOM,
-          pitch: 52,
-          bearing: -14,
+          pitch: 0,
+          bearing: 0,
           minZoom: MAP_MIN_ZOOM,
           maxZoom: MAP_MAX_ZOOM,
           maxBounds: WROCLAW_BOUNDS,
@@ -432,8 +432,8 @@ export class MapService {
       this.map?.flyTo({
         center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
         zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
-        pitch: view === 'silesia' ? 42 : 52,
-        bearing: view === 'silesia' ? 0 : -14,
+        pitch: 0,
+        bearing: 0,
         duration: 650
       });
     });
@@ -460,7 +460,7 @@ export class MapService {
       lang: this.i18n.lang(),
       view: this.state.currentView(),
       lod: this.vectors.activeLod(),
-      riverScale: this.state.riverVerticalScale(),
+      riverScale: 5,
       bundle: this.vectors.loadedBundle(),
       show3dEmbankments: this.state.show3dEmbankments(),
       showDepressionZones: this.state.showDepressionZones(),

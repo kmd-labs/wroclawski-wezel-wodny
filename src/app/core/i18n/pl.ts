@@ -21,7 +21,7 @@ export const PL: Dict = {
   glossary: 'Słowniczek',
   glossaryDesc: 'Najważniejsze pojęcia hydrotechniczne Wrocławskiego Węzła Wodnego.',
   sourcesBtn: 'Źródła',
-  settingsBtn: 'Ustawienia',
+  settingsBtn: 'Warstwy',
   close: 'Zamknij',
 
   // Map Camera Controls
@@ -96,16 +96,8 @@ export const PL: Dict = {
   silesiaAtWroclaw: 'Po redukcji w Trestnie',
   silesiaCapacityUnit: 'mln m³',
 
-  // Settings Popup (LOD, Layers, Theme)
-  settingsTitle: 'Warstwy mapy i szczegółowość (LOD)',
-  lodLabel: 'Poziom szczegółowości wektorów (LOD)',
-  lodDesc: 'Dynamicznie dobiera precyzję geometrii OSM do przybliżenia: Przegląd (55 m), Miasto (9 m) i Pełna precyzja OSM (~1 m).',
-  lodAuto: 'Auto',
-  lodLow: 'LOD 0',
-  lodMedium: 'LOD 1',
-  lodHigh: 'LOD 2',
-  riverScaleLabel: 'Przewyższenie segmentów rzeki (wysokość Q)',
-  riverScaleDesc: 'Skaluje wyłącznie wysokość 3D segmentów rzeki i kanałów (budynki i wały pozostają w skali 1:1).',
+  // Settings Popup (Layers & Theme)
+  settingsTitle: 'Warstwy mapy i motyw',
   layersLabel: 'Warstwy mapy',
   layerBuildings3d: 'Budynki 3D (OSM)',
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',

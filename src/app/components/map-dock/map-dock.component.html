@@ -33,7 +33,7 @@
           <div class="camera-row">
             <div class="camera-row__head">
               <span class="camera-row__label">{{ t.cameraZoom }}</span>
-              <span class="camera-row__val">{{ state.cameraZoom().toFixed(1) }} · LOD {{ vectors.activeLod() }}</span>
+              <span class="camera-row__val">{{ state.cameraZoom().toFixed(1) }}</span>
             </div>
             <div class="camera-row__controls">
               <button type="button" class="cam-pill" [attr.aria-label]="t.cameraZoomOut" (click)="mapService.zoomBy(-1)">
@@ -336,7 +336,7 @@
           }
           <app-button size="sm" variant="ghost" [ariaLabel]="t.settingsBtn" (btnClick)="openSettings()">
             <lucide-icon [img]="settingsIcon" [size]="14"></lucide-icon>
-            <span>LOD {{ vectors.activeLod() }}</span>
+            <span>{{ t.settingsBtn }}</span>
           </app-button>
           <app-button size="sm" variant="ghost" (btnClick)="openSources()">
             <lucide-icon [img]="sourcesIcon" [size]="14"></lucide-icon>

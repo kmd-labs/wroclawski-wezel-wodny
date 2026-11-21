@@ -36,7 +36,7 @@ const LOD_Q_SCALE: Record<LodLevel, { baseM: number; mPerM3s: number }> = {
 export function computeCanalVolumeHeight(
   flowM3s: number,
   lod: LodLevel,
-  riverScale = 1
+  riverScale = 5
 ): number {
   const { baseM, mPerM3s } = LOD_Q_SCALE[lod];
   return Math.round((baseM + Math.max(0, flowM3s) * mPerM3s) * riverScale * 100) / 100;

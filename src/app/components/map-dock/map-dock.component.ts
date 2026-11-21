@@ -31,7 +31,6 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { AppStateService } from '../../core/services/app-state.service';
 import { HydrologyService } from '../../core/services/hydrology.service';
 import { MapService } from '../../core/map/map.service';
-import { VectorDataService } from '../../core/services/vector-data.service';
 import { DEPRESSED_ZONES, WEIR_NODES } from '../../core/data/www-hydrology.data';
 import { HISTORY_ERAS, SILESIA_FACILITIES } from '../../core/data/www-events.data';
 import { FloodScenarioId, GateId } from '../../core/models/www.model';
@@ -59,7 +58,6 @@ export class MapDockComponent {
   readonly state = inject(AppStateService);
   readonly hydro = inject(HydrologyService);
   readonly mapService = inject(MapService);
-  readonly vectors = inject(VectorDataService);
   private readonly popup = inject(PopupService);
 
   readonly playIcon = Play;

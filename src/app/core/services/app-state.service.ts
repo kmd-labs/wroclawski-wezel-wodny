@@ -1,11 +1,10 @@
-import { Injectable, effect, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { ThemeMode, ThemeService } from '@kmd/design-system';
 import { DEFAULT_GATE_OPENINGS } from '../data/www-hydrology.data';
 import { SILESIA_FACILITIES } from '../data/www-events.data';
 import { FloodScenarioId, GateId, ViewMode } from '../models/www.model';
 
 const THEME_STORAGE_KEY = 'wroclawski-wezel-wodny.theme';
-const RIVER_SCALE_STORAGE_KEY = 'wroclawski-wezel-wodny.riverScale';
 
 @Injectable({ providedIn: 'root' })
 export class AppStateService {
@@ -44,28 +43,19 @@ export class AppStateService {
   readonly isPlaying = signal<boolean>(false);
   private playTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Map Camera State (controlled via compact button above bottom timeline)
+  // Map Camera State (starts flat without tilt)
   readonly cameraZoom = signal<number>(12.1);
-  readonly cameraPitch = signal<number>(52);
-  readonly cameraBearing = signal<number>(-14);
+  readonly cameraPitch = signal<number>(0);
+  readonly cameraBearing = signal<number>(0);
   readonly cameraControlsOpen = signal<boolean>(false);
 
-  // 3D Layer Toggles & River-Only Exaggeration
-  readonly riverVerticalScale = signal<number>(this.loadRiverScale());
+  // Map Layer Toggles
   readonly show3dBuildings = signal<boolean>(true);
   readonly show3dEmbankments = signal<boolean>(true);
   readonly showDepressionZones = signal<boolean>(true);
 
   constructor() {
     this.restoreTheme();
-    effect(() => {
-      const scale = this.riverVerticalScale();
-      try {
-        localStorage.setItem(RIVER_SCALE_STORAGE_KEY, String(scale));
-      } catch {
-        // ignore
-      }
-    });
   }
 
   setView(view: ViewMode): void {
@@ -153,16 +143,6 @@ export class AppStateService {
       }
     } catch {
       // ignore
-    }
-  }
-
-  private loadRiverScale(): number {
-    try {
-      const raw = localStorage.getItem(RIVER_SCALE_STORAGE_KEY);
-      const val = raw ? parseFloat(raw) : 1;
-      return !isNaN(val) && val >= 0.5 && val <= 8 ? val : 1;
-    } catch {
-      return 1;
     }
   }
 }
