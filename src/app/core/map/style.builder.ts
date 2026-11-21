@@ -19,13 +19,34 @@ import {
 import { Lang } from '../i18n/i18n.types';
 import { BranchHydrology, ViewMode } from '../models/www.model';
 import { HISTORY_ERAS, SILESIA_FACILITIES } from '../data/www-events.data';
-import { WwwLodBundle } from '../services/vector-data.service';
+import { LodLevel, WwwLodBundle } from '../services/vector-data.service';
 
 export const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
+
+/**
+ * Computes 3D river segment extrusion height proportional to discharge Q (m³/s)
+ * and calibrated per LOD tier so water volume remains visually legible at every zoom.
+ */
+const LOD_Q_SCALE: Record<LodLevel, { baseM: number; mPerM3s: number }> = {
+  0: { baseM: 4.0, mPerM3s: 0.085 },  // Overview zoom: 400 m³/s -> 38 m, 3640 m³/s -> 313 m
+  1: { baseM: 2.5, mPerM3s: 0.022 },  // City zoom:     400 m³/s -> 11 m, 3640 m³/s -> 83 m
+  2: { baseM: 1.2, mPerM3s: 0.0065 }  // Street zoom:   400 m³/s -> 3.8 m, 3640 m³/s -> 25 m
+};
+
+export function computeCanalVolumeHeight(
+  flowM3s: number,
+  lod: LodLevel,
+  riverScale = 5
+): number {
+  const { baseM, mPerM3s } = LOD_Q_SCALE[lod];
+  return Math.round((baseM + Math.max(0, flowM3s) * mPerM3s) * riverScale * 100) / 100;
+}
 
 export interface DynamicDataContext {
   lang: Lang;
   view: ViewMode;
+  lod: LodLevel;
+  riverScale: number;
   bundle: WwwLodBundle | null;
   show3dEmbankments: boolean;
   showDepressionZones: boolean;
@@ -35,6 +56,7 @@ export interface DynamicDataContext {
   historyYear: number;
   silesiaWaveStep: number;
   silesiaActiveIds: Set<string>;
+  selectedSegmentKey: string | null;
 }
 
 export interface DynamicSourcesPayload {
@@ -74,23 +96,29 @@ export function buildDynamicSources(ctx: DynamicDataContext): DynamicSourcesPayl
     HISTORY_ERAS[0]
   );
 
-  // 1. Real OSM River & Canal Polygons colored/extruded by live hydrology
+  // 1. Real OSM River & Canal Polygons colored/extruded by live Q (m³/s) volume per LOD
   const canalFeatures: Feature[] = [];
   if (ctx.view !== 'silesia') {
-    for (const f of b.canals.features) {
+    for (let i = 0; i < b.canals.features.length; i++) {
+      const f = b.canals.features[i];
       const branchId = String(f.properties?.['id'] ?? 'odra-upper');
       if (ctx.view === 'history' && !era.activeCanals.includes(branchId)) continue;
+      const osmId = String(f.properties?.['osmId'] ?? i);
+      const segKey = `${branchId}::${osmId}`;
       const hydro = ctx.branches[branchId];
+      const flowM3s = hydro?.flowM3s ?? 120;
       const load = hydro?.loadRatio ?? 0.3;
-      const stageM = hydro?.stageM ?? 1.5;
       const status = load > 1.0 ? 'overtop' : load > 0.78 ? 'warning' : 'safe';
       canalFeatures.push({
         type: 'Feature',
         geometry: f.geometry,
         properties: {
           id: branchId,
+          segKey,
+          selected: ctx.selectedSegmentKey === segKey,
+          flowM3s,
           status,
-          height: Math.max(0.5, stageM)
+          height: computeCanalVolumeHeight(flowM3s, ctx.lod, ctx.riverScale)
         }
       });
     }
@@ -245,6 +273,7 @@ export function buildBaseWwwStyle(
   const safeWater = '#0ea5e9';
   const warnWater = '#d37400';
   const overtopWater = '#ef4444';
+  const selectedWater = dark ? '#a78bfa' : '#7c3aed';
   const embankmentColor = dark ? '#9a8466' : '#78716c';
   const breachedColor = '#dc2626';
   const depressedFill = dark ? 'rgba(99, 102, 241, 0.14)' : 'rgba(99, 102, 241, 0.11)';
@@ -363,15 +392,20 @@ export function buildBaseWwwStyle(
       source: SRC_CANALS,
       paint: {
         'fill-extrusion-color': [
-          'match',
-          ['get', 'status'],
-          'overtop', overtopWater,
-          'warning', warnWater,
-          safeWater
+          'case',
+          ['get', 'selected'],
+          selectedWater,
+          [
+            'match',
+            ['get', 'status'],
+            'overtop', overtopWater,
+            'warning', warnWater,
+            safeWater
+          ]
         ],
         'fill-extrusion-height': ['get', 'height'],
         'fill-extrusion-base': 0,
-        'fill-extrusion-opacity': 0.86
+        'fill-extrusion-opacity': 0.88
       }
     },
     {

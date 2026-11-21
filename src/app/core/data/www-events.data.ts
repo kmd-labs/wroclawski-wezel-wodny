@@ -9,16 +9,24 @@ export const FLOOD_SCENARIOS: Record<FloodScenarioId, FloodScenarioMeta> = {
   '1997': {
     id: '1997',
     year: 1997,
+    startIso: '1997-07-06T00:00:00Z',
+    durationDays: 12,
     peakFlowM3s: 3640,
     peakStageCm: 724,
     systemCapacityM3s: 2350,
     keyframes: [
-      { step: 0, dateLabel: '07.07.1997 12:00', flowTrestnoM3s: 1120, stageTrestnoCm: 420, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
-      { step: 20, dateLabel: '10.07.1997 18:00', flowTrestnoM3s: 2350, stageTrestnoCm: 590, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['odra-upper'] },
-      { step: 40, dateLabel: '11.07.1997 22:00', flowTrestnoM3s: 3120, stageTrestnoCm: 675, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce'], breachedEmbankments: ['wal-opatowicki'], overloadedCanals: ['odra-upper', 'kanal-powodziowy', 'odra-miejska-upper'] },
-      { step: 60, dateLabel: '12.07.1997 14:00', flowTrestnoM3s: 3640, stageTrestnoCm: 724, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce', 'przedmiescie-olawskie', 'ostrow-tumski', 'kozanow-pilczyce'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow'], overloadedCanals: ['odra-upper', 'kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki', 'srodmiescie', 'stara-odra', 'odra-redzin', 'olawa-river'] },
-      { step: 80, dateLabel: '14.07.1997 08:00', flowTrestnoM3s: 3320, stageTrestnoCm: 702, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce', 'przedmiescie-olawskie', 'ostrow-tumski', 'kozanow-pilczyce', 'nadodrze-olbin'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow', 'wal-nadodrze'], overloadedCanals: ['odra-upper', 'stara-odra', 'srodmiescie', 'kanal-miejski', 'odra-redzin'] },
-      { step: 100, dateLabel: '17.07.1997 18:00', flowTrestnoM3s: 2180, stageTrestnoCm: 580, floodedZones: ['przedmiescie-olawskie', 'kozanow-pilczyce'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow'], overloadedCanals: [] }
+      { step: 0, hoursFromStart: 0, dateLabel: '06.07.1997 00:00', flowTrestnoM3s: 680, stageTrestnoCm: 340, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 8, hoursFromStart: 24, dateLabel: '07.07.1997 00:00', flowTrestnoM3s: 980, stageTrestnoCm: 395, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 16, hoursFromStart: 48, dateLabel: '08.07.1997 00:00', flowTrestnoM3s: 1420, stageTrestnoCm: 470, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 25, hoursFromStart: 72, dateLabel: '09.07.1997 00:00', flowTrestnoM3s: 1920, stageTrestnoCm: 545, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 33, hoursFromStart: 96, dateLabel: '10.07.1997 00:00', flowTrestnoM3s: 2380, stageTrestnoCm: 598, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['odra-upper'] },
+      { step: 42, hoursFromStart: 120, dateLabel: '11.07.1997 00:00', flowTrestnoM3s: 2980, stageTrestnoCm: 662, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce'], breachedEmbankments: ['wal-opatowicki'], overloadedCanals: ['odra-upper', 'kanal-powodziowy', 'odra-miejska-upper'] },
+      { step: 52, hoursFromStart: 150, dateLabel: '12.07.1997 06:00', flowTrestnoM3s: 3560, stageTrestnoCm: 716, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce', 'przedmiescie-olawskie', 'ostrow-tumski'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie'], overloadedCanals: ['odra-upper', 'kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki', 'srodmiescie', 'stara-odra', 'olawa-river'] },
+      { step: 58, hoursFromStart: 168, dateLabel: '13.07.1997 00:00', flowTrestnoM3s: 3640, stageTrestnoCm: 724, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce', 'przedmiescie-olawskie', 'ostrow-tumski', 'kozanow-pilczyce'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow'], overloadedCanals: ['odra-upper', 'kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki', 'srodmiescie', 'stara-odra', 'odra-redzin', 'olawa-river'] },
+      { step: 67, hoursFromStart: 192, dateLabel: '14.07.1997 00:00', flowTrestnoM3s: 3360, stageTrestnoCm: 702, floodedZones: ['polder-blizanowice-trestno', 'opatowice-bierdzany', 'kowale-swojczyce', 'przedmiescie-olawskie', 'ostrow-tumski', 'kozanow-pilczyce', 'nadodrze-olbin'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow', 'wal-nadodrze'], overloadedCanals: ['odra-upper', 'stara-odra', 'srodmiescie', 'kanal-miejski', 'odra-redzin'] },
+      { step: 75, hoursFromStart: 216, dateLabel: '15.07.1997 00:00', flowTrestnoM3s: 2890, stageTrestnoCm: 658, floodedZones: ['przedmiescie-olawskie', 'ostrow-tumski', 'kozanow-pilczyce', 'nadodrze-olbin'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow', 'wal-nadodrze'], overloadedCanals: ['odra-redzin'] },
+      { step: 85, hoursFromStart: 245, dateLabel: '16.07.1997 05:00', flowTrestnoM3s: 2420, stageTrestnoCm: 612, floodedZones: ['przedmiescie-olawskie', 'kozanow-pilczyce'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow'], overloadedCanals: [] },
+      { step: 100, hoursFromStart: 288, dateLabel: '18.07.1997 00:00', flowTrestnoM3s: 1740, stageTrestnoCm: 525, floodedZones: ['przedmiescie-olawskie', 'kozanow-pilczyce'], breachedEmbankments: ['wal-opatowicki', 'wal-przedmiescie', 'wal-kozanow'], overloadedCanals: [] }
     ],
     pins: [
       {
@@ -159,15 +167,20 @@ export const FLOOD_SCENARIOS: Record<FloodScenarioId, FloodScenarioMeta> = {
   '2012': {
     id: '2012',
     year: 2012,
+    startIso: '2010-05-18T00:00:00Z',
+    durationDays: 7,
     peakFlowM3s: 2160,
     peakStageCm: 664,
     systemCapacityM3s: 2350,
     keyframes: [
-      { step: 0, dateLabel: '19.05.2010 12:00', flowTrestnoM3s: 1280, stageTrestnoCm: 480, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
-      { step: 25, dateLabel: '21.05.2010 14:00', flowTrestnoM3s: 1940, stageTrestnoCm: 615, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['odra-upper', 'przewal-widawski'] },
-      { step: 50, dateLabel: '22.05.2010 04:00', flowTrestnoM3s: 2160, stageTrestnoCm: 664, floodedZones: ['polder-blizanowice-trestno', 'kozanow-pilczyce'], breachedEmbankments: ['wal-kozanow'], overloadedCanals: ['odra-upper', 'sleza-river', 'kanal-powodziowy'] },
-      { step: 75, dateLabel: '24.05.2010 10:00', flowTrestnoM3s: 1750, stageTrestnoCm: 585, floodedZones: ['polder-blizanowice-trestno', 'kozanow-pilczyce'], breachedEmbankments: ['wal-kozanow'], overloadedCanals: ['sleza-river'] },
-      { step: 100, dateLabel: '2012–2015 POPDO', flowTrestnoM3s: 1400, stageTrestnoCm: 495, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] }
+      { step: 0, hoursFromStart: 0, dateLabel: '18.05.2010 00:00', flowTrestnoM3s: 920, stageTrestnoCm: 395, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 14, hoursFromStart: 24, dateLabel: '19.05.2010 00:00', flowTrestnoM3s: 1320, stageTrestnoCm: 488, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 29, hoursFromStart: 48, dateLabel: '20.05.2010 00:00', flowTrestnoM3s: 1740, stageTrestnoCm: 575, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['odra-upper'] },
+      { step: 43, hoursFromStart: 72, dateLabel: '21.05.2010 00:00', flowTrestnoM3s: 2040, stageTrestnoCm: 635, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['odra-upper', 'przewal-widawski'] },
+      { step: 57, hoursFromStart: 96, dateLabel: '22.05.2010 00:00', flowTrestnoM3s: 2160, stageTrestnoCm: 664, floodedZones: ['polder-blizanowice-trestno', 'kozanow-pilczyce'], breachedEmbankments: ['wal-kozanow'], overloadedCanals: ['odra-upper', 'sleza-river', 'kanal-powodziowy'] },
+      { step: 71, hoursFromStart: 120, dateLabel: '23.05.2010 00:00', flowTrestnoM3s: 1960, stageTrestnoCm: 625, floodedZones: ['polder-blizanowice-trestno', 'kozanow-pilczyce'], breachedEmbankments: ['wal-kozanow'], overloadedCanals: ['sleza-river'] },
+      { step: 86, hoursFromStart: 144, dateLabel: '24.05.2010 00:00', flowTrestnoM3s: 1620, stageTrestnoCm: 560, floodedZones: ['kozanow-pilczyce'], breachedEmbankments: ['wal-kozanow'], overloadedCanals: [] },
+      { step: 100, hoursFromStart: 168, dateLabel: '25.05.2010 00:00', flowTrestnoM3s: 1260, stageTrestnoCm: 478, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] }
     ],
     pins: [
       {
@@ -267,15 +280,22 @@ export const FLOOD_SCENARIOS: Record<FloodScenarioId, FloodScenarioMeta> = {
   '2024': {
     id: '2024',
     year: 2024,
+    startIso: '2024-09-14T00:00:00Z',
+    durationDays: 9,
     peakFlowM3s: 1750,
     peakStageCm: 645,
     systemCapacityM3s: 3100,
     keyframes: [
-      { step: 0, dateLabel: '14.09.2024 12:00', flowTrestnoM3s: 680, stageTrestnoCm: 350, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
-      { step: 25, dateLabel: '16.09.2024 06:00', flowTrestnoM3s: 1250, stageTrestnoCm: 510, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['bystrzyca-river'] },
-      { step: 50, dateLabel: '18.09.2024 14:00', flowTrestnoM3s: 1620, stageTrestnoCm: 615, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['bystrzyca-river', 'przewal-widawski'] },
-      { step: 75, dateLabel: '19.09.2024 16:00', flowTrestnoM3s: 1750, stageTrestnoCm: 645, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: [] },
-      { step: 100, dateLabel: '22.09.2024 12:00', flowTrestnoM3s: 1180, stageTrestnoCm: 520, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] }
+      { step: 0, hoursFromStart: 0, dateLabel: '14.09.2024 00:00', flowTrestnoM3s: 520, stageTrestnoCm: 310, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 11, hoursFromStart: 24, dateLabel: '15.09.2024 00:00', flowTrestnoM3s: 890, stageTrestnoCm: 410, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 22, hoursFromStart: 48, dateLabel: '16.09.2024 00:00', flowTrestnoM3s: 1240, stageTrestnoCm: 505, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['bystrzyca-river'] },
+      { step: 33, hoursFromStart: 72, dateLabel: '17.09.2024 00:00', flowTrestnoM3s: 1480, stageTrestnoCm: 572, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['bystrzyca-river'] },
+      { step: 44, hoursFromStart: 96, dateLabel: '18.09.2024 00:00', flowTrestnoM3s: 1640, stageTrestnoCm: 618, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: ['bystrzyca-river', 'przewal-widawski'] },
+      { step: 56, hoursFromStart: 120, dateLabel: '19.09.2024 00:00', flowTrestnoM3s: 1750, stageTrestnoCm: 645, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 67, hoursFromStart: 144, dateLabel: '20.09.2024 00:00', flowTrestnoM3s: 1690, stageTrestnoCm: 632, floodedZones: ['polder-blizanowice-trestno'], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 78, hoursFromStart: 168, dateLabel: '21.09.2024 00:00', flowTrestnoM3s: 1460, stageTrestnoCm: 580, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 89, hoursFromStart: 192, dateLabel: '22.09.2024 00:00', flowTrestnoM3s: 1180, stageTrestnoCm: 515, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] },
+      { step: 100, hoursFromStart: 216, dateLabel: '23.09.2024 00:00', flowTrestnoM3s: 910, stageTrestnoCm: 440, floodedZones: [], breachedEmbankments: [], overloadedCanals: [] }
     ],
     pins: [
       {

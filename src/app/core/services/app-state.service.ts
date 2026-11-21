@@ -14,6 +14,11 @@ export class AppStateService {
   readonly currentView = signal<ViewMode>('equilibrium');
   readonly selectedPinId = signal<string | null>(null);
   readonly selectedWeirId = signal<GateId | null>(null);
+  readonly selectedSegment = signal<{
+    segKey: string;
+    branchId: string;
+    lngLat: [number, number];
+  } | null>(null);
 
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
@@ -38,13 +43,13 @@ export class AppStateService {
   readonly isPlaying = signal<boolean>(false);
   private playTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Map Camera State (controlled via compact button above bottom timeline)
+  // Map Camera State (starts flat without tilt)
   readonly cameraZoom = signal<number>(12.1);
-  readonly cameraPitch = signal<number>(52);
-  readonly cameraBearing = signal<number>(-14);
+  readonly cameraPitch = signal<number>(0);
+  readonly cameraBearing = signal<number>(0);
   readonly cameraControlsOpen = signal<boolean>(false);
 
-  // 3D Layer Toggles
+  // Map Layer Toggles
   readonly show3dBuildings = signal<boolean>(true);
   readonly show3dEmbankments = signal<boolean>(true);
   readonly showDepressionZones = signal<boolean>(true);
@@ -56,6 +61,7 @@ export class AppStateService {
   setView(view: ViewMode): void {
     this.stopPlaying();
     this.selectedPinId.set(null);
+    this.selectedSegment.set(null);
     this.currentView.set(view);
   }
 
@@ -108,11 +114,11 @@ export class AppStateService {
     this.playTimer = setInterval(() => {
       const view = this.currentView();
       if (view === 'floods') {
-        const next = this.floodTimelineStep() + 2;
+        const next = Math.round((this.floodTimelineStep() + 0.5) * 10) / 10;
         if (next > 100) this.floodTimelineStep.set(0);
         else this.floodTimelineStep.set(next);
       } else if (view === 'silesia') {
-        const next = this.silesiaWaveStep() + 2;
+        const next = Math.round((this.silesiaWaveStep() + 0.8) * 10) / 10;
         if (next > 100) this.silesiaWaveStep.set(0);
         else this.silesiaWaveStep.set(next);
       } else if (view === 'history') {
@@ -126,7 +132,7 @@ export class AppStateService {
         if (next > 3850) this.inflowM3s.set(450);
         else this.inflowM3s.set(next);
       }
-    }, 240);
+    }, 160);
   }
 
   private restoreTheme(): void {

@@ -1,10 +1,40 @@
 @let t = i18n.t();
 
 <div class="sources">
+  <!-- Citation Style Switcher & Attribution -->
+  <section class="sources__section sources__built">
+    <div class="sources__built-head">
+      <h3 class="sources__heading">{{ t.sourcesBuiltTitle }}</h3>
+      <span class="sources__style-label">{{ t.citeStyleLabel }}</span>
+    </div>
+    <p class="sources__desc">{{ t.sourcesBuiltBy }}</p>
+
+    <app-switcher
+      size="sm"
+      [options]="styleOptions"
+      [value]="citationStyle()"
+      [ariaLabel]="t.citeStyleLabel"
+      (valueChange)="citationStyle.set($event ?? 'oxford')">
+    </app-switcher>
+
+    <div class="sources__cite-box">
+      <pre class="sources__cite-text">{{ appCitation() }}</pre>
+      <button
+        type="button"
+        class="sources__copy-btn"
+        (click)="copyText('app', appCitation())">
+        <lucide-icon [img]="copiedKey() === 'app' ? checkIcon : copyIcon" [size]="12"></lucide-icon>
+        <span>{{ copiedKey() === 'app' ? t.citeCopiedBtn : t.citeCopyBtn }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Scientific & Hydrotechnical Literature -->
   <section class="sources__section">
     <h3 class="sources__heading">{{ t.sourcesLiteratureTitle }}</h3>
     <div class="sources__list">
       @for (s of t.sourcesList; track s.url) {
+        @let formatted = formatSourceCitation(s);
         <article class="sources__card">
           <div class="sources__card-top">
             <a [href]="s.url" target="_blank" rel="noopener noreferrer" class="sources__link">
@@ -15,11 +45,22 @@
           </div>
           <div class="sources__meta">{{ s.authors }} · {{ s.year }}</div>
           <p class="sources__desc">{{ s.desc }}</p>
+          <div class="sources__cite-box sources__cite-box--compact">
+            <pre class="sources__cite-text">{{ formatted }}</pre>
+            <button
+              type="button"
+              class="sources__copy-btn"
+              [attr.aria-label]="t.citeCopyBtn"
+              (click)="copyText(s.url, formatted)">
+              <lucide-icon [img]="copiedKey() === s.url ? checkIcon : copyIcon" [size]="11"></lucide-icon>
+            </button>
+          </div>
         </article>
       }
     </div>
   </section>
 
+  <!-- Flood Timeline Articles -->
   <section class="sources__section">
     <h3 class="sources__heading">{{ t.sourcesArticlesTitle }} ({{ articleLinks().length }})</h3>
     <ul class="sources__articles">
@@ -38,10 +79,5 @@
   <section class="sources__section">
     <h3 class="sources__heading">{{ t.sourcesMethodologyTitle }}</h3>
     <p class="sources__desc">{{ t.sourcesMethodologyText }}</p>
-  </section>
-
-  <section class="sources__section sources__built">
-    <h3 class="sources__heading">{{ t.sourcesBuiltTitle }}</h3>
-    <p class="sources__desc">{{ t.sourcesBuiltBy }}</p>
   </section>
 </div>

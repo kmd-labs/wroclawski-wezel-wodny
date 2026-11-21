@@ -1,23 +1,6 @@
 @let t = i18n.t();
 
 <div class="settings">
-  <!-- Dynamic Vector Level of Detail (LOD) -->
-  <section class="settings__section">
-    <div class="settings__head">
-      <h3 class="settings__label">{{ t.lodLabel }}</h3>
-      <span class="settings__value">{{ vectors.activePrecisionLabel() }}</span>
-    </div>
-    <p class="settings__desc">{{ t.lodDesc }}</p>
-
-    <app-switcher
-      size="sm"
-      [options]="lodOptions()"
-      [value]="vectors.lodMode()"
-      [ariaLabel]="t.lodLabel"
-      (valueChange)="onLodChange($event)">
-    </app-switcher>
-  </section>
-
   <!-- Map Layers -->
   <section class="settings__section">
     <h3 class="settings__label">{{ t.layersLabel }}</h3>

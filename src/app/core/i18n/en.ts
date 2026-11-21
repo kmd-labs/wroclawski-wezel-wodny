@@ -21,7 +21,7 @@ export const EN: Dict = {
   glossary: 'Glossary',
   glossaryDesc: 'Key hydrotechnical terms of the Wrocław Water Node.',
   sourcesBtn: 'Sources',
-  settingsBtn: 'Settings',
+  settingsBtn: 'Layers',
   close: 'Close',
 
   // Map Camera Controls
@@ -48,6 +48,8 @@ export const EN: Dict = {
   readoutYear: 'Era',
   readoutRetention: 'Retention',
   readoutReducedFlow: 'At Wrocław',
+  segmentCapacity: 'Max capacity',
+  segmentLoad: 'Load',
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: 'Weir & Floodgate Equilibrium',
@@ -78,6 +80,9 @@ export const EN: Dict = {
   readArticleBtn: 'Read source article',
   waterStageLabel: 'Stage H',
   dischargeLabel: 'Flow Q',
+  floodDayLabel: 'Day',
+  hydrographAriaLabel: 'Multi-day flood hydrograph Q (m³/s)',
+  waveTransitNote: 'River height ∝ Q (m³/s) · ~22h transit Trestno → Rędzin',
 
   // History View
   historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',
@@ -91,14 +96,8 @@ export const EN: Dict = {
   silesiaAtWroclaw: 'Shaved at Trestno',
   silesiaCapacityUnit: 'mln m³',
 
-  // Settings Popup (LOD, Layers, Theme)
-  settingsTitle: 'Map Layers & Vector Detail',
-  lodLabel: 'Vector Level of Detail (LOD)',
-  lodDesc: 'Automatically switches OSM vector geometry precision by zoom level: Overview (55 m), City (9 m), and Full OSM Detail (~1 m).',
-  lodAuto: 'Auto',
-  lodLow: 'LOD 0',
-  lodMedium: 'LOD 1',
-  lodHigh: 'LOD 2',
+  // Settings Popup (Layers & Theme)
+  settingsTitle: 'Map Layers & Appearance',
   layersLabel: 'Map Layers',
   layerBuildings3d: '3D OSM Buildings',
   layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',
@@ -122,8 +121,13 @@ export const EN: Dict = {
   sourcesArticlesTitle: 'Timeline News & Report Citations',
   sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
   sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, osiedle basins, and Lower Silesia reservoirs are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie, Opolskie, Śląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
-  sourcesBuiltTitle: 'Attribution',
+  sourcesBuiltTitle: 'Attribution & Citation',
   sourcesBuiltBy: 'Built by KMD Labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
+  citeStyleLabel: 'Citation style',
+  citeCopyBtn: 'Copy citation',
+  citeCopiedBtn: 'Copied',
+  citeAppTitle: 'Wrocławski Węzeł Wodny: Interactive 3D Hydrological & Flood Visualization',
+  citeAccessedLabel: 'accessed',
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monograph & Hydraulic Analysis)',

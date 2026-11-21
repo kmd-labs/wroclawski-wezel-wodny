@@ -6,13 +6,14 @@ import {
   signal,
   untracked
 } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import {
   AttributionControl,
   GeoJSONSource,
   Map as MapLibreMap,
   setWorkerUrl
 } from 'maplibre-gl';
-import { SplashService, ThemeService } from '@kmd/design-system';
+import { SplashService, ThemeService, TooltipService } from '@kmd/design-system';
 import {
   MAP_DEFAULT_ZOOM,
   MAP_MAX_ZOOM,
@@ -40,7 +41,7 @@ import { AppStateService } from '../services/app-state.service';
 import { HydrologyService } from '../services/hydrology.service';
 import { VectorDataService } from '../services/vector-data.service';
 import { HISTORY_ERAS, SILESIA_FACILITIES } from '../data/www-events.data';
-import { WEIR_NODES } from '../data/www-hydrology.data';
+import { CANAL_SEGMENTS, WEIR_NODES } from '../data/www-hydrology.data';
 import { MapPinViewModel, WeirNode } from '../models/www.model';
 
 const WORKER_ASSET_PATH = 'assets/maplibre/maplibre-gl-worker.mjs';
@@ -63,6 +64,8 @@ export class MapService {
   private readonly hydro = inject(HydrologyService);
   private readonly vectors = inject(VectorDataService);
   private readonly splash = inject(SplashService);
+  private readonly tooltip = inject(TooltipService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   private map: MapLibreMap | null = null;
   private readonly styleLoaded = signal(false);
@@ -145,8 +148,8 @@ export class MapService {
           map.flyTo({
             center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
             zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
-            pitch: view === 'silesia' ? 42 : 52,
-            bearing: view === 'silesia' ? 0 : -14,
+            pitch: 0,
+            bearing: 0,
             duration: 950
           });
         });
@@ -165,6 +168,18 @@ export class MapService {
       this.i18n.lang();
       this.mapReady();
       untracked(() => this.updateProjections());
+    });
+
+    // 6. Keep clicked river segment tooltip live when timeline, gates, or language change
+    effect(() => {
+      const seg = this.state.selectedSegment();
+      this.hydro.branchHydrology();
+      this.i18n.lang();
+      this.mapReady();
+      untracked(() => {
+        if (seg) this.updateSegmentTooltip();
+        else this.tooltip.hide();
+      });
     });
   }
 
@@ -228,8 +243,8 @@ export class MapService {
           style: initialStyle,
           center: WROCLAW_CENTER,
           zoom: MAP_DEFAULT_ZOOM,
-          pitch: 52,
-          bearing: -14,
+          pitch: 0,
+          bearing: 0,
           minZoom: MAP_MIN_ZOOM,
           maxZoom: MAP_MAX_ZOOM,
           maxBounds: WROCLAW_BOUNDS,
@@ -257,13 +272,122 @@ export class MapService {
     map.on('move', () => {
       this.syncCameraTelemetry(map);
       this.updateProjections();
+      if (this.state.selectedSegment()) {
+        this.zone.run(() => this.updateSegmentTooltip());
+      }
     });
     map.on('zoomend', () => {
       this.zone.run(() => this.vectors.syncWithZoom(map.getZoom()));
     });
     map.on('resize', () => this.updateProjections());
 
+    map.on('mouseenter', 'canals-3d', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', 'canals-3d', () => {
+      map.getCanvas().style.cursor = '';
+    });
+    map.on('click', e => {
+      const hits = map.queryRenderedFeatures(e.point, { layers: ['canals-3d'] });
+      this.zone.run(() => {
+        if (hits.length > 0) {
+          const props = hits[0].properties ?? {};
+          const segKey = String(props['segKey'] ?? '');
+          const branchId = String(props['id'] ?? '');
+          if (segKey && branchId) {
+            this.state.selectedSegment.set({
+              segKey,
+              branchId,
+              lngLat: [e.lngLat.lng, e.lngLat.lat]
+            });
+            this.updateSegmentTooltip();
+            return;
+          }
+        }
+        this.clearSelectedSegment();
+      });
+    });
+
     this.map = map;
+  }
+
+  clearSelectedSegment(): void {
+    this.state.selectedSegment.set(null);
+    this.tooltip.hide();
+  }
+
+  private updateSegmentTooltip(): void {
+    const map = this.map;
+    const sel = this.state.selectedSegment();
+    if (!map || !sel) return;
+
+    const pt = map.project(sel.lngLat);
+    const rect = map.getContainer().getBoundingClientRect();
+    const sx = rect.left + pt.x;
+    const sy = rect.top + pt.y;
+
+    const lang = this.i18n.lang();
+    const t = this.i18n.t();
+    const segMeta = CANAL_SEGMENTS.find(s => s.id === sel.branchId);
+    const branchName = segMeta
+      ? (lang === 'pl' ? segMeta.namePl : segMeta.nameEn)
+      : sel.branchId;
+    const hydro = this.hydro.branchHydrology()[sel.branchId];
+    const flowQ = hydro?.flowM3s ?? 0;
+    const maxCap = hydro?.maxCapacityM3s ?? segMeta?.maxCapacityM3s ?? 0;
+    const loadPct = Math.round((hydro?.loadRatio ?? 0) * 100);
+    const overtopped = hydro?.overtopped ?? false;
+
+    const waterSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--water"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
+    const capSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--cap"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>`;
+    const loadSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--load"><path d="M12 14l4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>`;
+
+    const htmlString = `
+      <div class="www-tooltip-col">
+        <div class="www-tooltip-col__header">
+          <span class="www-tooltip-col__title">${branchName}</span>
+        </div>
+        <div class="www-tooltip-col__divider"></div>
+        <div class="www-tooltip-col__rows">
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${waterSvg}
+              <span class="www-tooltip-col__label">${t.dischargeLabel}</span>
+            </div>
+            <span class="www-tooltip-col__val">${flowQ} m³/s</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${capSvg}
+              <span class="www-tooltip-col__label">${t.segmentCapacity}</span>
+            </div>
+            <span class="www-tooltip-col__val">${maxCap} m³/s</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${loadSvg}
+              <span class="www-tooltip-col__label">${t.segmentLoad}</span>
+            </div>
+            <span class="www-tooltip-col__val ${overtopped ? 'www-tooltip-col__val--overtop' : ''}">${loadPct}%</span>
+          </div>
+        </div>
+      </div>
+    `.trim();
+
+    const safeHtml = this.sanitizer.bypassSecurityTrustHtml(htmlString);
+    this.tooltip.show(
+      `${branchName}: ${flowQ} m³/s`,
+      sx,
+      sy - 10,
+      'top',
+      0,
+      {
+        html: safeHtml,
+        interactive: true,
+        closable: true,
+        onClose: () => this.clearSelectedSegment()
+      }
+    );
   }
 
   // ─── Camera Controls (invoked from floating button above bottom timeline) ──
@@ -308,8 +432,8 @@ export class MapService {
       this.map?.flyTo({
         center: view === 'silesia' ? SILESIA_CENTER : WROCLAW_CENTER,
         zoom: view === 'silesia' ? MAP_SILESIA_ZOOM : MAP_DEFAULT_ZOOM,
-        pitch: view === 'silesia' ? 42 : 52,
-        bearing: view === 'silesia' ? 0 : -14,
+        pitch: 0,
+        bearing: 0,
         duration: 650
       });
     });
@@ -335,6 +459,8 @@ export class MapService {
     return buildDynamicSources({
       lang: this.i18n.lang(),
       view: this.state.currentView(),
+      lod: this.vectors.activeLod(),
+      riverScale: 5,
       bundle: this.vectors.loadedBundle(),
       show3dEmbankments: this.state.show3dEmbankments(),
       showDepressionZones: this.state.showDepressionZones(),
@@ -343,7 +469,8 @@ export class MapService {
       breachedEmbankments: this.hydro.breachedEmbankmentIds(),
       historyYear: this.state.historyYear(),
       silesiaWaveStep: this.state.silesiaWaveStep(),
-      silesiaActiveIds: this.state.silesiaActiveIds()
+      silesiaActiveIds: this.state.silesiaActiveIds(),
+      selectedSegmentKey: this.state.selectedSegment()?.segKey ?? null
     });
   }
 

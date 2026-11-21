@@ -67,6 +67,8 @@ export interface Dict {
   readoutYear: string;
   readoutRetention: string;
   readoutReducedFlow: string;
+  segmentCapacity: string;
+  segmentLoad: string;
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: string;
@@ -97,6 +99,9 @@ export interface Dict {
   readArticleBtn: string;
   waterStageLabel: string;
   dischargeLabel: string;
+  floodDayLabel: string;
+  hydrographAriaLabel: string;
+  waveTransitNote: string;
 
   // History View
   historySubtitle: string;
@@ -110,14 +115,8 @@ export interface Dict {
   silesiaAtWroclaw: string;
   silesiaCapacityUnit: string;
 
-  // Settings Popup (LOD, Layers, Theme)
+  // Settings Popup (Layers & Theme)
   settingsTitle: string;
-  lodLabel: string;
-  lodDesc: string;
-  lodAuto: string;
-  lodLow: string;
-  lodMedium: string;
-  lodHigh: string;
   layersLabel: string;
   layerBuildings3d: string;
   layerEmbankments3d: string;
@@ -143,6 +142,11 @@ export interface Dict {
   sourcesMethodologyText: string;
   sourcesBuiltTitle: string;
   sourcesBuiltBy: string;
+  citeStyleLabel: string;
+  citeCopyBtn: string;
+  citeCopiedBtn: string;
+  citeAppTitle: string;
+  citeAccessedLabel: string;
   sourcesList: LiteratureSourceItem[];
   glossaryEntries: GlossaryEntry[];
   osmAttribution: string;

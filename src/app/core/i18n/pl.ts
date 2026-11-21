@@ -21,7 +21,7 @@ export const PL: Dict = {
   glossary: 'Słowniczek',
   glossaryDesc: 'Najważniejsze pojęcia hydrotechniczne Wrocławskiego Węzła Wodnego.',
   sourcesBtn: 'Źródła',
-  settingsBtn: 'Ustawienia',
+  settingsBtn: 'Warstwy',
   close: 'Zamknij',
 
   // Map Camera Controls
@@ -48,6 +48,8 @@ export const PL: Dict = {
   readoutYear: 'Okres',
   readoutRetention: 'Retencja',
   readoutReducedFlow: 'We Wrocławiu',
+  segmentCapacity: 'Przepustowość',
+  segmentLoad: 'Obciążenie',
 
   // Equilibrium View (Weir & Gate Controls)
   weirPanelTitle: 'Sterowanie jazami i zasuwami',
@@ -78,6 +80,9 @@ export const PL: Dict = {
   readArticleBtn: 'Czytaj źródło / artykuł',
   waterStageLabel: 'Stan H',
   dischargeLabel: 'Przepływ Q',
+  floodDayLabel: 'Dzień',
+  hydrographAriaLabel: 'Wielodniowy hydrogram fali Q (m³/s)',
+  waveTransitNote: 'Wysokość rzeki ∝ Q (m³/s) · ~22h przejścia Trestno → Rędzin',
 
   // History View
   historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',
@@ -91,14 +96,8 @@ export const PL: Dict = {
   silesiaAtWroclaw: 'Po redukcji w Trestnie',
   silesiaCapacityUnit: 'mln m³',
 
-  // Settings Popup (LOD, Layers, Theme)
-  settingsTitle: 'Warstwy mapy i szczegółowość (LOD)',
-  lodLabel: 'Poziom szczegółowości wektorów (LOD)',
-  lodDesc: 'Dynamicznie dobiera precyzję geometrii OSM do przybliżenia: Przegląd (55 m), Miasto (9 m) i Pełna precyzja OSM (~1 m).',
-  lodAuto: 'Auto',
-  lodLow: 'LOD 0',
-  lodMedium: 'LOD 1',
-  lodHigh: 'LOD 2',
+  // Settings Popup (Layers & Theme)
+  settingsTitle: 'Warstwy mapy i motyw',
   layersLabel: 'Warstwy mapy',
   layerBuildings3d: 'Budynki 3D (OSM)',
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',
@@ -122,8 +121,13 @@ export const PL: Dict = {
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
   sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
   sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy, granice osiedli oraz zbiorniki i poldery Dolnego Śląska pochodzą bezpośrednio z paczek OpenStreetMap Geofabrik (Dolnośląskie, Opolskie, Śląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
-  sourcesBuiltTitle: 'Atrybucja',
+  sourcesBuiltTitle: 'Atrybucja i cytowanie',
   sourcesBuiltBy: 'Stworzone przez KMD Labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
+  citeStyleLabel: 'Styl cytowania',
+  citeCopyBtn: 'Kopiuj cytat',
+  citeCopiedBtn: 'Skopiowano',
+  citeAppTitle: 'Wrocławski Węzeł Wodny: Interaktywna wizualizacja hydrologiczna 3D',
+  citeAccessedLabel: 'dostęp',
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monografia i analiza hydrauliczna)',
