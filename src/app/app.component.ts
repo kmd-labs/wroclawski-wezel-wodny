@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
-  Globe,
+  Settings,
   SlidersHorizontal,
   Waves,
   History
@@ -11,6 +11,7 @@ import {
   AboutService,
   BrandComponent,
   BreakpointService,
+  ButtonComponent,
   DropdownComponent,
   DropdownOption,
   PopupComponent,
@@ -18,15 +19,16 @@ import {
   SeoService,
   SplashComponent,
   SplashService,
-  TooltipComponent
+  TooltipComponent,
+  TooltipDirective
 } from '@kmd/design-system';
 import { I18nService } from './core/i18n/i18n.service';
-import { Lang } from './core/i18n/i18n.types';
 import { AppStateService } from './core/services/app-state.service';
 import { ViewMode } from './core/models/www.model';
 import { MapStageComponent } from './components/map-stage/map-stage.component';
 import { MapDockComponent } from './components/map-dock/map-dock.component';
 import { PinInspectorComponent } from './components/pin-inspector/pin-inspector.component';
+import { SettingsPopupComponent } from './components/settings-popup/settings-popup.component';
 
 @Component({
   selector: 'app-root',
@@ -35,10 +37,12 @@ import { PinInspectorComponent } from './components/pin-inspector/pin-inspector.
     CommonModule,
     LucideAngularModule,
     BrandComponent,
+    ButtonComponent,
     DropdownComponent,
     PopupComponent,
     SplashComponent,
     TooltipComponent,
+    TooltipDirective,
     MapStageComponent,
     MapDockComponent,
     PinInspectorComponent
@@ -55,7 +59,7 @@ export class AppComponent {
   readonly seo = inject(SeoService);
   readonly state = inject(AppStateService);
 
-  readonly globeIcon = Globe;
+  readonly settingsIcon = Settings;
 
   constructor() {
     this.seo.update({
@@ -64,15 +68,6 @@ export class AppComponent {
       image: 'assets/design-system/og-image.png'
     });
   }
-
-  readonly langOptions = computed<DropdownOption<Lang>[]>(() =>
-    this.i18n.langs.map(l => ({
-      value: l,
-      label: this.i18n.dicts[l].langName,
-      shortLabel: l.toUpperCase(),
-      badge: l.toUpperCase()
-    }))
-  );
 
   readonly viewOptions = computed<DropdownOption<ViewMode>[]>(() => {
     const t = this.i18n.t();
@@ -88,4 +83,14 @@ export class AppComponent {
   );
 
   readonly isPopupOpen = computed(() => this.popup.config() !== null);
+
+  openSettings(): void {
+    this.popup.open({
+      id: 'settings',
+      title: computed(() => this.i18n.t().settingsTitle),
+      component: SettingsPopupComponent,
+      size: 'sm',
+      actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
+    });
+  }
 }

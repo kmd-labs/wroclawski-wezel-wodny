@@ -91,8 +91,9 @@ export const EN: Dict = {
   historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',
   historyNoBuildingsNote: '3D modern buildings hidden in History view',
 
-  // Settings Popup (Layers & Theme)
-  settingsTitle: 'Map Layers & Appearance',
+  // Settings & Layers Popups
+  settingsTitle: 'Settings',
+  layersTitle: 'Map Layers',
   layersLabel: 'Map Layers',
   layerBuildings3d: '3D OSM Buildings',
   layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',

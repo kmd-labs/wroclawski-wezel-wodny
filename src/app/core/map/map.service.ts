@@ -100,7 +100,8 @@ export class MapService {
         )
       );
       untracked(() => {
-        this.zone.runOutsideAngular(() => map.setStyle(style, { diff: true }));
+        this.styleLoaded.set(false);
+        this.zone.runOutsideAngular(() => map.setStyle(style, { diff: false }));
       });
     });
 

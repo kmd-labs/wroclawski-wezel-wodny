@@ -91,8 +91,9 @@ export const PL: Dict = {
   historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',
   historyNoBuildingsNote: 'Współczesne budynki 3D ukryte w widoku historycznym',
 
-  // Settings Popup (Layers & Theme)
-  settingsTitle: 'Warstwy mapy i motyw',
+  // Settings & Layers Popups
+  settingsTitle: 'Ustawienia',
+  layersTitle: 'Warstwy mapy',
   layersLabel: 'Warstwy mapy',
   layerBuildings3d: 'Budynki 3D (OSM)',
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',

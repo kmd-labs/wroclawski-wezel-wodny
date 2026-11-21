@@ -1,43 +1,43 @@
 @let t = i18n.t();
 
 <div class="settings">
-  <!-- Map Layers -->
+  <!-- Appearance Section -->
   <section class="settings__section">
-    <h3 class="settings__label">{{ t.layersLabel }}</h3>
-    <div class="settings__toggles">
-      <app-toggle
-        [label]="t.layerBuildings3d"
-        [checked]="state.show3dBuildings()"
-        [disabled]="state.currentView() === 'history'"
-        [fullWidth]="true"
-        (checkedChange)="state.show3dBuildings.set($event)">
-      </app-toggle>
-
-      <app-toggle
-        [label]="t.layerEmbankments3d"
-        [checked]="state.show3dEmbankments()"
-        [fullWidth]="true"
-        (checkedChange)="state.show3dEmbankments.set($event)">
-      </app-toggle>
-
-      <app-toggle
-        [label]="t.layerDepressions"
-        [checked]="state.showDepressionZones()"
-        [fullWidth]="true"
-        (checkedChange)="state.showDepressionZones.set($event)">
-      </app-toggle>
+    <h3 class="settings__label">{{ t.themeLabel }}</h3>
+    <div class="settings__group" role="radiogroup" [attr.aria-label]="t.themeLabel">
+      @for (th of themes(); track th.id) {
+        <button
+          type="button"
+          class="settings__option"
+          [class.settings__option--active]="theme.mode() === th.id"
+          role="radio"
+          [attr.aria-checked]="theme.mode() === th.id"
+          (click)="state.setTheme(th.id)">
+          <span class="settings__badge settings__badge--icon" aria-hidden="true">
+            <lucide-icon [img]="th.icon" [size]="13"></lucide-icon>
+          </span>
+          <span class="settings__name">{{ th.label }}</span>
+        </button>
+      }
     </div>
   </section>
 
-  <!-- Theme (Light / Midnight Dark) -->
+  <!-- Language Section -->
   <section class="settings__section">
-    <h3 class="settings__label">{{ t.themeLabel }}</h3>
-    <app-switcher
-      size="sm"
-      [options]="themeOptions()"
-      [value]="theme.mode()"
-      [ariaLabel]="t.themeLabel"
-      (valueChange)="state.setTheme($event ?? 'light')">
-    </app-switcher>
+    <h3 class="settings__label">{{ t.changeLanguage }}</h3>
+    <div class="settings__group" role="radiogroup" [attr.aria-label]="t.changeLanguage">
+      @for (l of languages(); track l.id) {
+        <button
+          type="button"
+          class="settings__option"
+          [class.settings__option--active]="i18n.lang() === l.id"
+          role="radio"
+          [attr.aria-checked]="i18n.lang() === l.id"
+          (click)="i18n.setLang(l.id)">
+          <span class="settings__badge" translate="no">{{ l.id.toUpperCase() }}</span>
+          <span class="settings__name">{{ l.label }}</span>
+        </button>
+      }
+    </div>
   </section>
 </div>

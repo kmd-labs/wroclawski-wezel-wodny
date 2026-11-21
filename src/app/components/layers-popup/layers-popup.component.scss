@@ -1,0 +1,22 @@
+@use "variables" as *;
+
+.layers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    margin: 0;
+    font-size: font-size("xs");
+    font-weight: font-weight("semibold");
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: color("text-dim");
+  }
+
+  &__toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

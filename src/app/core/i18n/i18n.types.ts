@@ -112,8 +112,9 @@ export interface Dict {
   historySubtitle: string;
   historyNoBuildingsNote: string;
 
-  // Settings Popup (Layers & Theme)
+  // Settings & Layers Popups
   settingsTitle: string;
+  layersTitle: string;
   layersLabel: string;
   layerBuildings3d: string;
   layerEmbankments3d: string;

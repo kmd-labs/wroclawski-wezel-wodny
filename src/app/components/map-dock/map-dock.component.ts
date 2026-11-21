@@ -34,7 +34,7 @@ import { MapService } from '../../core/map/map.service';
 import { DEPRESSED_ZONES, WEIR_NODES } from '../../core/data/www-hydrology.data';
 import { HISTORY_ERAS } from '../../core/data/www-events.data';
 import { FloodScenarioId, GateId } from '../../core/models/www.model';
-import { SettingsPopupComponent } from '../settings-popup/settings-popup.component';
+import { LayersPopupComponent } from '../layers-popup/layers-popup.component';
 import { SourcesPopupComponent } from '../sources-popup/sources-popup.component';
 
 @Component({
@@ -191,9 +191,9 @@ export class MapDockComponent {
 
   openSettings(): void {
     this.popup.open({
-      id: 'settings',
-      title: computed(() => this.i18n.t().settingsTitle),
-      component: SettingsPopupComponent,
+      id: 'layers',
+      title: computed(() => this.i18n.t().layersTitle),
+      component: LayersPopupComponent,
       size: 'sm',
       actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
     });
