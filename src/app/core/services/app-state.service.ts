@@ -108,11 +108,11 @@ export class AppStateService {
     this.playTimer = setInterval(() => {
       const view = this.currentView();
       if (view === 'floods') {
-        const next = this.floodTimelineStep() + 2;
+        const next = Math.round((this.floodTimelineStep() + 0.5) * 10) / 10;
         if (next > 100) this.floodTimelineStep.set(0);
         else this.floodTimelineStep.set(next);
       } else if (view === 'silesia') {
-        const next = this.silesiaWaveStep() + 2;
+        const next = Math.round((this.silesiaWaveStep() + 0.8) * 10) / 10;
         if (next > 100) this.silesiaWaveStep.set(0);
         else this.silesiaWaveStep.set(next);
       } else if (view === 'history') {
@@ -126,7 +126,7 @@ export class AppStateService {
         if (next > 3850) this.inflowM3s.set(450);
         else this.inflowM3s.set(next);
       }
-    }, 240);
+    }, 160);
   }
 
   private restoreTheme(): void {

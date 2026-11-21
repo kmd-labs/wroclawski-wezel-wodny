@@ -78,6 +78,9 @@ export const PL: Dict = {
   readArticleBtn: 'Czytaj źródło / artykuł',
   waterStageLabel: 'Stan H',
   dischargeLabel: 'Przepływ Q',
+  floodDayLabel: 'Dzień',
+  hydrographAriaLabel: 'Wielodniowy hydrogram fali Q (m³/s)',
+  waveTransitNote: 'Wysokość rzeki ∝ Q (m³/s) · ~22h przejścia Trestno → Rędzin',
 
   // History View
   historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',

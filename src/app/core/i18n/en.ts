@@ -78,6 +78,9 @@ export const EN: Dict = {
   readArticleBtn: 'Read source article',
   waterStageLabel: 'Stage H',
   dischargeLabel: 'Flow Q',
+  floodDayLabel: 'Day',
+  hydrographAriaLabel: 'Multi-day flood hydrograph Q (m³/s)',
+  waveTransitNote: 'River height ∝ Q (m³/s) · ~22h transit Trestno → Rędzin',
 
   // History View
   historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',

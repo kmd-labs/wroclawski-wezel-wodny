@@ -106,8 +106,9 @@ export class MapDockComponent {
   readonly sliderStep = computed(() => {
     const v = this.state.currentView();
     if (v === 'equilibrium') return 25;
+    if (v === 'floods') return 0.5;
     if (v === 'history') return 1;
-    return 1;
+    return 0.5;
   });
 
   readonly sliderValue = computed(() => {
@@ -170,6 +171,14 @@ export class MapDockComponent {
 
   onMarkerClick(m: TimelineMarker): void {
     this.onSliderChange(m.value);
+  }
+
+  onHydrographClick(event: MouseEvent): void {
+    const el = event.currentTarget as SVGSVGElement;
+    const rect = el.getBoundingClientRect();
+    if (!rect.width) return;
+    const pct = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+    this.state.floodTimelineStep.set(Math.round(pct * 2) / 2);
   }
 
   onGateInput(gate: GateId, event: Event): void {

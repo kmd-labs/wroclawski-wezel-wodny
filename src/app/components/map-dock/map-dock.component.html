@@ -168,25 +168,59 @@
         </div>
       }
 
-      <!-- 2. Floods Scenario Switcher -->
+      <!-- 2. Floods Scenario Switcher & Multi-Day Hydrograph -->
       @if (view === 'floods') {
-        <div class="dock__subbar">
-          <app-switcher
-            size="sm"
-            [options]="scenarioOptions()"
-            [value]="state.floodScenario()"
-            [ariaLabel]="t.chooseView"
-            (valueChange)="state.floodScenario.set($event ?? '1997'); state.floodTimelineStep.set(55)">
-          </app-switcher>
-          <span class="dock__subtitle">
-            {{
-              state.floodScenario() === '1997'
-                ? t.scenario1997Subtitle
-                : state.floodScenario() === '2012'
-                  ? t.scenario2012Subtitle
-                  : t.scenario2024Subtitle
-            }}
-          </span>
+        @let kf = hydro.activeFloodKeyframe();
+        @let chart = hydro.floodHydrographChart();
+        <div class="dock__subbar dock__subbar--floods">
+          <div class="dock__flood-meta">
+            <app-switcher
+              size="sm"
+              [options]="scenarioOptions()"
+              [value]="state.floodScenario()"
+              [ariaLabel]="t.chooseView"
+              (valueChange)="state.floodScenario.set($event ?? '1997'); state.floodTimelineStep.set(55)">
+            </app-switcher>
+            <span class="dock__subtitle">
+              {{
+                state.floodScenario() === '1997'
+                  ? t.scenario1997Subtitle
+                  : state.floodScenario() === '2012'
+                    ? t.scenario2012Subtitle
+                    : t.scenario2024Subtitle
+              }}
+            </span>
+          </div>
+
+          <div class="hydrograph">
+            <svg
+              class="hydrograph__svg"
+              [attr.viewBox]="'0 0 ' + chart.width + ' ' + chart.height"
+              preserveAspectRatio="none"
+              role="img"
+              [attr.aria-label]="t.hydrographAriaLabel"
+              (click)="onHydrographClick($event)">
+              <polygon class="hydrograph__area" [attr.points]="chart.areaPoints" />
+              <line
+                class="hydrograph__cap"
+                x1="0"
+                [attr.x2]="chart.width"
+                [attr.y1]="chart.capY"
+                [attr.y2]="chart.capY" />
+              <polyline class="hydrograph__line" [attr.points]="chart.linePoints" />
+              <line
+                class="hydrograph__cursor"
+                [attr.x1]="chart.cursorX"
+                [attr.x2]="chart.cursorX"
+                y1="0"
+                [attr.y2]="chart.height" />
+            </svg>
+            <div class="hydrograph__legend">
+              <span>{{ t.floodDayLabel }} 1</span>
+              <span>{{ t.waveTransitNote }}</span>
+              <span>{{ t.floodDayLabel }} {{ kf.durationDays }}</span>
+            </div>
+          </div>
         </div>
       }
 
@@ -245,7 +279,10 @@
             </div>
           } @else if (view === 'floods') {
             @let kf = hydro.activeFloodKeyframe();
-            <span class="status-pill status-pill--accent">{{ kf.dateLabel }}</span>
+            <span class="status-pill status-pill--accent">
+              {{ t.floodDayLabel }} {{ kf.dayNumber }}/{{ kf.durationDays }} · +{{ kf.hoursFromStart }}h
+            </span>
+            <span class="readout__val">{{ kf.dateLabel }}</span>
             <div class="readout">
               <span class="readout__label">{{ t.readoutTrestno }}</span>
               <span class="readout__val">{{ kf.flowTrestnoM3s }} m³/s</span>

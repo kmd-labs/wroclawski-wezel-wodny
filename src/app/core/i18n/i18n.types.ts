@@ -97,6 +97,9 @@ export interface Dict {
   readArticleBtn: string;
   waterStageLabel: string;
   dischargeLabel: string;
+  floodDayLabel: string;
+  hydrographAriaLabel: string;
+  waveTransitNote: string;
 
   // History View
   historySubtitle: string;

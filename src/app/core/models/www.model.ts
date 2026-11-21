@@ -94,6 +94,7 @@ export interface FloodEventPin {
 
 export interface FloodScenarioKeyframe {
   step: number;
+  hoursFromStart: number;
   dateLabel: string;
   flowTrestnoM3s: number;
   stageTrestnoCm: number;
@@ -108,6 +109,8 @@ export interface FloodScenarioKeyframe {
 export interface FloodScenarioMeta {
   id: FloodScenarioId;
   year: number;
+  startIso: string;
+  durationDays: number;
   peakFlowM3s: number;
   peakStageCm: number;
   systemCapacityM3s: number;

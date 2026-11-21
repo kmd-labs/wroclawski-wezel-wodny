@@ -335,6 +335,7 @@ export class MapService {
     return buildDynamicSources({
       lang: this.i18n.lang(),
       view: this.state.currentView(),
+      lod: this.vectors.activeLod(),
       bundle: this.vectors.loadedBundle(),
       show3dEmbankments: this.state.show3dEmbankments(),
       showDepressionZones: this.state.showDepressionZones(),
