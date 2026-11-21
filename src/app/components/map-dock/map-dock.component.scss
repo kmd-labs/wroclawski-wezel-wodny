@@ -231,6 +231,12 @@
       gap: 8px;
     }
 
+    &--history {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
     &--wrap {
       max-height: 110px;
       overflow-y: auto;

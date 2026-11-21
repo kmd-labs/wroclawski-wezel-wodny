@@ -237,7 +237,7 @@
       <!-- 3. History Summary Bar -->
       @if (view === 'history') {
         @let era = hydro.activeHistoryEra();
-        <div class="dock__subbar">
+        <div class="dock__subbar dock__subbar--history">
           <span class="dock__era-badge">{{ i18n.lang() === 'pl' ? era.labelPl : era.labelEn }}</span>
           <span class="dock__subtitle">{{ i18n.lang() === 'pl' ? era.summaryPl : era.summaryEn }}</span>
         </div>
