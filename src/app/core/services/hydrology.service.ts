@@ -82,8 +82,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'polder-blizanowice-trestno',
     center: [17.135, 51.062],
     radii: [0.028, 0.018],
-    bankfullMasl: 118.2,
-    maxRiseM: 3.2,
+    bankfullMasl: 117.5,
+    maxRiseM: 3.6,
     critLoadRatio: 0.99,
     triggers: ['odra-upper']
   },
@@ -91,8 +91,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'opatowice-bierdzany',
     center: [17.090, 51.088],
     radii: [0.030, 0.018],
-    bankfullMasl: 117.8,
-    maxRiseM: 3.4,
+    bankfullMasl: 116.5,
+    maxRiseM: 5.0,
     critLoadRatio: 1.008,
     triggers: ['odra-upper', 'odra-miejska-upper']
   },
@@ -100,8 +100,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'przedmiescie-olawskie',
     center: [17.059, 51.095],
     radii: [0.024, 0.015],
-    bankfullMasl: 116.4,
-    maxRiseM: 3.5,
+    bankfullMasl: 117.0,
+    maxRiseM: 5.2,
     critLoadRatio: 1.032,
     triggers: ['odra-miejska-upper', 'srodmiescie', 'olawa-river']
   },
@@ -109,8 +109,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'kowale-swojczyce',
     center: [17.098, 51.116],
     radii: [0.028, 0.020],
-    bankfullMasl: 116.8,
-    maxRiseM: 3.1,
+    bankfullMasl: 115.2,
+    maxRiseM: 4.8,
     critLoadRatio: 1.045,
     triggers: ['kanal-powodziowy', 'przewal-widawski', 'kanal-zeglugowy']
   },
@@ -118,8 +118,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'ostrow-tumski',
     center: [17.038, 51.112],
     radii: [0.022, 0.010],
-    bankfullMasl: 115.6,
-    maxRiseM: 3.2,
+    bankfullMasl: 113.5,
+    maxRiseM: 5.8,
     critLoadRatio: 1.062,
     triggers: ['srodmiescie', 'przekop-szczytnicki']
   },
@@ -127,8 +127,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'kozanow-pilczyce',
     center: [16.985, 51.124],
     radii: [0.032, 0.020],
-    bankfullMasl: 112.4,
-    maxRiseM: 3.8,
+    bankfullMasl: 112.8,
+    maxRiseM: 5.6,
     critLoadRatio: 1.078,
     directBreachTriggers: [
       { branchId: 'odra-redzin', ratio: 1.008 },
@@ -140,8 +140,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'nadodrze-olbin',
     center: [17.042, 51.121],
     radii: [0.022, 0.012],
-    bankfullMasl: 114.8,
-    maxRiseM: 3.4,
+    bankfullMasl: 114.2,
+    maxRiseM: 5.2,
     critLoadRatio: 1.105,
     directBreachTriggers: [{ branchId: 'kanal-miejski', ratio: 1.008 }],
     triggers: ['kanal-miejski', 'stara-odra', 'srodmiescie']
@@ -150,8 +150,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'pracze-odrzanskie',
     center: [16.932, 51.182],
     radii: [0.045, 0.028],
-    bankfullMasl: 110.4,
-    maxRiseM: 3.7,
+    bankfullMasl: 108.8,
+    maxRiseM: 5.4,
     critLoadRatio: 1.088,
     directBreachTriggers: [
       { branchId: 'odra-redzin', ratio: 1.025 },
@@ -163,8 +163,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
     id: 'wielka-wyspa',
     center: [17.078, 51.110],
     radii: [0.022, 0.015],
-    bankfullMasl: 116.9,
-    maxRiseM: 3.0,
+    bankfullMasl: 116.2,
+    maxRiseM: 4.8,
     critLoadRatio: 1.145,
     triggers: ['kanal-powodziowy', 'odra-miejska-upper', 'przekop-szczytnicki']
   }
@@ -423,15 +423,7 @@ export class HydrologyService {
     const qSzczytniki = qOdraMiejskaUpper * ((655 / 1605) * szOpen);
     const qSrodmiescie = Math.max(0, qOdraMiejskaUpper - qSzczytniki);
     const qStaraOdra = Math.max(0, qKanalPowodziowy + qKanalZeglugowyBase + qSzczytniki);
-
-    const redzinCap =
-      view === 'equilibrium'
-        ? Math.max(400, (gates.redzin / 100) * 3100)
-        : view === 'floods' && scenarioId !== '2024'
-          ? 2350
-          : 3100;
     const qRedzin = qStaraOdra + qSrodmiescie + qKanalMiejski;
-    const backwaterFactor = qRedzin > redzinCap ? qRedzin / redzinCap : 1;
 
     return {
       'odra-upper': effectiveTrestno,
@@ -443,11 +435,11 @@ export class HydrologyService {
       'stara-odra': qStaraOdra,
       'srodmiescie': qSrodmiescie,
       'kanal-miejski': qKanalMiejski,
-      'odra-redzin': qRedzin * backwaterFactor,
+      'odra-redzin': qRedzin,
       'olawa-river': 22 + Math.max(0, effectiveTrestno - 2000) * 0.11,
       'sleza-river':
         (view === 'floods' && scenarioId === '2012' && step >= 45 ? 165 : 18) +
-        (backwaterFactor - 1) * 180,
+        Math.max(0, effectiveTrestno - 2000) * 0.04,
       'bystrzyca-river':
         view === 'floods' && scenarioId === '2024' && step >= 35 && step <= 70 ? 195 : 26
     };
@@ -463,6 +455,7 @@ export class HydrologyService {
     const scenario = this.activeFloodScenario();
     const step = this.state.floodTimelineStep();
     const totalHours = scenario.durationDays * 24;
+    const gates = this.state.gateOpenings();
 
     const rawFlows: Record<string, number> = {};
 
@@ -499,13 +492,30 @@ export class HydrologyService {
       Object.assign(rawFlows, this.routeWaveFlows(effectiveTrestno, view, scenario.id, step));
     }
 
+    const redzinGateFactor =
+      view === 'equilibrium' ? 0.35 + 0.65 * (gates.redzin / 100) : 1.0;
+    const redzinFlow = Math.round(rawFlows['odra-redzin'] ?? 420);
+    const redzinEffectiveCap =
+      view === 'floods' && this.state.floodScenario() !== '2024'
+        ? Math.round(3100 * 0.76)
+        : Math.max(400, Math.round(3100 * redzinGateFactor));
+    const redzinOverload = Math.max(1, redzinFlow / redzinEffectiveCap);
+
     const result: Record<string, BranchHydrology> = {};
     for (const seg of CANAL_SEGMENTS) {
       const flowM3s = Math.round(rawFlows[seg.id] ?? seg.normalFlowM3s);
-      const effectiveMax =
+      let effectiveMax =
         view === 'floods' && this.state.floodScenario() !== '2024'
           ? Math.round(seg.maxCapacityM3s * 0.76)
           : seg.maxCapacityM3s;
+
+      if (seg.id === 'odra-redzin' && view === 'equilibrium') {
+        effectiveMax = redzinEffectiveCap;
+      } else if (seg.id === 'sleza-river' && redzinOverload > 1.0) {
+        // Rędzin tailwater backwater (cofka) reduces Ślęza gravity discharge capacity
+        effectiveMax = Math.max(20, Math.round(effectiveMax / Math.pow(redzinOverload, 1.35)));
+      }
+
       const loadRatio = effectiveMax > 0 ? flowM3s / effectiveMax : 0;
       const stageRange = seg.crestHeightM - seg.baseWaterM;
       const stageM = seg.baseWaterM + Math.min(1.35, loadRatio) * stageRange;

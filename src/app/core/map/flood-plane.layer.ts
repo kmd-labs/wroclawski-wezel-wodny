@@ -1,19 +1,30 @@
 import { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap, MercatorCoordinate } from 'maplibre-gl';
+import {
+  DEM_GRID_COLS,
+  DEM_GRID_ELEV_DM,
+  DEM_MAX_LAT,
+  DEM_MAX_LNG,
+  DEM_MIN_LAT,
+  DEM_MIN_LNG
+} from '../data/www-dem-grid.data';
+import { DEM_GRID_ROWS } from '../data/www-dem-grid.data';
 import { FloodBasinLevel, FloodPlaneState } from '../services/hydrology.service';
 
-const GRID_COLS = 80;
-const GRID_ROWS = 60;
-const MIN_LNG = 16.86;
-const MAX_LNG = 17.18;
-const MIN_LAT = 51.045;
-const MAX_LAT = 51.215;
-const HIDDEN_ELEV_MASL = 85.0;
+// Relative-To-Center (RTC) Mercator origin computed in 64-bit float so WebGL Float32 vertex
+// attributes retain sub-millimetre precision at every zoom level (z=6.5..18) without jitter.
+const RTC_ORIGIN = MercatorCoordinate.fromLngLat([17.02, 51.13], 115.0);
 
 /**
- * Custom 3D WebGL layer rendering a spatially localized, real-elevation (1:1 m a.s.l., zero
- * vertical exaggeration) flood water surface across Wrocław's hydrotechnical basins.
- * Only overtopped or breached basins rise above the MapLibre EU-DEM terrain; safe sectors stay
- * buried below ground at 85 m a.s.l. so inundation spreads stage-by-stage across real topography.
+ * Custom 3D WebGL layer rendering progressive, spatially localized ISOK-inspired flood
+ * inundation from a pre-baked `96x72` EU-DEM heightfield (`www-dem-grid.data.ts`).
+ *
+ * Why pre-baked DEM + 64-bit RTC instead of raw WebGL depth-testing against live DEM tiles:
+ *  - Live MapLibre DEM tiles swap LOD meshes at each zoom level, shifting local heights by +/-1-4m
+ *    and causing water to clip inconsistently on every zoom change.
+ *  - Here, sub-cell water depth (`localWaterMasl - prebakedGroundMasl`) is computed in JS and
+ *    interpolated smoothly across GPU triangles (`if (v_depth <= 0.0) discard;`), yielding
+ *    rock-solid, zoom-invariant topographic flood shorelines rendered cleanly underneath 3D canals,
+ *    embankments, weirs, and buildings.
  */
 export class FloodWaterPlaneLayer implements CustomLayerInterface {
   readonly id = 'flood-water-plane';
@@ -31,7 +42,8 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
   private signature = '';
   private dirty = true;
 
-  private readonly vertexData = new Float32Array((GRID_COLS + 1) * (GRID_ROWS + 1) * 3);
+  // 4 floats per vertex: [rtcX, rtcY, rtcZ, waterDepthM]
+  private readonly vertexData = new Float32Array((DEM_GRID_COLS + 1) * (DEM_GRID_ROWS + 1) * 4);
   private readonly matrix32 = new Float32Array(16);
 
   setFloodState(state: FloodPlaneState): void {
@@ -51,17 +63,30 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
     this.map = map;
 
     const vertSrc = `
+      precision highp float;
       uniform mat4 u_matrix;
       attribute vec3 a_pos;
+      attribute float a_depth;
+      varying float v_depth;
       void main() {
+        v_depth = a_depth;
         gl_Position = u_matrix * vec4(a_pos, 1.0);
       }
     `;
     const fragSrc = `
-      precision mediump float;
-      uniform vec4 u_color;
+      precision highp float;
+      varying float v_depth;
       void main() {
-        gl_FragColor = u_color;
+        if (v_depth <= 0.0) discard;
+        // Feather shoreline smoothly over the first 12 cm of depth
+        float edge = smoothstep(0.0, 0.12, v_depth);
+        // Depth-graduated inundation palette: shallow sky-blue -> deep flood cobalt
+        float deepT = clamp((v_depth - 0.15) / 2.6, 0.0, 1.0);
+        vec3 shallowCol = vec3(0.18, 0.62, 0.96);
+        vec3 deepCol    = vec3(0.06, 0.28, 0.78);
+        vec3 col = mix(shallowCol, deepCol, deepT);
+        float alpha = mix(0.38, 0.68, deepT) * edge;
+        gl_FragColor = vec4(col * alpha, alpha);
       }
     `;
 
@@ -86,9 +111,9 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
     this.idxBuffer = gl.createBuffer();
 
     const indices: number[] = [];
-    const stride = GRID_COLS + 1;
-    for (let r = 0; r < GRID_ROWS; r++) {
-      for (let c = 0; c < GRID_COLS; c++) {
+    const stride = DEM_GRID_COLS + 1;
+    for (let r = 0; r < DEM_GRID_ROWS; r++) {
+      for (let c = 0; c < DEM_GRID_COLS; c++) {
         const i0 = r * stride + c;
         const i1 = i0 + 1;
         const i2 = i0 + stride;
@@ -128,22 +153,37 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
     gl.useProgram(this.program);
 
+    const floatBytes = 4;
+    const strideBytes = 4 * floatBytes;
     const aPos = gl.getAttribLocation(this.program, 'a_pos');
+    const aDepth = gl.getAttribLocation(this.program, 'a_depth');
     gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, strideBytes, 0);
+    gl.enableVertexAttribArray(aDepth);
+    gl.vertexAttribPointer(aDepth, 1, gl.FLOAT, false, strideBytes, 3 * floatBytes);
+
+    // Compute RTC translation column in 64-bit JS double precision before Float32 uniform upload
+    const rawMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
+    for (let i = 0; i < 12; i++) {
+      this.matrix32[i] = rawMatrix[i];
+    }
+    const ox = RTC_ORIGIN.x;
+    const oy = RTC_ORIGIN.y;
+    const oz = RTC_ORIGIN.z;
+    for (let r = 0; r < 4; r++) {
+      this.matrix32[12 + r] =
+        rawMatrix[r] * ox +
+        rawMatrix[4 + r] * oy +
+        rawMatrix[8 + r] * oz +
+        rawMatrix[12 + r];
+    }
 
     const uMatrix = gl.getUniformLocation(this.program, 'u_matrix');
-    const rawMatrix = options.defaultProjectionData?.mainMatrix ?? options.modelViewProjectionMatrix;
-    for (let i = 0; i < 16; i++) this.matrix32[i] = rawMatrix[i];
     gl.uniformMatrix4fv(uMatrix, false, this.matrix32);
 
-    // Premultiplied alpha blue flood water sheet (alpha = 0.52)
-    const uColor = gl.getUniformLocation(this.program, 'u_color');
-    const a = 0.52;
-    gl.uniform4f(uColor, 0.08 * a, 0.42 * a, 0.92 * a, a);
-
-    gl.enable(gl.DEPTH_TEST);
-    gl.depthFunc(gl.LEQUAL);
+    // Disable depth-buffer fighting against zoom-dependent DEM tiles; this layer is ordered below
+    // canals-3d / embankments-3d / buildings-3d so 3D infrastructure draws cleanly on top.
+    gl.disable(gl.DEPTH_TEST);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -151,20 +191,29 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.idxBuffer);
     gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
 
+    gl.enable(gl.DEPTH_TEST);
     gl.depthMask(true);
     gl.disableVertexAttribArray(aPos);
+    gl.disableVertexAttribArray(aDepth);
   }
 
   private rebuildVertices(): void {
     const active = this.active && this.basins.length > 0;
+    const ox = RTC_ORIGIN.x;
+    const oy = RTC_ORIGIN.y;
+    const oz = RTC_ORIGIN.z;
     let ptr = 0;
+    let demIdx = 0;
 
-    for (let r = 0; r <= GRID_ROWS; r++) {
-      const lat = MIN_LAT + (r / GRID_ROWS) * (MAX_LAT - MIN_LAT);
-      for (let c = 0; c <= GRID_COLS; c++) {
-        const lng = MIN_LNG + (c / GRID_COLS) * (MAX_LNG - MIN_LNG);
+    for (let r = 0; r <= DEM_GRID_ROWS; r++) {
+      const lat = DEM_MIN_LAT + (r / DEM_GRID_ROWS) * (DEM_MAX_LAT - DEM_MIN_LAT);
+      for (let c = 0; c <= DEM_GRID_COLS; c++) {
+        const lng = DEM_MIN_LNG + (c / DEM_GRID_COLS) * (DEM_MAX_LNG - DEM_MIN_LNG);
+        const groundMasl = DEM_GRID_ELEV_DM[demIdx++] / 10;
 
-        let elevMasl = HIDDEN_ELEV_MASL;
+        let depthM = -2.0;
+        let elevMasl = groundMasl;
+
         if (active) {
           let totalWeight = 0;
           let weightedWaterMasl = 0;
@@ -174,10 +223,12 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
             const dx = (lng - b.center[0]) / b.radii[0];
             const dy = (lat - b.center[1]) / b.radii[1];
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist >= 1.55) continue;
+            if (dist >= 1.35) continue;
 
-            // Flat plateau inside the basin (dist <= 0.8), smooth cosine skirt out to 1.55
-            const raw = dist <= 0.8 ? 1.0 : 0.5 * (1 + Math.cos(Math.PI * ((dist - 0.8) / 0.75)));
+            const raw =
+              dist <= 0.78
+                ? 1.0
+                : 0.5 * (1 + Math.cos(Math.PI * ((dist - 0.78) / 0.57)));
             const w = raw * raw;
             if (w > 0.001) {
               totalWeight += w;
@@ -188,17 +239,21 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
           if (totalWeight > 0.001) {
             const localWaterMasl = weightedWaterMasl / totalWeight;
-            // Inside the basin (maxInfluence >= 0.75) hold horizontal true m a.s.l. so EU-DEM terrain
-            // naturally shapes the flooded contours; drop rapidly underground outside the skirt.
-            const levelFactor = maxInfluence >= 0.75 ? 1.0 : maxInfluence / 0.75;
-            elevMasl = HIDDEN_ELEV_MASL + (localWaterMasl - HIDDEN_ELEV_MASL) * levelFactor;
+            const rawDepth = localWaterMasl - groundMasl;
+            // Attenuate water depth cleanly near basin margin so flood never leaks past basin rim
+            const rimAtten = maxInfluence >= 0.7 ? 1.0 : maxInfluence / 0.7;
+            depthM = rawDepth * rimAtten - (1 - rimAtten) * 1.5;
+            if (depthM > 0) {
+              elevMasl = Math.max(groundMasl, localWaterMasl);
+            }
           }
         }
 
         const mc = MercatorCoordinate.fromLngLat([lng, lat], elevMasl);
-        this.vertexData[ptr++] = mc.x;
-        this.vertexData[ptr++] = mc.y;
-        this.vertexData[ptr++] = mc.z;
+        this.vertexData[ptr++] = mc.x - ox;
+        this.vertexData[ptr++] = mc.y - oy;
+        this.vertexData[ptr++] = mc.z - oz;
+        this.vertexData[ptr++] = depthM;
       }
     }
   }
