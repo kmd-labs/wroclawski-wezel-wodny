@@ -150,6 +150,11 @@ export interface Dict {
   sourcesMethodologyText: string;
   sourcesBuiltTitle: string;
   sourcesBuiltBy: string;
+  citeStyleLabel: string;
+  citeCopyBtn: string;
+  citeCopiedBtn: string;
+  citeAppTitle: string;
+  citeAccessedLabel: string;
   sourcesList: LiteratureSourceItem[];
   glossaryEntries: GlossaryEntry[];
   osmAttribution: string;

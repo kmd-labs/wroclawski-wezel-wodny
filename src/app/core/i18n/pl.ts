@@ -129,8 +129,13 @@ export const PL: Dict = {
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
   sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
   sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy, granice osiedli oraz zbiorniki i poldery Dolnego Śląska pochodzą bezpośrednio z paczek OpenStreetMap Geofabrik (Dolnośląskie, Opolskie, Śląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
-  sourcesBuiltTitle: 'Atrybucja',
+  sourcesBuiltTitle: 'Atrybucja i cytowanie',
   sourcesBuiltBy: 'Stworzone przez KMD Labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
+  citeStyleLabel: 'Styl cytowania',
+  citeCopyBtn: 'Kopiuj cytat',
+  citeCopiedBtn: 'Skopiowano',
+  citeAppTitle: 'Wrocławski Węzeł Wodny: Interaktywna wizualizacja hydrologiczna 3D',
+  citeAccessedLabel: 'dostęp',
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monografia i analiza hydrauliczna)',

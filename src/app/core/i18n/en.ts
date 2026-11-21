@@ -129,8 +129,13 @@ export const EN: Dict = {
   sourcesArticlesTitle: 'Timeline News & Report Citations',
   sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
   sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, osiedle basins, and Lower Silesia reservoirs are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie, Opolskie, Śląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
-  sourcesBuiltTitle: 'Attribution',
+  sourcesBuiltTitle: 'Attribution & Citation',
   sourcesBuiltBy: 'Built by KMD Labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
+  citeStyleLabel: 'Citation style',
+  citeCopyBtn: 'Copy citation',
+  citeCopiedBtn: 'Copied',
+  citeAppTitle: 'Wrocławski Węzeł Wodny: Interactive 3D Hydrological & Flood Visualization',
+  citeAccessedLabel: 'accessed',
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monograph & Hydraulic Analysis)',
