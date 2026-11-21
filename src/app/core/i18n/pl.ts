@@ -68,10 +68,10 @@ export const PL: Dict = {
   floodPopupGround: 'Teren (DEM)',
   floodPopupWaterLevel: 'Zwierciadło wody',
   floodPopupDepth: 'Głębokość zalania',
-  floodPopupDry: 'Sucho (0,0 m)',
+  floodPopupDry: 'Sucho',
   floodPopupProtected: 'Chronione wałem',
   floodPopupFloodway: 'Międzywale',
-  floodPopupUpland: 'Sucho · Poza strefą zalewową',
+  floodPopupUpland: 'Sucho',
 
   // Historical Floods View
   scenario1997: '1997',

@@ -68,10 +68,10 @@ export const EN: Dict = {
   floodPopupGround: 'Terrain (DEM)',
   floodPopupWaterLevel: 'Flood level',
   floodPopupDepth: 'Water depth',
-  floodPopupDry: 'Dry (0.0 m)',
+  floodPopupDry: 'Dry',
   floodPopupProtected: 'Protected by dyke',
   floodPopupFloodway: 'Inter-dyke floodway',
-  floodPopupUpland: 'Dry · Above floodplain',
+  floodPopupUpland: 'Dry',
 
   // Historical Floods View
   scenario1997: '1997',
