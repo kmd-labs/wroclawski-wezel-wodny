@@ -275,6 +275,41 @@ function interpolateScenarioAtStep(
   };
 }
 
+const HEAT_STOPS: Array<[number, [number, number, number]]> = [
+  [0.0, [56, 189, 248]],   // cool sky blue (#38bdf8)
+  [0.35, [14, 165, 233]],  // vivid Odra blue (#0ea5e9)
+  [0.62, [245, 158, 11]],  // warning amber (#f59e0b)
+  [0.82, [211, 116, 0]],   // high flood orange (#d37400)
+  [1.0, [220, 38, 38]]     // extreme peak crimson (#dc2626)
+];
+
+function heatToHex(t: number): string {
+  const clamped = Math.max(0, Math.min(1, t));
+  let a = HEAT_STOPS[0];
+  let b = HEAT_STOPS[HEAT_STOPS.length - 1];
+  for (let i = 0; i < HEAT_STOPS.length - 1; i++) {
+    if (clamped >= HEAT_STOPS[i][0] && clamped <= HEAT_STOPS[i + 1][0]) {
+      a = HEAT_STOPS[i];
+      b = HEAT_STOPS[i + 1];
+      break;
+    }
+  }
+  const span = b[0] - a[0] || 1;
+  const f = (clamped - a[0]) / span;
+  const r = Math.round(a[1][0] + (b[1][0] - a[1][0]) * f);
+  const g = Math.round(a[1][1] + (b[1][1] - a[1][1]) * f);
+  const bl = Math.round(a[1][2] + (b[1][2] - a[1][2]) * f);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${bl.toString(16).padStart(2, '0')}`;
+}
+
+function scenarioFlowHeat(flowM3s: number, systemCapacityM3s: number): number {
+  if (flowM3s >= systemCapacityM3s) {
+    return Math.min(1, 0.72 + ((flowM3s - systemCapacityM3s) / 1300) * 0.28);
+  }
+  const denom = Math.max(900, systemCapacityM3s - 500);
+  return Math.max(0, Math.min(0.7, ((flowM3s - 500) / denom) * 0.68));
+}
+
 @Injectable({ providedIn: 'root' })
 export class HydrologyService {
   private readonly state = inject(AppStateService);
@@ -325,24 +360,29 @@ export class HydrologyService {
     );
   });
 
-  /** SVG hydrograph polyline & capacity line for the multi-day dock chart. */
+  /** SVG hydrograph polyline, capacity line, and Q-following slider gradient for the multi-day dock chart. */
   readonly floodHydrographChart = computed(() => {
     const scenario = this.activeFloodScenario();
     const w = 320;
     const h = 42;
     const maxQ = 3900;
     const pts: string[] = [];
+    const gradStops: string[] = [];
     for (let s = 0; s <= 100; s += 2) {
       const sample = interpolateScenarioAtStep(scenario, s);
       const x = ((s / 100) * w).toFixed(1);
       const y = (h - Math.min(1, sample.flowTrestnoM3s / maxQ) * (h - 6) - 3).toFixed(1);
       pts.push(`${x},${y}`);
+      if (s % 4 === 0 || s === 100) {
+        gradStops.push(`${heatToHex(scenarioFlowHeat(sample.flowTrestnoM3s, scenario.systemCapacityM3s))} ${s}%`);
+      }
     }
     const linePoints = pts.join(' ');
     const areaPoints = `0,${h} ${linePoints} ${w},${h}`;
     const capY = Number((h - (scenario.systemCapacityM3s / maxQ) * (h - 6) - 3).toFixed(1));
     const cursorX = Number(((this.state.floodTimelineStep() / 100) * w).toFixed(1));
-    return { width: w, height: h, linePoints, areaPoints, capY, cursorX };
+    const trackGradient = `linear-gradient(90deg, ${gradStops.join(', ')})`;
+    return { width: w, height: h, linePoints, areaPoints, capY, cursorX, trackGradient };
   });
 
   readonly activeHistoryEra = computed(() => {

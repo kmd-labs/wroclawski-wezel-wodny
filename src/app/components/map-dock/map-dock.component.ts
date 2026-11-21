@@ -149,6 +149,11 @@ export class MapDockComponent {
       .map(z => (lang === 'pl' ? z.namePl : z.nameEn));
   });
 
+  readonly sliderTrackGradient = computed<string | undefined>(() => {
+    if (this.state.currentView() !== 'floods') return undefined;
+    return this.hydro.floodHydrographChart().trackGradient;
+  });
+
   onSliderChange(val: number): void {
     const v = this.state.currentView();
     if (v === 'equilibrium') this.state.inflowM3s.set(val);

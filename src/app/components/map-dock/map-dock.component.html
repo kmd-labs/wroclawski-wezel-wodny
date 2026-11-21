@@ -304,6 +304,7 @@
           [step]="sliderStep()"
           [value]="sliderValue()"
           [markers]="sliderMarkers()"
+          [trackGradient]="sliderTrackGradient()"
           [ariaLabel]="view === 'equilibrium' ? t.dischargeSliderLabel : t.timelineLabel"
           (valueChange)="onSliderChange($event)"
           (markerClick)="onMarkerClick($event)">
