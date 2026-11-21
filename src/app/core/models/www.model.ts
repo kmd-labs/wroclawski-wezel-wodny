@@ -8,7 +8,7 @@ export type GateId =
   | 'psie-pole'
   | 'redzin';
 
-export type FloodScenarioId = '1997' | '2012' | '2024';
+export type FloodScenarioId = '1997' | '2010' | '2024';
 
 export type PinCategory = 'breach' | 'weir' | 'polder' | 'defense' | 'milestone' | 'reservoir';
 

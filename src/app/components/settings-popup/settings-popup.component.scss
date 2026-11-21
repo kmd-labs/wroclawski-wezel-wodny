@@ -3,7 +3,8 @@
 .settings {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  padding: 4px 0;
 
   &__section {
     display: flex;
@@ -11,45 +12,86 @@
     gap: 8px;
   }
 
-  &__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
   &__label {
     margin: 0;
-    font-size: font-size("xs");
-    font-weight: font-weight("semibold");
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: color("text-dim");
-  }
-
-  &__value {
-    font-family: $font-family-mono;
-    font-size: font-size("xs");
+    font-size: font-size("xxs");
     font-weight: font-weight("bold");
     color: color("accent");
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
-  &__desc {
-    margin: 0;
-    font-size: font-size("xs");
-    line-height: 1.45;
-    color: color("text-desc");
-  }
-
-  &__range {
-    width: 100%;
-    accent-color: color("accent");
-    cursor: pointer;
-  }
-
-  &__toggles {
+  &__group {
     display: flex;
-    flex-direction: column;
     gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__option {
+    flex: 1;
+    min-width: 100px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: radius("control");
+    border: 1px solid color("line");
+    background: color("btn-bg");
+    color: color("text-main");
+    cursor: pointer;
+    font: inherit;
+    font-size: font-size("xs");
+    font-weight: font-weight("medium");
+    transition: background transition("fast"), border-color transition("fast"), color transition("fast");
+
+    &:hover {
+      background: color("btn-hover");
+      border-color: color("line-strong");
+      color: color("text-bright");
+    }
+
+    &:focus-visible {
+      outline: 2px solid color("btn-active-blue-border");
+      outline-offset: 1px;
+    }
+
+    &--active,
+    &--active:hover {
+      background: color("btn-active-blue");
+      border-color: color("btn-active-blue-border");
+      color: color("btn-active-blue-border");
+      font-weight: font-weight("semibold");
+
+      .settings__badge {
+        background: color("btn-active-blue-border");
+        color: color("on-info");
+      }
+    }
+  }
+
+  &__badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 5px;
+    border-radius: radius("sm");
+    background: color("line");
+    color: color("text-dim");
+    font-size: 10px;
+    font-family: $font-family-mono;
+    font-weight: font-weight("bold");
+    line-height: 1;
+    transition: background transition("fast"), color transition("fast");
+
+    &--icon {
+      padding: 3px 4px;
+    }
+  }
+
+  &__name {
+    min-width: 0;
+    white-space: nowrap;
   }
 }

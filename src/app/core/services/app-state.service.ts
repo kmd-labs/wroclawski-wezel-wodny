@@ -23,7 +23,6 @@ export class AppStateService {
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
   readonly gateOpenings = signal<Record<GateId, number>>({ ...DEFAULT_GATE_OPENINGS });
-  readonly polderRetentionActive = signal<boolean>(false);
   readonly weirPanelOpen = signal<boolean>(false);
 
   // 2. Floods View State
@@ -100,13 +99,7 @@ export class AppStateService {
         const next = Math.round((this.floodTimelineStep() + 0.5) * 10) / 10;
         if (next > 100) this.floodTimelineStep.set(0);
         else this.floodTimelineStep.set(next);
-      } else if (view === 'history') {
-        const years = [1241, 1897, 1903, 1917, 1939, 1997, 2024];
-        const cur = this.historyYear();
-        const idx = years.findIndex(y => y >= cur);
-        const nextIdx = idx < 0 || idx >= years.length - 1 ? 0 : idx + 1;
-        this.historyYear.set(years[nextIdx]);
-      } else {
+      } else if (view === 'equilibrium') {
         const next = this.inflowM3s() + 60;
         if (next > 3850) this.inflowM3s.set(450);
         else this.inflowM3s.set(next);

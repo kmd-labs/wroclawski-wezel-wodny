@@ -1,8 +1,11 @@
 export type Lang = 'en' | 'pl';
 
-export interface GlossaryEntry {
-  term: string;
-  badge: string;
+export interface DataSourceItem {
+  name: string;
+  provider: string;
+  url: string;
+  license: string;
+  licenseUrl: string;
   desc: string;
 }
 
@@ -37,8 +40,6 @@ export interface Dict {
   dischargeSliderLabel: string;
   playStart: string;
   playStop: string;
-  glossary: string;
-  glossaryDesc: string;
   sourcesBtn: string;
   settingsBtn: string;
   close: string;
@@ -72,7 +73,6 @@ export interface Dict {
   weirPanelSubtitle: string;
   weirToggleBtn: string;
   autoEquilibriumBtn: string;
-  polderShavingLabel: string;
   statusSafe: string;
   statusWarning: string;
   statusOverflow: string;
@@ -94,7 +94,7 @@ export interface Dict {
 
   // Historical Floods View
   scenario1997: string;
-  scenario2012: string;
+  scenario2010: string;
   scenario2024: string;
   wwwStatePreModern: string;
   wwwStateModern: string;
@@ -111,8 +111,9 @@ export interface Dict {
   historySubtitle: string;
   historyNoBuildingsNote: string;
 
-  // Settings Popup (Layers & Theme)
+  // Settings & Layers Popups
   settingsTitle: string;
+  layersTitle: string;
   layersLabel: string;
   layerBuildings3d: string;
   layerEmbankments3d: string;
@@ -130,8 +131,9 @@ export interface Dict {
   legendFlooded: string;
   belowFloodCrest: string;
 
-  // Sources & Glossary Popups
+  // Sources Popup
   sourcesTitle: string;
+  sourcesDataTitle: string;
   sourcesLiteratureTitle: string;
   sourcesArticlesTitle: string;
   sourcesMethodologyTitle: string;
@@ -143,7 +145,7 @@ export interface Dict {
   citeCopiedBtn: string;
   citeAppTitle: string;
   citeAccessedLabel: string;
+  dataSourcesList: DataSourceItem[];
   sourcesList: LiteratureSourceItem[];
-  glossaryEntries: GlossaryEntry[];
   osmAttribution: string;
 }

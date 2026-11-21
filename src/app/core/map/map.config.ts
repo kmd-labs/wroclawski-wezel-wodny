@@ -19,6 +19,7 @@ export const MAP_FONT_ITALIC = ['Noto Sans Italic'];
 
 export const SRC_BASEMAP = 'basemap';
 export const SRC_DEM = 'www-dem';
+export const SRC_HILLSHADE_DEM = 'www-dem-hillshade';
 export const DEM_TILES_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const SRC_DEPRESSIONS = 'www-depressions';
 export const SRC_INUNDATION = 'www-inundation';

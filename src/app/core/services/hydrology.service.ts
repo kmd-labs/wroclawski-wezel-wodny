@@ -57,6 +57,7 @@ export interface FloodBasinLevel {
   waterMasl: number;
   depthM: number;
   excessRatio: number;
+  maxLng?: number;
 }
 
 export interface FloodPlaneState {
@@ -160,8 +161,8 @@ const ISOK_BASIN_PROFILES: IsokBasinProfile[] = [
   },
   {
     id: 'kozanow-pilczyce',
-    center: [16.985, 51.124],
-    radii: [0.032, 0.020],
+    center: [16.988, 51.123],
+    radii: [0.022, 0.014],
     bankfullMasl: 110.6,
     maxRiseM: 5.6,
     critLoadRatio: 1.122,
@@ -462,7 +463,7 @@ export class HydrologyService {
       'odra-redzin': qRedzin,
       'olawa-river': 22 + Math.max(0, effectiveTrestno - 2000) * 0.11,
       'sleza-river':
-        (view === 'floods' && scenarioId === '2012' && step >= 45 ? 165 : 18) +
+        (view === 'floods' && scenarioId === '2010' && step >= 45 ? 165 : 18) +
         Math.max(0, effectiveTrestno - 2000) * 0.04,
       'bystrzyca-river':
         view === 'floods' && scenarioId === '2024' && step >= 35 && step <= 70 ? 195 : 26
@@ -499,17 +500,12 @@ export class HydrologyService {
       }
     } else {
       let inflow = this.state.inflowM3s();
-      let polderShave =
-        this.state.polderRetentionActive() && inflow > 2100
-          ? Math.min(260, (inflow - 2100) * 0.26)
-          : 0;
 
       if (view === 'history') {
         inflow = Math.min(2100, this.activeHistoryEra().capacityM3s * 0.85);
-        polderShave = 0;
       }
 
-      const effectiveTrestno = Math.max(250, inflow - polderShave);
+      const effectiveTrestno = Math.max(250, inflow);
       Object.assign(rawFlows, this.routeWaveFlows(effectiveTrestno, view, scenario.id, step));
     }
 
@@ -564,13 +560,12 @@ export class HydrologyService {
     if (view === 'history') return [];
 
     const branches = this.branchHydrology();
-    const polderOn = this.state.polderRetentionActive();
-    const inflow = this.state.inflowM3s();
     const basins: FloodBasinLevel[] = [];
 
     if (view === 'floods') {
       const kf = this.activeFloodKeyframe();
       const kfZones = new Set(kf.floodedZones);
+      const scenarioId = this.state.floodScenario();
       const cap = this.activeFloodScenario().systemCapacityM3s;
       const waveExcess = Math.max(0, (kf.flowTrestnoM3s - cap) / 1300);
 
@@ -593,7 +588,10 @@ export class HydrologyService {
           maxTriggerLoad = Math.max(maxTriggerLoad, branches[bId]?.loadRatio ?? 0);
         }
         const branchExcess = Math.max(0, maxTriggerLoad - 0.96);
-        const excessRatio = Math.min(1, Math.max(0.08, waveExcess * 0.65 + branchExcess * 0.55));
+        const is2010Kozanow = scenarioId === '2010' && profile.id === 'kozanow-pilczyce';
+        const excessRatio = is2010Kozanow
+          ? 0.72
+          : Math.min(1, Math.max(0.08, waveExcess * 0.65 + branchExcess * 0.55));
         const depthM = Math.round((0.25 + excessRatio * (profile.maxRiseM - 0.25)) * 100) / 100;
         basins.push({
           id: profile.id,
@@ -602,7 +600,8 @@ export class HydrologyService {
           bankfullMasl: profile.bankfullMasl,
           waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
           depthM,
-          excessRatio
+          excessRatio,
+          ...(is2010Kozanow ? { maxLng: 16.9965 } : {})
         });
       }
       return basins;
@@ -611,10 +610,8 @@ export class HydrologyService {
     for (const profile of ISOK_BASIN_PROFILES) {
       if (profile.id === 'polder-blizanowice-trestno') {
         const odraLoad = branches['odra-upper']?.loadRatio ?? 0;
-        if ((polderOn && inflow > 2100) || odraLoad > 1.005) {
-          const norm = polderOn
-            ? Math.min(1, Math.max(0.15, (inflow - 2100) / 1000))
-            : Math.min(1, (odraLoad - 1.0) / 0.25);
+        if (odraLoad > 1.005) {
+          const norm = Math.min(1, (odraLoad - 1.0) / 0.25);
           const depthM = Math.round((0.35 + norm * 2.4) * 100) / 100;
           basins.push({
             id: profile.id,
@@ -869,7 +866,8 @@ export class HydrologyService {
     }
 
     const basinId = DEM_BASIN_IDS[zoneCode] ?? null;
-    const activeBasin = plane.active ? plane.basins.find(b => b.id === basinId) : undefined;
+    const rawBasin = plane.active ? plane.basins.find(b => b.id === basinId) : undefined;
+    const activeBasin = rawBasin && (!rawBasin.maxLng || lng <= rawBasin.maxLng) ? rawBasin : undefined;
     const depthM = activeBasin
       ? Math.max(0, Math.round((activeBasin.depthM - relElevM) * 10) / 10)
       : 0;

@@ -1,0 +1,28 @@
+@let t = i18n.t();
+
+<div class="layers">
+  <h3 class="layers__label">{{ t.layersLabel }}</h3>
+  <div class="layers__toggles">
+    <app-toggle
+      [label]="t.layerBuildings3d"
+      [checked]="state.show3dBuildings()"
+      [disabled]="state.currentView() === 'history'"
+      [fullWidth]="true"
+      (checkedChange)="state.show3dBuildings.set($event)">
+    </app-toggle>
+
+    <app-toggle
+      [label]="t.layerEmbankments3d"
+      [checked]="state.show3dEmbankments()"
+      [fullWidth]="true"
+      (checkedChange)="state.show3dEmbankments.set($event)">
+    </app-toggle>
+
+    <app-toggle
+      [label]="t.layerDepressions"
+      [checked]="state.showDepressionZones()"
+      [fullWidth]="true"
+      (checkedChange)="state.showDepressionZones.set($event)">
+    </app-toggle>
+  </div>
+</div>

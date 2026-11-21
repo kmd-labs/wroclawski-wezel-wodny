@@ -5,7 +5,6 @@ import {
   Play,
   Pause,
   SlidersHorizontal,
-  BookOpen,
   Database,
   Wand2,
   AlertTriangle,
@@ -15,16 +14,17 @@ import {
   Compass,
   Plus,
   Minus,
-  RotateCcw
+  RotateCcw,
+  MapPin
 } from 'lucide-angular';
 import {
+  BreakpointService,
   ButtonComponent,
   PopupService,
   SwitcherComponent,
   SwitcherOption,
   TimelineMarker,
   TimelineSliderComponent,
-  ToggleComponent,
   TooltipDirective
 } from '@kmd/design-system';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -34,9 +34,8 @@ import { MapService } from '../../core/map/map.service';
 import { DEPRESSED_ZONES, WEIR_NODES } from '../../core/data/www-hydrology.data';
 import { HISTORY_ERAS } from '../../core/data/www-events.data';
 import { FloodScenarioId, GateId } from '../../core/models/www.model';
-import { SettingsPopupComponent } from '../settings-popup/settings-popup.component';
+import { LayersPopupComponent } from '../layers-popup/layers-popup.component';
 import { SourcesPopupComponent } from '../sources-popup/sources-popup.component';
-import { GlossaryComponent } from '../glossary/glossary.component';
 
 @Component({
   selector: 'app-map-dock',
@@ -47,7 +46,6 @@ import { GlossaryComponent } from '../glossary/glossary.component';
     ButtonComponent,
     SwitcherComponent,
     TimelineSliderComponent,
-    ToggleComponent,
     TooltipDirective
   ],
   templateUrl: './map-dock.component.html',
@@ -58,12 +56,12 @@ export class MapDockComponent {
   readonly state = inject(AppStateService);
   readonly hydro = inject(HydrologyService);
   readonly mapService = inject(MapService);
+  readonly bp = inject(BreakpointService);
   private readonly popup = inject(PopupService);
 
   readonly playIcon = Play;
   readonly pauseIcon = Pause;
   readonly settingsIcon = SlidersHorizontal;
-  readonly bookIcon = BookOpen;
   readonly sourcesIcon = Database;
   readonly autoIcon = Wand2;
   readonly warnIcon = AlertTriangle;
@@ -74,14 +72,16 @@ export class MapDockComponent {
   readonly plusIcon = Plus;
   readonly minusIcon = Minus;
   readonly resetIcon = RotateCcw;
+  readonly pinIcon = MapPin;
 
   readonly controllableWeirs = WEIR_NODES.filter(w => w.controllable && w.gateId);
+  readonly historyEras = HISTORY_ERAS;
 
   readonly scenarioOptions = computed<SwitcherOption<FloodScenarioId>[]>(() => {
     const t = this.i18n.t();
     return [
       { value: '1997', label: t.scenario1997 },
-      { value: '2012', label: t.scenario2012 },
+      { value: '2010', label: t.scenario2010 },
       { value: '2024', label: t.scenario2024 }
     ];
   });
@@ -118,12 +118,13 @@ export class MapDockComponent {
   readonly sliderMarkers = computed<TimelineMarker[]>(() => {
     const v = this.state.currentView();
     if (v === 'equilibrium') {
+      const unit = this.bp.mobile() ? '' : ' m³/s';
       return [
-        { id: 'q-450', value: 450, label: '450 m³/s', color: '#0ea5e9' },
-        { id: 'q-1500', value: 1500, label: '1500', color: '#0ea5e9' },
-        { id: 'q-2400', value: 2400, label: '2400', color: '#d37400' },
-        { id: 'q-3100', value: 3100, label: '3100', color: '#10b981' },
-        { id: 'q-3640', value: 3640, label: '3640 m³/s', color: '#ef4444' }
+        { id: 'q-450', value: 450, label: `450${unit}`, color: '#0ea5e9' },
+        { id: 'q-1500', value: 1500, label: `1500${unit}`, color: '#0ea5e9' },
+        { id: 'q-2400', value: 2400, label: `2400${unit}`, color: '#d37400' },
+        { id: 'q-3100', value: 3100, label: `3100${unit}`, color: '#10b981' },
+        { id: 'q-3640', value: 3640, label: `3640${unit}`, color: '#ef4444' }
       ];
     }
     if (v === 'floods') {
@@ -134,20 +135,27 @@ export class MapDockComponent {
         color: p.category === 'breach' ? '#ef4444' : '#d37400'
       }));
     }
-    return HISTORY_ERAS.map(e => ({
-      id: `era-${e.year}`,
-      value: e.year,
-      label: String(e.year),
-      color: e.year === 1997 ? '#ef4444' : '#d37400'
-    }));
+    return [];
   });
 
-  readonly floodedZoneNames = computed(() => {
+  readonly floodedBasins = computed(() => {
     const ids = this.hydro.floodedZoneIds();
     const lang = this.i18n.lang();
-    return DEPRESSED_ZONES.filter(z => ids.has(z.id) && z.id !== 'polder-blizanowice-trestno')
-      .map(z => (lang === 'pl' ? z.namePl : z.nameEn));
+    return DEPRESSED_ZONES.filter(z => ids.has(z.id) && z.id !== 'polder-blizanowice-trestno').map(z => {
+      const ring = z.polygon.length > 1 ? z.polygon.slice(0, -1) : z.polygon;
+      const lng = ring.reduce((s, p) => s + p[0], 0) / (ring.length || 1);
+      const lat = ring.reduce((s, p) => s + p[1], 0) / (ring.length || 1);
+      return {
+        id: z.id,
+        name: lang === 'pl' ? z.namePl : z.nameEn,
+        center: [lng, lat] as [number, number]
+      };
+    });
   });
+
+  navigateToBasin(center: [number, number]): void {
+    this.mapService.flyTo(center, 13.6);
+  }
 
   readonly sliderTrackGradient = computed<string | undefined>(() => {
     if (this.state.currentView() !== 'floods') return undefined;
@@ -195,9 +203,9 @@ export class MapDockComponent {
 
   openSettings(): void {
     this.popup.open({
-      id: 'settings',
-      title: computed(() => this.i18n.t().settingsTitle),
-      component: SettingsPopupComponent,
+      id: 'layers',
+      title: computed(() => this.i18n.t().layersTitle),
+      component: LayersPopupComponent,
       size: 'sm',
       actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
     });
@@ -209,17 +217,6 @@ export class MapDockComponent {
       title: computed(() => this.i18n.t().sourcesTitle),
       component: SourcesPopupComponent,
       size: 'lg',
-      actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
-    });
-  }
-
-  openGlossary(): void {
-    this.popup.open({
-      id: 'glossary',
-      title: computed(() => this.i18n.t().glossary),
-      description: computed(() => this.i18n.t().glossaryDesc),
-      component: GlossaryComponent,
-      size: 'md',
       actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
     });
   }

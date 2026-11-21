@@ -1,3 +1,4 @@
+import { ISOK_MZP_METADATA } from '../data/www-dem-grid.data';
 import { Dict } from './i18n.types';
 
 export const PL: Dict = {
@@ -18,8 +19,6 @@ export const PL: Dict = {
   dischargeSliderLabel: 'Dopływ Q w Trestnie (m³/s)',
   playStart: 'Odtwórz symulację',
   playStop: 'Wstrzymaj symulację',
-  glossary: 'Słowniczek',
-  glossaryDesc: 'Najważniejsze pojęcia hydrotechniczne Wrocławskiego Węzła Wodnego.',
   sourcesBtn: 'Źródła',
   settingsBtn: 'Warstwy',
   close: 'Zamknij',
@@ -53,7 +52,6 @@ export const PL: Dict = {
   weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
   weirToggleBtn: 'Zasuwy',
   autoEquilibriumBtn: 'Auto-sterowanie',
-  polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
   statusSafe: 'Przepływ bezpieczny',
   statusWarning: 'Blisko limitu',
   statusOverflow: 'Przelanie wałów!',
@@ -75,7 +73,7 @@ export const PL: Dict = {
 
   // Historical Floods View
   scenario1997: '1997',
-  scenario2012: '2010 / 2012',
+  scenario2010: '2010',
   scenario2024: '2024',
   wwwStatePreModern: 'WWW sprzed przebudowy (limit ok. 2350 m³/s)',
   wwwStateModern: 'Zmodernizowany WWW + Racibórz (3100 m³/s)',
@@ -92,15 +90,16 @@ export const PL: Dict = {
   historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',
   historyNoBuildingsNote: 'Współczesne budynki 3D ukryte w widoku historycznym',
 
-  // Settings Popup (Layers & Theme)
-  settingsTitle: 'Warstwy mapy i motyw',
+  // Settings & Layers Popups
+  settingsTitle: 'Ustawienia',
+  layersTitle: 'Warstwy mapy',
   layersLabel: 'Warstwy mapy',
   layerBuildings3d: 'Budynki 3D (OSM)',
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',
   layerDepressions: 'Niecki osiedli poniżej korony wału (-m)',
   themeLabel: 'Motyw interfejsu',
-  themeLight: 'Jasny (Dzień)',
-  themeDark: 'Midnight (Ciemny)',
+  themeLight: 'Jasny',
+  themeDark: 'Ciemny',
 
   // Map Legend & Depression Callout
   legendNormal: 'Bezpieczny (<75%)',
@@ -111,19 +110,62 @@ export const PL: Dict = {
   legendFlooded: 'Strefa zalania 3D',
   belowFloodCrest: 'poniżej korony fali',
 
-  // Sources & Glossary Popups
-  sourcesTitle: 'Literatura hydrologiczna i źródła medialne',
+  // Sources Popup
+  sourcesTitle: 'Źródła danych, licencje i literatura',
+  sourcesDataTitle: 'Dane mapowe, integracje i licencje',
   sourcesLiteratureTitle: 'Publikacje naukowe i dokumentacja techniczna',
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
-  sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
-  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy i granice osiedli pochodzą bezpośrednio z paczki OpenStreetMap Geofabrik (Dolnośląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
+  sourcesMethodologyTitle: 'Założenia modelu i oficjalne dane ISOK',
+  sourcesMethodologyText: `Linie brzegowe rzek i kanałów, wały, jazy i granice osiedli pochodzą z OpenStreetMap Geofabrik (Dolnośląskie) w 3 poziomach LOD, połączonych z oficjalnymi Mapami Zagrożenia Powodziowego ISOK (PGW Wody Polskie, INSPIRE WFS ${ISOK_MZP_METADATA.namespace} Q10%/Q1%/Q0,2%, pobrano ${ISOK_MZP_METADATA.acquiredDate}) oraz NMT EU-DEM. Wizualizacja ma charakter wyłącznie poglądowy — nie stanowi dokumentu urzędowego.`,
   sourcesBuiltTitle: 'Atrybucja i cytowanie',
-  sourcesBuiltBy: 'Stworzone przez kmd-labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
+  sourcesBuiltBy: `Stworzone przez kmd-labs na danych PGW Wody Polskie ISOK MZP (pobrano ${ISOK_MZP_METADATA.acquiredDate}), OpenStreetMap / OpenFreeMap i MapLibre GL 3D.`,
   citeStyleLabel: 'Styl cytowania',
   citeCopyBtn: 'Kopiuj cytat',
   citeCopiedBtn: 'Skopiowano',
   citeAppTitle: 'Wrocławski Węzeł Wodny: Interaktywna wizualizacja hydrologiczna 3D',
   citeAccessedLabel: 'dostęp',
+  dataSourcesList: [
+    {
+      name: 'OpenStreetMap (Geofabrik Dolnośląskie / Opolskie / Śląskie)',
+      provider: 'Współtwórcy OpenStreetMap · Geofabrik GmbH',
+      url: 'https://www.openstreetmap.org/copyright',
+      license: 'ODbL 1.0',
+      licenseUrl: 'https://opendatacommons.org/licenses/odbl/',
+      desc: 'Geometrie rzek i kanałów, wały przeciwpowodziowe, jazy, granice wrocławskich osiedli oraz zbiorniki i poldery w dorzeczu Odry.'
+    },
+    {
+      name: 'Mapy Zagrożenia Powodziowego ISOK (MZP · II cykl)',
+      provider: `PGW Wody Polskie · Hydroportal (${ISOK_MZP_METADATA.namespace}, pobr. ${ISOK_MZP_METADATA.acquiredDate})`,
+      url: 'https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS',
+      license: 'Otwarte dane publiczne (INSPIRE / HVD)',
+      licenseUrl: 'https://dane.gov.pl/en/regulations',
+      desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% użyte do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
+    },
+    {
+      name: 'OpenFreeMap: Budynki 3D, kafelki wektorowe i fonty Noto',
+      provider: 'OpenFreeMap / OpenMapTiles (bryły i wysokości budynków z OSM)',
+      url: 'https://openfreemap.org/',
+      license: 'MIT / ODbL',
+      licenseUrl: 'https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md',
+      desc: 'Budynki 3D (ekstruzja render_height na bazie OpenStreetMap), sieć dróg, zieleń, wody oraz glify etykiet mapy.'
+    },
+    {
+      name: 'AWS Terrain Tiles (Terrarium DEM / EU-DEM)',
+      provider: 'Mapzen / Registry of Open Data on AWS',
+      url: 'https://registry.opendata.aws/terrain-tiles/',
+      license: 'Open Data / Copernicus',
+      licenseUrl: 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md',
+      desc: 'Kafelki wysokościowe Terrarium (z=12) do rzeźby terenu 1:1 oraz siatki zwierciadła wody powodziowej.'
+    },
+    {
+      name: 'MapLibre GL JS',
+      provider: 'MapLibre Organization',
+      url: 'https://maplibre.org/',
+      license: 'BSD-3-Clause',
+      licenseUrl: 'https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt',
+      desc: 'Otwartoźródłowy silnik WebGL2 do renderowania mapy 3D i niestandardowych shaderów.'
+    }
+  ],
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monografia i analiza hydrauliczna)',
@@ -148,39 +190,15 @@ export const PL: Dict = {
       license: 'Raport publiczny',
       url: 'https://www.nik.gov.pl/aktualnosci/modernizacja-wroclawskiego-wezla-wodnego.html',
       desc: 'Weryfikacja przebudowy Starej Odry, Kanału Powodziowego, stopni Rędzin i Psie Pole oraz bajpasu Widawy.'
+    },
+    {
+      name: `Mapy Zagrożenia Powodziowego ISOK (MZP · II cykl, ${ISOK_MZP_METADATA.namespace})`,
+      authors: 'PGW Wody Polskie · Hydroportal (wody.isok.gov.pl)',
+      year: `2022–2025 (pobr. ${ISOK_MZP_METADATA.acquiredDate})`,
+      license: 'Otwarte dane publiczne (HVD / INSPIRE)',
+      url: 'https://wody.isok.gov.pl/hydroportal.html',
+      desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% wykorzystane do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
     }
   ],
-  glossaryEntries: [
-    {
-      term: 'Wrocławski Węzeł Wodny (WWW)',
-      badge: 'System',
-      desc: 'Rozbudowany układ naturalnych ramion Odry, sztucznych kanałów powodziowych i żeglugowych, jazów, śluz oraz polderów chroniący Wrocław (3100 m³/s po modernizacji).'
-    },
-    {
-      term: 'Przewał Widawski (Bypas Widawy)',
-      badge: '300 m³/s',
-      desc: 'Kanał przerzutowy ze Strachocina do doliny Widawy przejmujący do 300 m³/s nadmiaru wód powodziowych z ominięciem centrum Wrocławia.'
-    },
-    {
-      term: 'Brama Przeciwpowodziowa Psie Pole',
-      badge: 'Zasuwa',
-      desc: 'Zabytkowa brama z 1897 r. (zmodernizowana w 2015 r.) odcinająca Kanał Miejski podczas wezbrań, chroniąca Nadodrze, Ołbin i Kleczków.'
-    },
-    {
-      term: 'Jaz Szczytniki i Przekop Szczytnicki',
-      badge: '680 m³/s',
-      desc: 'Węzeł rozrządowy Górnej Odry Miejskiej kierujący do 680 m³/s do Starej Odry, aby Śródmieście nie przekroczyło bezpiecznego limitu 950 m³/s.'
-    },
-    {
-      term: 'Polder zalewowy',
-      badge: 'Retencja',
-      desc: 'Obwałowana dolina (np. Blizanowice–Trestno, Lipki–Oława, Buków) celowo zalewana podczas szczytu fali w celu jego spłaszczenia.'
-    },
-    {
-      term: 'Cofka',
-      badge: 'Hydraulika',
-      desc: 'Podpiętrzenie wody w górę rzeki lub dopływu wywołane zdławieniem odpływu (np. przy stopniu Rędzin lub na ujściach Ślęzy i Oławy).'
-    }
-  ],
-  osmAttribution: '© Współtwórcy OpenStreetMap · OpenFreeMap'
+  osmAttribution: '© Współtwórcy OpenStreetMap'
 };
