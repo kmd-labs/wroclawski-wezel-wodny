@@ -19,8 +19,6 @@ export const EN: Dict = {
   dischargeSliderLabel: 'Trestno Inflow Q (m³/s)',
   playStart: 'Play simulation',
   playStop: 'Pause simulation',
-  glossary: 'Glossary',
-  glossaryDesc: 'Key hydrotechnical terms of the Wrocław Water Node.',
   sourcesBtn: 'Sources',
   settingsBtn: 'Layers',
   close: 'Close',
@@ -112,8 +110,9 @@ export const EN: Dict = {
   legendFlooded: 'Flooded Volume',
   belowFloodCrest: 'below flood crest',
 
-  // Sources & Glossary Popups
-  sourcesTitle: 'Hydrological Literature & Event Sources',
+  // Sources Popup
+  sourcesTitle: 'Data Sources, Licenses & Literature',
+  sourcesDataTitle: 'Map Data, Integrations & Licenses',
   sourcesLiteratureTitle: 'Scientific & Hydrotechnical Literature',
   sourcesArticlesTitle: 'Timeline News & Report Citations',
   sourcesMethodologyTitle: 'Hydrological Model & Official ISOK Data Notes',
@@ -125,6 +124,48 @@ export const EN: Dict = {
   citeCopiedBtn: 'Copied',
   citeAppTitle: 'Wrocławski Węzeł Wodny: Interactive 3D Hydrological & Flood Visualization',
   citeAccessedLabel: 'accessed',
+  dataSourcesList: [
+    {
+      name: 'OpenStreetMap (Geofabrik Dolnośląskie / Opolskie / Śląskie)',
+      provider: 'OpenStreetMap contributors · Geofabrik GmbH',
+      url: 'https://www.openstreetmap.org/copyright',
+      license: 'ODbL 1.0',
+      licenseUrl: 'https://opendatacommons.org/licenses/odbl/',
+      desc: 'River & canal geometries, flood embankments (dykes), weirs, Wrocław osiedle boundaries, and upstream retention basins.'
+    },
+    {
+      name: 'ISOK Flood Hazard Maps (MZP · Cycle II)',
+      provider: `PGW Wody Polskie · Hydroportal (${ISOK_MZP_METADATA.namespace}, acq. ${ISOK_MZP_METADATA.acquiredDate})`,
+      url: 'https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS',
+      license: 'Open Public Data (INSPIRE / HVD)',
+      licenseUrl: 'https://dane.gov.pl/',
+      desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
+    },
+    {
+      name: 'OpenFreeMap Vector Tiles & Noto Fonts',
+      provider: 'OpenFreeMap / OpenMapTiles',
+      url: 'https://openfreemap.org/',
+      license: 'MIT / ODbL',
+      licenseUrl: 'https://github.com/hyperknot/openfreemap/blob/main/LICENSE.md',
+      desc: 'Base vector tiles (buildings, roads, parks, water) and font glyphs rendered in the 3D canvas.'
+    },
+    {
+      name: 'AWS Terrain Tiles (Terrarium DEM / EU-DEM)',
+      provider: 'Mapzen / Registry of Open Data on AWS',
+      url: 'https://registry.opendata.aws/terrain-tiles/',
+      license: 'Open Data / Copernicus',
+      licenseUrl: 'https://github.com/tilezen/joerd/blob/master/docs/attribution.md',
+      desc: 'Zoom-12 Terrarium elevation tiles used for 1:1 terrain relief and the pre-baked flood water surface heightfield.'
+    },
+    {
+      name: 'MapLibre GL JS',
+      provider: 'MapLibre Organization',
+      url: 'https://maplibre.org/',
+      license: 'BSD-3-Clause',
+      licenseUrl: 'https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt',
+      desc: 'Open-source WebGL2 3D map and custom shader rendering engine.'
+    }
+  ],
   sourcesList: [
     {
       name: 'Wrocławski Węzeł Wodny (Monograph & Hydraulic Analysis)',
@@ -157,38 +198,6 @@ export const EN: Dict = {
       license: 'Open Public Data (HVD / INSPIRE)',
       url: 'https://wody.isok.gov.pl/hydroportal.html',
       desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
-    }
-  ],
-  glossaryEntries: [
-    {
-      term: 'Wrocławski Węzeł Wodny (WWW)',
-      badge: 'System',
-      desc: 'Complex hydrotechnical network of natural Odra branches, artificial flood/navigation canals, weirs, locks, and polders protecting Wrocław (3,100 m³/s post-POPDO capacity).'
-    },
-    {
-      term: 'Przewał Widawski (Odra–Widawa Bypass)',
-      badge: '300 m³/s',
-      desc: 'Controlled transfer canal at Strachocin diverting up to 300 m³/s from the Odra into the Widawa valley around northern Wrocław.'
-    },
-    {
-      term: 'Brama Przeciwpowodziowa Psie Pole',
-      badge: 'Floodgate',
-      desc: 'Historic 1897 (modernized 2015) floodgate sealing Kanał Miejski during flood waves to protect low-lying Nadodrze, Ołbin, and Kleczków.'
-    },
-    {
-      term: 'Jaz Szczytniki & Przekop Szczytnicki',
-      badge: '680 m³/s',
-      desc: 'Diversion weir splitting Górna Odra Miejska: sends up to 680 m³/s north into Stara Odra so Downtown (Śródmieście) never exceeds 950 m³/s.'
-    },
-    {
-      term: 'Polder zalewowy (Floodplain Polder)',
-      badge: 'Retention',
-      desc: 'Embanked floodplain basin (e.g., Blizanowice–Trestno, Lipki–Oława, Buków) intentionally flooded during high water to shave the peak wave.'
-    },
-    {
-      term: 'Cofka (Backwater Effect)',
-      badge: 'Hydraulics',
-      desc: 'Upstream rise in water surface when downstream outflow is throttled (e.g., at Rędzin or tributary mouths of Ślęza and Oława).'
     }
   ],
   osmAttribution: '© OpenStreetMap · PGW Wody Polskie (ISOK MZP)'

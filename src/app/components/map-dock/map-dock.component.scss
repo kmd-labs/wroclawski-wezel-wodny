@@ -488,3 +488,68 @@
     }
   }
 }
+
+.history-steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+
+  &__track {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+
+    @include respond-to("mobile") {
+      gap: 4px;
+    }
+  }
+}
+
+.history-step {
+  height: $control-height;
+  padding: 0 8px;
+  border-radius: radius("pill");
+  border: 1px solid color("line");
+  background: color("panel-inset");
+  color: color("text-dim");
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  font-family: $font-family-mono;
+  font-size: font-size("xs");
+  transition: border-color transition("fast"), background transition("fast"), color transition("fast");
+
+  @include respond-to("mobile") {
+    padding: 0;
+  }
+
+  &:hover {
+    border-color: color("accent");
+    color: color("text-bright");
+  }
+
+  &--reached {
+    border-color: color("line-strong");
+    color: color("text-main");
+  }
+
+  &--active {
+    background: color("accent");
+    border-color: color("accent");
+    color: #ffffff;
+    font-weight: font-weight("bold");
+  }
+
+  &__num {
+    font-weight: font-weight("bold");
+  }
+
+  &__year {
+    font-size: font-size("xxs");
+    opacity: 0.9;
+  }
+}

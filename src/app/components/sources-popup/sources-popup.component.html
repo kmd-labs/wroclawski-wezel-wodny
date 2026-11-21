@@ -29,6 +29,33 @@
     </div>
   </section>
 
+  <!-- Map Data, Integrations & Licenses -->
+  <section class="sources__section">
+    <h3 class="sources__heading">{{ t.sourcesDataTitle }}</h3>
+    <div class="sources__list">
+      @for (ds of t.dataSourcesList; track ds.url) {
+        <article class="sources__card">
+          <div class="sources__card-top">
+            <a [href]="ds.url" target="_blank" rel="noopener noreferrer" class="sources__link">
+              <span>{{ ds.name }}</span>
+              <lucide-icon [img]="externalLinkIcon" [size]="12"></lucide-icon>
+            </a>
+            <a
+              [href]="ds.licenseUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="sources__badge sources__badge--link">
+              <span>{{ ds.license }}</span>
+              <lucide-icon [img]="externalLinkIcon" [size]="10"></lucide-icon>
+            </a>
+          </div>
+          <div class="sources__meta">{{ ds.provider }}</div>
+          <p class="sources__desc">{{ ds.desc }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
   <!-- Scientific & Hydrotechnical Literature -->
   <section class="sources__section">
     <h3 class="sources__heading">{{ t.sourcesLiteratureTitle }}</h3>

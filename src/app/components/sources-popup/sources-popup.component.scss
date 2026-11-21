@@ -125,6 +125,21 @@
     background: color("surface-muted");
     font-size: font-size("xxs");
     color: color("text-dim");
+
+    &--link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      border: 1px solid color("line");
+      color: color("text-main");
+      transition: border-color transition("fast"), color transition("fast");
+
+      &:hover {
+        border-color: color("accent");
+        color: color("accent");
+      }
+    }
   }
 
   &__meta {

@@ -187,10 +187,6 @@
           <lucide-icon [img]="sourcesIcon" [size]="14"></lucide-icon>
           <span>{{ t.sourcesBtn }}</span>
         </app-button>
-        <app-button size="sm" variant="ghost" (btnClick)="openGlossary()">
-          <lucide-icon [img]="bookIcon" [size]="14"></lucide-icon>
-          <span>{{ t.glossary }}</span>
-        </app-button>
       </div>
 
       <!-- 2. Floods Scenario Switcher & Multi-Day Hydrograph -->
@@ -296,19 +292,11 @@
         }
       </div>
 
-      <!-- Level 3: Main Timeline Slider -->
+      <!-- Level 3: Numbered Steps (History) or Timeline Slider (Simulation / Floods) -->
       <div class="dock__timeline">
-        <app-timeline-slider
-          [min]="sliderMin()"
-          [max]="sliderMax()"
-          [step]="sliderStep()"
-          [value]="sliderValue()"
-          [markers]="sliderMarkers()"
-          [trackGradient]="sliderTrackGradient()"
-          [ariaLabel]="view === 'equilibrium' ? t.dischargeSliderLabel : t.timelineLabel"
-          (valueChange)="onSliderChange($event)"
-          (markerClick)="onMarkerClick($event)">
-          <div timelineAction>
+        @if (view === 'history') {
+          @let activeEra = hydro.activeHistoryEra();
+          <div class="history-steps">
             <app-button
               variant="play"
               [iconOnly]="true"
@@ -317,8 +305,52 @@
               (btnClick)="state.togglePlaying()">
               <lucide-icon [img]="state.isPlaying() ? pauseIcon : playIcon" [size]="15"></lucide-icon>
             </app-button>
+
+            <div class="history-steps__track" role="radiogroup" [attr.aria-label]="t.timelineLabel">
+              @for (era of historyEras; track era.year; let idx = $index) {
+                @let isActive = activeEra.year === era.year;
+                @let isReached = state.historyYear() >= era.year;
+                <button
+                  type="button"
+                  role="radio"
+                  class="history-step"
+                  [class.history-step--active]="isActive"
+                  [class.history-step--reached]="isReached && !isActive"
+                  [attr.aria-checked]="isActive"
+                  [attr.aria-label]="(idx + 1) + '. ' + (i18n.lang() === 'pl' ? era.labelPl : era.labelEn)"
+                  [appTooltip]="i18n.lang() === 'pl' ? era.labelPl : era.labelEn"
+                  (click)="state.historyYear.set(era.year)">
+                  <span class="history-step__num">{{ idx + 1 }}</span>
+                  @if (!bp.mobile()) {
+                    <span class="history-step__year">{{ era.year }}</span>
+                  }
+                </button>
+              }
+            </div>
           </div>
-        </app-timeline-slider>
+        } @else {
+          <app-timeline-slider
+            [min]="sliderMin()"
+            [max]="sliderMax()"
+            [step]="sliderStep()"
+            [value]="sliderValue()"
+            [markers]="sliderMarkers()"
+            [trackGradient]="sliderTrackGradient()"
+            [ariaLabel]="view === 'equilibrium' ? t.dischargeSliderLabel : t.timelineLabel"
+            (valueChange)="onSliderChange($event)"
+            (markerClick)="onMarkerClick($event)">
+            <div timelineAction>
+              <app-button
+                variant="play"
+                [iconOnly]="true"
+                [active]="state.isPlaying()"
+                [ariaLabel]="state.isPlaying() ? t.playStop : t.playStart"
+                (btnClick)="state.togglePlaying()">
+                <lucide-icon [img]="state.isPlaying() ? pauseIcon : playIcon" [size]="15"></lucide-icon>
+              </app-button>
+            </div>
+          </app-timeline-slider>
+        }
       </div>
     </div>
   </div>

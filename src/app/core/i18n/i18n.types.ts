@@ -1,8 +1,11 @@
 export type Lang = 'en' | 'pl';
 
-export interface GlossaryEntry {
-  term: string;
-  badge: string;
+export interface DataSourceItem {
+  name: string;
+  provider: string;
+  url: string;
+  license: string;
+  licenseUrl: string;
   desc: string;
 }
 
@@ -37,8 +40,6 @@ export interface Dict {
   dischargeSliderLabel: string;
   playStart: string;
   playStop: string;
-  glossary: string;
-  glossaryDesc: string;
   sourcesBtn: string;
   settingsBtn: string;
   close: string;
@@ -130,8 +131,9 @@ export interface Dict {
   legendFlooded: string;
   belowFloodCrest: string;
 
-  // Sources & Glossary Popups
+  // Sources Popup
   sourcesTitle: string;
+  sourcesDataTitle: string;
   sourcesLiteratureTitle: string;
   sourcesArticlesTitle: string;
   sourcesMethodologyTitle: string;
@@ -143,7 +145,7 @@ export interface Dict {
   citeCopiedBtn: string;
   citeAppTitle: string;
   citeAccessedLabel: string;
+  dataSourcesList: DataSourceItem[];
   sourcesList: LiteratureSourceItem[];
-  glossaryEntries: GlossaryEntry[];
   osmAttribution: string;
 }
