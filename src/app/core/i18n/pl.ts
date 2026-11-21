@@ -1,3 +1,4 @@
+import { ISOK_MZP_METADATA } from '../data/www-dem-grid.data';
 import { Dict } from './i18n.types';
 
 export const PL: Dict = {
@@ -116,9 +117,9 @@ export const PL: Dict = {
   sourcesLiteratureTitle: 'Publikacje naukowe i dokumentacja techniczna',
   sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
   sourcesMethodologyTitle: 'Założenia modelu i oficjalne dane ISOK',
-  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały, jazy i granice osiedli pochodzą z OpenStreetMap Geofabrik (Dolnośląskie) w 3 poziomach LOD, połączonych z oficjalnymi Mapami Zagrożenia Powodziowego ISOK (PGW Wody Polskie, INSPIRE WFS PL.ZIPGW.6453/MZP-MRP Q10%/Q1%/Q0,2%, pobrano 2026-11-21) oraz NMT EU-DEM. Wizualizacja ma charakter wyłącznie poglądowy — nie stanowi dokumentu urzędowego.',
+  sourcesMethodologyText: `Linie brzegowe rzek i kanałów, wały, jazy i granice osiedli pochodzą z OpenStreetMap Geofabrik (Dolnośląskie) w 3 poziomach LOD, połączonych z oficjalnymi Mapami Zagrożenia Powodziowego ISOK (PGW Wody Polskie, INSPIRE WFS ${ISOK_MZP_METADATA.namespace} Q10%/Q1%/Q0,2%, pobrano ${ISOK_MZP_METADATA.acquiredDate}) oraz NMT EU-DEM. Wizualizacja ma charakter wyłącznie poglądowy — nie stanowi dokumentu urzędowego.`,
   sourcesBuiltTitle: 'Atrybucja i cytowanie',
-  sourcesBuiltBy: 'Stworzone przez kmd-labs na danych PGW Wody Polskie ISOK MZP (pobrano 2026-11-21), OpenStreetMap / OpenFreeMap i MapLibre GL 3D.',
+  sourcesBuiltBy: `Stworzone przez kmd-labs na danych PGW Wody Polskie ISOK MZP (pobrano ${ISOK_MZP_METADATA.acquiredDate}), OpenStreetMap / OpenFreeMap i MapLibre GL 3D.`,
   citeStyleLabel: 'Styl cytowania',
   citeCopyBtn: 'Kopiuj cytat',
   citeCopiedBtn: 'Skopiowano',
@@ -150,9 +151,9 @@ export const PL: Dict = {
       desc: 'Weryfikacja przebudowy Starej Odry, Kanału Powodziowego, stopni Rędzin i Psie Pole oraz bajpasu Widawy.'
     },
     {
-      name: 'Mapy Zagrożenia Powodziowego ISOK (MZP · II cykl, PL.ZIPGW.6453/MZP-MRP)',
+      name: `Mapy Zagrożenia Powodziowego ISOK (MZP · II cykl, ${ISOK_MZP_METADATA.namespace})`,
       authors: 'PGW Wody Polskie · Hydroportal (wody.isok.gov.pl)',
-      year: '2022–2025 (pobr. 2026-11-21)',
+      year: `2022–2025 (pobr. ${ISOK_MZP_METADATA.acquiredDate})`,
       license: 'Otwarte dane publiczne (HVD / INSPIRE)',
       url: 'https://wody.isok.gov.pl/hydroportal.html',
       desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% wykorzystane do kalibracji międzywala i progów zalewowych (materiał poglądowy).'

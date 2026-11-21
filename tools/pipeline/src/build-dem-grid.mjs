@@ -447,10 +447,6 @@ for (let i = 0; i < totalVerts; i++) {
       break;
     }
   }
-  // shortcut: clip western tail of OSM Pilczyce boundary instead of splitting district relation manually
-  if (inBasinIdx === 5 && (lng < 16.968 || lat > 51.140)) {
-    inBasinIdx = -1;
-  }
 
   // Retention polder Blizanowice-Trestno behaves as a controlled polder zone (code 0)
   if (inBasinIdx === 0) {

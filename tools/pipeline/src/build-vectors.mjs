@@ -645,9 +645,51 @@ for (const [relId, zoneId] of OSIEDLE_TO_ZONE.entries()) {
   zoneGeoms.get(zoneId).push(g);
 }
 
+// Clips a ring against a half-plane (`inside(pt)` + edge `intersect(a, b)`) using Sutherland-Hodgman.
+function clipRingHalfPlane(ring, inside, intersect) {
+  if (ring.length < 4) return [];
+  const open = ring.slice(0, -1);
+  const out = [];
+  for (let i = 0; i < open.length; i++) {
+    const a = open[(i + open.length - 1) % open.length];
+    const b = open[i];
+    const aIn = inside(a);
+    const bIn = inside(b);
+    if (bIn) {
+      if (!aIn) out.push(intersect(a, b));
+      out.push(b);
+    } else if (aIn) {
+      out.push(intersect(a, b));
+    }
+  }
+  if (out.length < 3) return [];
+  out.push(out[0]);
+  return out;
+}
+
+function clipPolygonToMaxBox(geom, minLng, maxLat) {
+  const clipPoly = rings => {
+    const outer = clipRingHalfPlane(
+      clipRingHalfPlane(rings[0], p => p[0] >= minLng, (a, b) => [minLng, a[1] + ((minLng - a[0]) / (b[0] - a[0] || 1e-12)) * (b[1] - a[1])]),
+      p => p[1] <= maxLat,
+      (a, b) => [a[0] + ((maxLat - a[1]) / (b[1] - a[1] || 1e-12)) * (b[0] - a[0]), maxLat]
+    );
+    return outer.length >= 4 ? [outer] : null;
+  };
+  if (geom.type === 'Polygon') {
+    const p = clipPoly(geom.coordinates);
+    return p ? { type: 'Polygon', coordinates: p } : null;
+  }
+  const polys = geom.coordinates.map(clipPoly).filter(Boolean);
+  return polys.length ? { type: 'MultiPolygon', coordinates: polys } : null;
+}
+
 const depressionFeatures = [];
 for (const [zoneId, meta] of Object.entries(DEPRESSED_META)) {
-  const merged = mergePolygons(zoneGeoms.get(zoneId) || []);
+  let merged = mergePolygons(zoneGeoms.get(zoneId) || []);
+  if (merged && zoneId === 'kozanow-pilczyce') {
+    merged = clipPolygonToMaxBox(merged, 16.968, 51.140);
+  }
   if (!merged) continue;
   depressionFeatures.push({
     type: 'Feature',
