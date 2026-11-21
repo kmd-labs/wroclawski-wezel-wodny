@@ -57,6 +57,7 @@ export interface FloodBasinLevel {
   waterMasl: number;
   depthM: number;
   excessRatio: number;
+  maxLng?: number;
 }
 
 export interface FloodPlaneState {
@@ -599,7 +600,8 @@ export class HydrologyService {
           bankfullMasl: profile.bankfullMasl,
           waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
           depthM,
-          excessRatio
+          excessRatio,
+          ...(is2010Kozanow ? { maxLng: 16.9965 } : {})
         });
       }
       return basins;
@@ -864,7 +866,8 @@ export class HydrologyService {
     }
 
     const basinId = DEM_BASIN_IDS[zoneCode] ?? null;
-    const activeBasin = plane.active ? plane.basins.find(b => b.id === basinId) : undefined;
+    const rawBasin = plane.active ? plane.basins.find(b => b.id === basinId) : undefined;
+    const activeBasin = rawBasin && (!rawBasin.maxLng || lng <= rawBasin.maxLng) ? rawBasin : undefined;
     const depthM = activeBasin
       ? Math.max(0, Math.round((activeBasin.depthM - relElevM) * 10) / 10)
       : 0;

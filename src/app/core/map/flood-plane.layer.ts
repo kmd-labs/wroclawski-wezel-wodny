@@ -49,7 +49,7 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
 
   setFloodState(state: FloodPlaneState): void {
     const sig = state.active
-      ? `${state.basins.map(b => `${b.id}:${b.depthM.toFixed(2)}`).join('|')}#${state.miedzywaleDepths.map(d => d.toFixed(2)).join(',')}`
+      ? `${state.basins.map(b => `${b.id}:${b.depthM.toFixed(2)}:${b.maxLng ?? ''}`).join('|')}#${state.miedzywaleDepths.map(d => d.toFixed(2)).join(',')}`
       : 'inactive';
     if (sig === this.signature) return;
 
@@ -235,7 +235,7 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
             // Protected embanked zawale basin: 100% dry until this exact basin's embankment overtops
             const basinId = DEM_BASIN_IDS[zoneCode];
             const basin = basinById.get(basinId);
-            if (basin && basin.depthM > 0) {
+            if (basin && basin.depthM > 0 && (!basin.maxLng || lng <= basin.maxLng)) {
               depthM = Math.max(-1.8, basin.depthM - relElevM);
             }
           }
