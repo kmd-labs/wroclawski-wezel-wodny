@@ -8,7 +8,7 @@ export const EN: Dict = {
   // Top HUD & Navigation
   changeLanguage: 'Language',
   chooseView: 'View',
-  viewEquilibrium: 'How It Works (Equilibrium)',
+  viewEquilibrium: 'How It Works',
   viewFloods: 'Floods: 1997 · 2012 · 2024',
   viewHistory: 'History & Construction',
   viewSilesia: 'Lower Silesia Polders',
@@ -16,6 +16,7 @@ export const EN: Dict = {
 
   // Bottom Dock & Playback
   timelineLabel: 'Simulation Timeline',
+  dischargeSliderLabel: 'Trestno Inflow Q (m³/s)',
   playStart: 'Play simulation',
   playStop: 'Pause simulation',
   glossary: 'Glossary',
@@ -51,16 +52,16 @@ export const EN: Dict = {
   segmentCapacity: 'Max capacity',
   segmentLoad: 'Load',
 
-  // Equilibrium View (Weir & Gate Controls)
-  weirPanelTitle: 'Weir & Floodgate Equilibrium',
+  // How It Works View (Weir & Gate Controls)
+  weirPanelTitle: 'Weir & Floodgate Controls',
   weirPanelSubtitle: 'Adjust gate apertures (0–100%) to route the Odra wave safely.',
   weirToggleBtn: 'Gates',
-  autoEquilibriumBtn: 'RZGW Auto-Equilibrium',
+  autoEquilibriumBtn: 'RZGW Auto-Balance',
   presetNormalBtn: 'Normal (450 m³/s)',
-  preset1997Btn: '1997 Wave (3,640 m³/s)',
+  preset1997Btn: 'Extreme Wave (3,640 m³/s)',
   presetMisuseBtn: 'Gate Error Demo',
   polderShavingLabel: 'Upstream Polders (-260 m³/s)',
-  statusSafe: 'Equilibrium Safe',
+  statusSafe: 'Flow Safe',
   statusWarning: 'Near Capacity',
   statusOverflow: 'Overtopping!',
   floodedDistrictsLabel: 'Inundated basins',

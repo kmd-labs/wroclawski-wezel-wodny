@@ -35,6 +35,7 @@ export interface Dict {
 
   // Bottom Dock & Playback
   timelineLabel: string;
+  dischargeSliderLabel: string;
   playStart: string;
   playStop: string;
   glossary: string;

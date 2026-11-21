@@ -8,7 +8,7 @@ export const PL: Dict = {
   // Top HUD & Navigation
   changeLanguage: 'Język',
   chooseView: 'Widok',
-  viewEquilibrium: 'Jak działa (Równowaga)',
+  viewEquilibrium: 'Jak działa system',
   viewFloods: 'Powodzie: 1997 · 2012 · 2024',
   viewHistory: 'Historia i budowa WWW',
   viewSilesia: 'Poldery Dolnego Śląska',
@@ -16,6 +16,7 @@ export const PL: Dict = {
 
   // Bottom Dock & Playback
   timelineLabel: 'Oś czasu symulacji',
+  dischargeSliderLabel: 'Dopływ Q w Trestnie (m³/s)',
   playStart: 'Odtwórz symulację',
   playStop: 'Wstrzymaj symulację',
   glossary: 'Słowniczek',
@@ -51,16 +52,16 @@ export const PL: Dict = {
   segmentCapacity: 'Przepustowość',
   segmentLoad: 'Obciążenie',
 
-  // Equilibrium View (Weir & Gate Controls)
+  // How It Works View (Weir & Gate Controls)
   weirPanelTitle: 'Sterowanie jazami i zasuwami',
   weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
   weirToggleBtn: 'Zasuwy',
-  autoEquilibriumBtn: 'Auto-równowaga RZGW',
+  autoEquilibriumBtn: 'Auto-sterowanie RZGW',
   presetNormalBtn: 'Norma (450 m³/s)',
-  preset1997Btn: 'Fala 1997 (3640 m³/s)',
+  preset1997Btn: 'Ekstremalna fala (3640 m³/s)',
   presetMisuseBtn: 'Błąd sterowania',
   polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
-  statusSafe: 'Równowaga bezpieczna',
+  statusSafe: 'Przepływ bezpieczny',
   statusWarning: 'Blisko limitu',
   statusOverflow: 'Przelanie wałów!',
   floodedDistrictsLabel: 'Zalane niecki',

@@ -121,11 +121,11 @@ export class MapDockComponent {
     const v = this.state.currentView();
     if (v === 'equilibrium') {
       return [
-        { id: 'eq-450', value: 450, label: '450', color: '#0ea5e9' },
-        { id: 'eq-2010', value: 2160, label: '2010', color: '#d37400' },
-        { id: 'eq-1917', value: 2400, label: '1917', color: '#d37400' },
-        { id: 'eq-3100', value: 3100, label: '3100', color: '#10b981' },
-        { id: 'eq-1997', value: 3640, label: '1997', color: '#ef4444' }
+        { id: 'q-450', value: 450, label: '450 m³/s', color: '#0ea5e9' },
+        { id: 'q-1500', value: 1500, label: '1500', color: '#0ea5e9' },
+        { id: 'q-2400', value: 2400, label: '2400', color: '#d37400' },
+        { id: 'q-3100', value: 3100, label: '3100', color: '#10b981' },
+        { id: 'q-3640', value: 3640, label: '3640 m³/s', color: '#ef4444' }
       ];
     }
     if (v === 'floods') {
