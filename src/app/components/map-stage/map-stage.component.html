@@ -1,6 +1,9 @@
+@let t = i18n.t();
+@let gate = activeGate();
+
 <div #mapContainer class="map-canvas"></div>
 
-<!-- Event Pins Overlay (50% opacity before occurrence, 100% when reached) -->
+<!-- Event Pins & On-Map Gates Overlay -->
 <div class="map-pins" aria-live="polite">
   @for (pin of mapService.projectedPins(); track pin.id) {
     @if (pin.visible) {
@@ -22,7 +25,7 @@
     }
   }
 
-  <!-- Controllable Weir Badges in Equilibrium View -->
+  <!-- Controllable Gates on the Map -->
   @for (badge of mapService.projectedWeirs(); track badge.weir.id) {
     @if (badge.visible) {
       <button
@@ -32,8 +35,9 @@
         [class.weir-badge--closed]="badge.openingPct === 0"
         [style.left.px]="badge.x"
         [style.top.px]="badge.y"
-        [appTooltip]="i18n.lang() === 'pl' ? badge.weir.namePl : badge.weir.nameEn"
-        (click)="selectWeir(badge)">
+        [appTooltip]="state.selectedWeirId() === badge.weir.gateId ? '' : (i18n.lang() === 'pl' ? badge.weir.namePl : badge.weir.nameEn)"
+        (pointerdown)="$event.stopPropagation()"
+        (click)="selectWeir(badge, $event)">
         <lucide-icon [img]="weirIcon" [size]="11"></lucide-icon>
         <span class="weir-badge__name">
           {{ i18n.lang() === 'pl' ? badge.weir.namePl : badge.weir.nameEn }}
@@ -41,5 +45,74 @@
         <span class="weir-badge__pct">{{ badge.openingPct }}%</span>
       </button>
     }
+  }
+
+  <!-- Gate Control Popup (Q-tooltip style, closed only by X button) -->
+  @if (gate && gate.visible) {
+    @let gid = gate.weir.gateId!;
+    <div
+      class="gate-popup www-tooltip-col"
+      role="dialog"
+      [attr.aria-label]="i18n.lang() === 'pl' ? gate.weir.namePl : gate.weir.nameEn"
+      [style.left.px]="gate.x"
+      [style.top.px]="gate.y"
+      (pointerdown)="$event.stopPropagation()"
+      (click)="$event.stopPropagation()">
+      <div class="www-tooltip-col__header">
+        <span class="www-tooltip-col__title">
+          {{ i18n.lang() === 'pl' ? gate.weir.namePl : gate.weir.nameEn }}
+        </span>
+        <button
+          type="button"
+          class="gate-popup__close"
+          [attr.aria-label]="t.close"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="closeGatePopup($event)">
+          <lucide-icon [img]="closeIcon" [size]="12"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="www-tooltip-col__divider"></div>
+
+      <div class="www-tooltip-col__rows">
+        <p class="gate-popup__role">
+          {{ i18n.lang() === 'pl' ? gate.weir.rolePl : gate.weir.roleEn }}
+        </p>
+
+        <div class="www-tooltip-col__row">
+          <div class="www-tooltip-col__label-group">
+            <lucide-icon class="www-tooltip-col__icon www-tooltip-col__icon--load" [img]="weirIcon" [size]="13"></lucide-icon>
+            <span class="www-tooltip-col__label">{{ t.gateOpeningLabel }}</span>
+          </div>
+          <span class="www-tooltip-col__val">{{ gate.openingPct }}%</span>
+        </div>
+
+        <input
+          class="gate-popup__slider"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          [value]="gate.openingPct"
+          [attr.aria-label]="t.gateOpeningLabel"
+          (pointerdown)="$event.stopPropagation()"
+          (click)="$event.stopPropagation()"
+          (input)="onGateRange(gid, $event)" />
+
+        <div class="gate-popup__presets">
+          <button type="button" class="gate-popup__preset" [class.gate-popup__preset--active]="gate.openingPct === 0" (click)="setGatePreset(gid, 0, $event)">0% ({{ t.gateClosed }})</button>
+          <button type="button" class="gate-popup__preset" [class.gate-popup__preset--active]="gate.openingPct === 50" (click)="setGatePreset(gid, 50, $event)">50%</button>
+          <button type="button" class="gate-popup__preset" [class.gate-popup__preset--active]="gate.openingPct === 100" (click)="setGatePreset(gid, 100, $event)">100% ({{ t.gateOpen }})</button>
+        </div>
+
+        <div class="www-tooltip-col__row">
+          <div class="www-tooltip-col__label-group">
+            <lucide-icon class="www-tooltip-col__icon www-tooltip-col__icon--cap" [img]="gaugeIcon" [size]="13"></lucide-icon>
+            <span class="www-tooltip-col__label">{{ t.segmentCapacity }}</span>
+          </div>
+          <span class="www-tooltip-col__val">{{ gate.weir.maxCapacityM3s }} m³/s</span>
+        </div>
+      </div>
+    </div>
   }
 </div>
