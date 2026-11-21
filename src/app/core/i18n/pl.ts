@@ -48,6 +48,7 @@ export const PL: Dict = {
   readoutYear: 'Okres',
   readoutRetention: 'Retencja',
   readoutReducedFlow: 'We Wrocławiu',
+  readoutFloodLevel: 'Poziom zalania',
   segmentCapacity: 'Przepustowość',
   segmentLoad: 'Obciążenie',
 

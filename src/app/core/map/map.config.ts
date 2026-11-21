@@ -20,6 +20,8 @@ export const MAP_FONT_BOLD = ['Noto Sans Bold'];
 export const MAP_FONT_ITALIC = ['Noto Sans Italic'];
 
 export const SRC_BASEMAP = 'basemap';
+export const SRC_DEM = 'www-dem';
+export const DEM_TILES_URL = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const SRC_DEPRESSIONS = 'www-depressions';
 export const SRC_INUNDATION = 'www-inundation';
 export const SRC_CANALS = 'www-canals';

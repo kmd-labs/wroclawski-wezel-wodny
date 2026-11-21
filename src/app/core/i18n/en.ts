@@ -48,6 +48,7 @@ export const EN: Dict = {
   readoutYear: 'Era',
   readoutRetention: 'Retention',
   readoutReducedFlow: 'At Wrocław',
+  readoutFloodLevel: 'Flood Level',
   segmentCapacity: 'Max capacity',
   segmentLoad: 'Load',
 

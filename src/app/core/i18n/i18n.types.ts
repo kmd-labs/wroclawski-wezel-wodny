@@ -67,6 +67,7 @@ export interface Dict {
   readoutYear: string;
   readoutRetention: string;
   readoutReducedFlow: string;
+  readoutFloodLevel: string;
   segmentCapacity: string;
   segmentLoad: string;
 
