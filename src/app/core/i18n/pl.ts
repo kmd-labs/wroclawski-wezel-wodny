@@ -2,21 +2,185 @@ import { Dict } from './i18n.types';
 
 export const PL: Dict = {
   htmlLang: 'pl',
-  docTitle: 'KMD · Wroclawski Wezel Wodny',
+  docTitle: 'KMD · Wrocławski Węzeł Wodny',
   langName: 'Polski',
 
   // Top HUD & Navigation
   changeLanguage: 'Język',
   chooseView: 'Widok',
-  viewPrimary: 'Przegląd',
-  viewSecondary: 'Analiza',
-  stageAriaLabel: 'Wizualizacja Wroclawski Wezel Wodny',
+  viewEquilibrium: 'Jak działa (Równowaga)',
+  viewFloods: 'Powodzie: 1997 · 2012 · 2024',
+  viewHistory: 'Historia i budowa WWW',
+  viewSilesia: 'Poldery Dolnego Śląska',
+  stageAriaLabel: 'Wizualizacja 3D Wrocławskiego Węzła Wodnego',
 
-  // Bottom Dock & Glossary
-  timelineLabel: 'Oś czasu',
+  // Bottom Dock & Playback
+  timelineLabel: 'Oś czasu symulacji',
+  playStart: 'Odtwórz symulację',
+  playStop: 'Wstrzymaj symulację',
   glossary: 'Słowniczek',
-  glossaryDesc: '',
-  close: 'Zamknij'
+  glossaryDesc: 'Najważniejsze pojęcia hydrotechniczne Wrocławskiego Węzła Wodnego.',
+  sourcesBtn: 'Źródła',
+  settingsBtn: 'Ustawienia',
+  close: 'Zamknij',
 
-  // Application-specific keys:
+  // Map Camera Controls
+  cameraBtn: 'Kamera mapy (Kierunek, Zoom i Pochylenie)',
+  cameraHeading: 'Kierunek',
+  cameraZoom: 'Zoom',
+  cameraTilt: 'Pochylenie',
+  cameraResetNorth: 'Północ',
+  cameraZoomIn: 'Przybliż',
+  cameraZoomOut: 'Oddal',
+  cameraTiltFlat: '2D (0°)',
+  cameraTilt3d: '3D (55°)',
+  cameraResetView: 'Resetuj kamerę',
+
+  // Hydrological Telemetry & Readouts
+  readoutTrestno: 'Trestno Q',
+  readoutNodeLoad: 'Obciążenie WWW',
+  readoutWidawa: 'Widawa',
+  readoutDowntown: 'Śródmieście',
+  readoutStaraOdra: 'Stara Odra',
+  readoutCapacity: 'Przepustowość',
+  readoutPeak: 'Szczyt Q',
+  readoutStage: 'Trestno H',
+  readoutYear: 'Okres',
+  readoutRetention: 'Retencja',
+  readoutReducedFlow: 'We Wrocławiu',
+
+  // Equilibrium View (Weir & Gate Controls)
+  weirPanelTitle: 'Sterowanie jazami i zasuwami',
+  weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
+  weirToggleBtn: 'Zasuwy',
+  autoEquilibriumBtn: 'Auto-równowaga RZGW',
+  presetNormalBtn: 'Norma (450 m³/s)',
+  preset1997Btn: 'Fala 1997 (3640 m³/s)',
+  presetMisuseBtn: 'Błąd sterowania',
+  polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
+  statusSafe: 'Równowaga bezpieczna',
+  statusWarning: 'Blisko limitu',
+  statusOverflow: 'Przelanie wałów!',
+  floodedDistrictsLabel: 'Zalane niecki',
+  noFloodingLabel: 'Wszystkie wały bezpieczne',
+  gateClosed: 'Zamknięta',
+  gateOpen: 'Otwarta',
+
+  // Historical Floods View
+  scenario1997: '1997 (Przed mod.)',
+  scenario2012: '2010 / 2012',
+  scenario2024: '2024 (Po mod.)',
+  scenario1997Subtitle: 'Powódź Tysiąclecia 1997 · Stan przed modernizacją (limit 2350 m³/s vs fala 3640 m³/s)',
+  scenario2012Subtitle: 'Przerwanie wału na Kozanowie (2010, 2160 m³/s) i start modernizacji POPDO 2012',
+  scenario2024Subtitle: 'Powódź wrzesień 2024 · Racibórz Dolny + zmodernizowany WWW (3100 m³/s)',
+  pinPendingLabel: 'Przed wydarzeniem na osi czasu (50% przezroczystości)',
+  pinOccurredLabel: 'Wydarzenie nastąpiło (100% widoczności)',
+  readArticleBtn: 'Czytaj źródło / artykuł',
+  waterStageLabel: 'Stan H',
+  dischargeLabel: 'Przepływ Q',
+
+  // History View
+  historySubtitle: 'Ewolucja od średniowiecznych rozlewisk do węzła o przepustowości 3100 m³/s',
+  historyNoBuildingsNote: 'Współczesne budynki 3D ukryte w widoku historycznym',
+
+  // Lower Silesia View
+  silesiaSubtitle: 'Suche zbiorniki i poldery przeciwpowodziowe Dolnego Śląska i Górnej Odry',
+  silesiaToggleAll: 'Włącz wszystkie',
+  silesiaWaveLabel: 'Przejście fali wezbraniowej',
+  silesiaInflowPeak: 'Fala Górnej Odry',
+  silesiaAtWroclaw: 'Po redukcji w Trestnie',
+  silesiaCapacityUnit: 'mln m³',
+
+  // Settings Popup (LOD, Layers, Theme)
+  settingsTitle: 'Warstwy mapy i szczegółowość (LOD)',
+  lodLabel: 'Poziom szczegółowości wektorów (LOD)',
+  lodDesc: 'Dynamicznie dobiera precyzję geometrii OSM do przybliżenia: Przegląd (55 m), Miasto (9 m) i Pełna precyzja OSM (~1 m).',
+  lodAuto: 'Auto',
+  lodLow: 'LOD 0',
+  lodMedium: 'LOD 1',
+  lodHigh: 'LOD 2',
+  layersLabel: 'Warstwy mapy',
+  layerBuildings3d: 'Budynki 3D (OSM)',
+  layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',
+  layerDepressions: 'Niecki osiedli poniżej korony wału (-m)',
+  themeLabel: 'Motyw interfejsu',
+  themeLight: 'Jasny (Dzień)',
+  themeDark: 'Midnight (Ciemny)',
+
+  // Map Legend & Depression Callout
+  legendNormal: 'Bezpieczny (<75%)',
+  legendHigh: 'Wysoki (75–100%)',
+  legendOvertop: 'Przelanie (>100%)',
+  legendEmbankment: 'Wał 3D',
+  legendDepressed: 'Poniżej korony wału',
+  legendFlooded: 'Strefa zalania 3D',
+  belowFloodCrest: 'poniżej korony fali',
+
+  // Sources & Glossary Popups
+  sourcesTitle: 'Literatura hydrologiczna i źródła medialne',
+  sourcesLiteratureTitle: 'Publikacje naukowe i dokumentacja techniczna',
+  sourcesArticlesTitle: 'Artykuły i raporty z osi czasu powodzi',
+  sourcesMethodologyTitle: 'Założenia modelu i precyzja wektorów',
+  sourcesMethodologyText: 'Linie brzegowe rzek i kanałów, wały przeciwpowodziowe, jazy, granice osiedli oraz zbiorniki i poldery Dolnego Śląska pochodzą bezpośrednio z paczek OpenStreetMap Geofabrik (Dolnośląskie, Opolskie, Śląskie) w 3 dynamicznych poziomach szczegółowości (LOD). Przepustowości odpowiadają zmodernizowanemu WWW (3100 m³/s: 2800 m³/s miejska Odra + 300 m³/s Przewał Widawski).',
+  sourcesBuiltTitle: 'Atrybucja',
+  sourcesBuiltBy: 'Stworzone przez KMD Labs na danych OpenStreetMap / OpenFreeMap i silniku MapLibre GL 3D.',
+  sourcesList: [
+    {
+      name: 'Wrocławski Węzeł Wodny (Monografia i analiza hydrauliczna)',
+      authors: 'M. Mokwa, R. Kasperek, M. Wiatkowski i in.',
+      year: '2014',
+      license: 'Publikacja naukowa',
+      url: 'https://www.researchgate.net/publication/271523243_Wroclawski_Wezel_Wodny',
+      desc: 'Szczegółowa charakterystyka hydrotechniczna koryt, jazów, śluz i przepustowości Wrocławskiego Węzła Wodnego.'
+    },
+    {
+      name: 'Projekt Ochrony Przeciwpowodziowej Dorzecza Odry (POPDO)',
+      authors: 'PGW Wody Polskie · RZGW we Wrocławiu',
+      year: '2015–2024',
+      license: 'Dane publiczne',
+      url: 'https://www.gov.pl/web/wody-polskie-wroclaw',
+      desc: 'Parametry modernizacji podnoszącej przepustowość WWW z ok. 2350 m³/s do 3100 m³/s (oraz 3850 m³/s ze zbiornikiem Racibórz Dolny).'
+    },
+    {
+      name: 'Informacja o wynikach kontroli modernizacji WWW',
+      authors: 'Najwyższa Izba Kontroli (NIK)',
+      year: '2016',
+      license: 'Raport publiczny',
+      url: 'https://www.nik.gov.pl/aktualnosci/modernizacja-wroclawskiego-wezla-wodnego.html',
+      desc: 'Weryfikacja przebudowy Starej Odry, Kanału Powodziowego, stopni Rędzin i Psie Pole oraz bajpasu Widawy.'
+    }
+  ],
+  glossaryEntries: [
+    {
+      term: 'Wrocławski Węzeł Wodny (WWW)',
+      badge: 'System',
+      desc: 'Rozbudowany układ naturalnych ramion Odry, sztucznych kanałów powodziowych i żeglugowych, jazów, śluz oraz polderów chroniący Wrocław (3100 m³/s po modernizacji).'
+    },
+    {
+      term: 'Przewał Widawski (Bypas Widawy)',
+      badge: '300 m³/s',
+      desc: 'Kanał przerzutowy ze Strachocina do doliny Widawy przejmujący do 300 m³/s nadmiaru wód powodziowych z ominięciem centrum Wrocławia.'
+    },
+    {
+      term: 'Brama Przeciwpowodziowa Psie Pole',
+      badge: 'Zasuwa',
+      desc: 'Zabytkowa brama z 1897 r. (zmodernizowana w 2015 r.) odcinająca Kanał Miejski podczas wezbrań, chroniąca Nadodrze, Ołbin i Kleczków.'
+    },
+    {
+      term: 'Jaz Szczytniki i Przekop Szczytnicki',
+      badge: '680 m³/s',
+      desc: 'Węzeł rozrządowy Górnej Odry Miejskiej kierujący do 680 m³/s do Starej Odry, aby Śródmieście nie przekroczyło bezpiecznego limitu 950 m³/s.'
+    },
+    {
+      term: 'Polder zalewowy',
+      badge: 'Retencja',
+      desc: 'Obwałowana dolina (np. Blizanowice–Trestno, Lipki–Oława, Buków) celowo zalewana podczas szczytu fali w celu jego spłaszczenia.'
+    },
+    {
+      term: 'Cofka',
+      badge: 'Hydraulika',
+      desc: 'Podpiętrzenie wody w górę rzeki lub dopływu wywołane zdławieniem odpływu (np. przy stopniu Rędzin lub na ujściach Ślęzy i Oławy).'
+    }
+  ],
+  osmAttribution: '© Współtwórcy OpenStreetMap · OpenFreeMap'
 };

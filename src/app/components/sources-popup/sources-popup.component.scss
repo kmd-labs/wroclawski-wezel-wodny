@@ -1,0 +1,119 @@
+@use "variables" as *;
+
+.sources {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__heading {
+    margin: 0;
+    font-size: font-size("xs");
+    font-weight: font-weight("semibold");
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: color("text-dim");
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__card {
+    padding: 10px 12px;
+    border-radius: radius("sm");
+    background: color("panel-inset");
+    border: 1px solid color("line");
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: font-size("sm");
+    font-weight: font-weight("semibold");
+    color: color("link-color");
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__badge {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border-radius: radius("pill");
+    background: color("surface-muted");
+    font-size: font-size("xxs");
+    color: color("text-dim");
+  }
+
+  &__meta {
+    font-size: font-size("xxs");
+    color: color("text-dim");
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: font-size("xs");
+    line-height: 1.45;
+    color: color("text-desc");
+  }
+
+  &__articles {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  &__article-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: radius("sm");
+    background: color("panel-inset");
+    border: 1px solid color("line");
+    text-decoration: none;
+    color: color("text-main");
+    font-size: font-size("xs");
+
+    &:hover {
+      border-color: color("accent");
+    }
+  }
+
+  &__article-outlet {
+    flex-shrink: 0;
+    font-weight: font-weight("semibold");
+    color: color("accent");
+  }
+
+  &__article-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

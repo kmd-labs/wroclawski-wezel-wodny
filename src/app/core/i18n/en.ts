@@ -2,21 +2,185 @@ import { Dict } from './i18n.types';
 
 export const EN: Dict = {
   htmlLang: 'en',
-  docTitle: 'KMD · Wroclawski Wezel Wodny',
+  docTitle: 'KMD · Wrocławski Węzeł Wodny',
   langName: 'English',
 
   // Top HUD & Navigation
   changeLanguage: 'Language',
   chooseView: 'View',
-  viewPrimary: 'Overview',
-  viewSecondary: 'Analysis',
-  stageAriaLabel: 'Wroclawski Wezel Wodny Visualization',
+  viewEquilibrium: 'How It Works (Equilibrium)',
+  viewFloods: 'Floods: 1997 · 2012 · 2024',
+  viewHistory: 'History & Construction',
+  viewSilesia: 'Lower Silesia Polders',
+  stageAriaLabel: 'Wrocławski Węzeł Wodny 3D Hydrological Map',
 
-  // Bottom Dock & Glossary
-  timelineLabel: 'Timeline',
+  // Bottom Dock & Playback
+  timelineLabel: 'Simulation Timeline',
+  playStart: 'Play simulation',
+  playStop: 'Pause simulation',
   glossary: 'Glossary',
-  glossaryDesc: '',
-  close: 'Close'
+  glossaryDesc: 'Key hydrotechnical terms of the Wrocław Water Node.',
+  sourcesBtn: 'Sources',
+  settingsBtn: 'Settings',
+  close: 'Close',
 
-  // Application-specific keys:
+  // Map Camera Controls
+  cameraBtn: 'Map Camera (Heading, Zoom & Tilt)',
+  cameraHeading: 'Heading',
+  cameraZoom: 'Zoom',
+  cameraTilt: 'Tilt',
+  cameraResetNorth: 'North',
+  cameraZoomIn: 'Zoom in',
+  cameraZoomOut: 'Zoom out',
+  cameraTiltFlat: '2D (0°)',
+  cameraTilt3d: '3D (55°)',
+  cameraResetView: 'Reset camera',
+
+  // Hydrological Telemetry & Readouts
+  readoutTrestno: 'Trestno Q',
+  readoutNodeLoad: 'WWW Load',
+  readoutWidawa: 'Widawa',
+  readoutDowntown: 'Downtown',
+  readoutStaraOdra: 'Stara Odra',
+  readoutCapacity: 'Capacity',
+  readoutPeak: 'Peak Q',
+  readoutStage: 'Trestno H',
+  readoutYear: 'Era',
+  readoutRetention: 'Retention',
+  readoutReducedFlow: 'At Wrocław',
+
+  // Equilibrium View (Weir & Gate Controls)
+  weirPanelTitle: 'Weir & Floodgate Equilibrium',
+  weirPanelSubtitle: 'Adjust gate apertures (0–100%) to route the Odra wave safely.',
+  weirToggleBtn: 'Gates',
+  autoEquilibriumBtn: 'RZGW Auto-Equilibrium',
+  presetNormalBtn: 'Normal (450 m³/s)',
+  preset1997Btn: '1997 Wave (3,640 m³/s)',
+  presetMisuseBtn: 'Gate Error Demo',
+  polderShavingLabel: 'Upstream Polders (-260 m³/s)',
+  statusSafe: 'Equilibrium Safe',
+  statusWarning: 'Near Capacity',
+  statusOverflow: 'Overtopping!',
+  floodedDistrictsLabel: 'Inundated basins',
+  noFloodingLabel: 'All embankments holding',
+  gateClosed: 'Closed',
+  gateOpen: 'Open',
+
+  // Historical Floods View
+  scenario1997: '1997 (Pre-Mod)',
+  scenario2012: '2010 / 2012',
+  scenario2024: '2024 (Modern)',
+  scenario1997Subtitle: 'July 1997 Millennium Flood · Pre-modernization (2,350 m³/s limit vs 3,640 m³/s wave)',
+  scenario2012Subtitle: 'May 2010 Kozanów breach (2,160 m³/s) & 2012 POPDO modernization launch',
+  scenario2024Subtitle: 'Sept 2024 flood · Racibórz Dolny + modernized 3,100 m³/s WWW',
+  pinPendingLabel: 'Upcoming on timeline (50% opacity)',
+  pinOccurredLabel: 'Occurred on timeline (100% opacity)',
+  readArticleBtn: 'Read source article',
+  waterStageLabel: 'Stage H',
+  dischargeLabel: 'Flow Q',
+
+  // History View
+  historySubtitle: 'Evolution from medieval braided channels to the 3,100 m³/s modernized node',
+  historyNoBuildingsNote: '3D modern buildings hidden in History view',
+
+  // Lower Silesia View
+  silesiaSubtitle: 'Upper & Middle Odra dry reservoirs and floodplain polders protecting Wrocław',
+  silesiaToggleAll: 'Enable All',
+  silesiaWaveLabel: 'Flood wave propagation',
+  silesiaInflowPeak: 'Upper Odra Peak',
+  silesiaAtWroclaw: 'Shaved at Trestno',
+  silesiaCapacityUnit: 'mln m³',
+
+  // Settings Popup (LOD, Layers, Theme)
+  settingsTitle: 'Map Layers & Vector Detail',
+  lodLabel: 'Vector Level of Detail (LOD)',
+  lodDesc: 'Automatically switches OSM vector geometry precision by zoom level: Overview (55 m), City (9 m), and Full OSM Detail (~1 m).',
+  lodAuto: 'Auto',
+  lodLow: 'LOD 0',
+  lodMedium: 'LOD 1',
+  lodHigh: 'LOD 2',
+  layersLabel: 'Map Layers',
+  layerBuildings3d: '3D OSM Buildings',
+  layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',
+  layerDepressions: 'Low-Lying District Basins (-m)',
+  themeLabel: 'Appearance',
+  themeLight: 'Light (Day)',
+  themeDark: 'Midnight (Dark)',
+
+  // Map Legend & Depression Callout
+  legendNormal: 'Safe (<75%)',
+  legendHigh: 'High (75–100%)',
+  legendOvertop: 'Overtopping (>100%)',
+  legendEmbankment: '3D Embankment',
+  legendDepressed: 'Below Flood Crest',
+  legendFlooded: 'Flooded Volume',
+  belowFloodCrest: 'below flood crest',
+
+  // Sources & Glossary Popups
+  sourcesTitle: 'Hydrological Literature & Event Sources',
+  sourcesLiteratureTitle: 'Scientific & Hydrotechnical Literature',
+  sourcesArticlesTitle: 'Timeline News & Report Citations',
+  sourcesMethodologyTitle: 'Hydrological Model & Vector Precision Notes',
+  sourcesMethodologyText: 'River banks, canals, flood dykes, weirs, osiedle basins, and Lower Silesia reservoirs are extracted directly from Geofabrik OpenStreetMap PBF extracts (Dolnośląskie, Opolskie, Śląskie) and served across 3 dynamic LOD tiers. Branch capacities follow the post-POPDO modernized WWW specification (3,100 m³/s total: 2,800 m³/s urban Odra + 300 m³/s Odra–Widawa bypass).',
+  sourcesBuiltTitle: 'Attribution',
+  sourcesBuiltBy: 'Built by KMD Labs on OpenStreetMap / OpenFreeMap vector tiles & MapLibre GL 3D.',
+  sourcesList: [
+    {
+      name: 'Wrocławski Węzeł Wodny (Monograph & Hydraulic Analysis)',
+      authors: 'M. Mokwa, R. Kasperek, M. Wiatkowski et al.',
+      year: '2014',
+      license: 'Academic',
+      url: 'https://www.researchgate.net/publication/271523243_Wroclawski_Wezel_Wodny',
+      desc: 'Comprehensive hydrotechnical analysis of the Wrocław Water Node channels, weirs, and floodway capacities.'
+    },
+    {
+      name: 'Odra River Basin Flood Protection Project (POPDO / Wody Polskie)',
+      authors: 'PGW Wody Polskie · RZGW Wrocław',
+      year: '2015–2024',
+      license: 'Public Data',
+      url: 'https://www.gov.pl/web/wody-polskie-wroclaw',
+      desc: 'Official modernization parameters increasing WWW throughput from ~2,350 m³/s to 3,100 m³/s (and 3,850 m³/s with Racibórz Dolny).'
+    },
+    {
+      name: 'Audit of Wrocław Water Node Modernization',
+      authors: 'Supreme Audit Office (NIK)',
+      year: '2016',
+      license: 'Public Report',
+      url: 'https://www.nik.gov.pl/aktualnosci/modernizacja-wroclawskiego-wezla-wodnego.html',
+      desc: 'Technical verification of Stara Odra, Kanał Powodziowy, Rędzin, Psie Pole, and Widawa bypass works.'
+    }
+  ],
+  glossaryEntries: [
+    {
+      term: 'Wrocławski Węzeł Wodny (WWW)',
+      badge: 'System',
+      desc: 'Complex hydrotechnical network of natural Odra branches, artificial flood/navigation canals, weirs, locks, and polders protecting Wrocław (3,100 m³/s post-POPDO capacity).'
+    },
+    {
+      term: 'Przewał Widawski (Odra–Widawa Bypass)',
+      badge: '300 m³/s',
+      desc: 'Controlled transfer canal at Strachocin diverting up to 300 m³/s from the Odra into the Widawa valley around northern Wrocław.'
+    },
+    {
+      term: 'Brama Przeciwpowodziowa Psie Pole',
+      badge: 'Floodgate',
+      desc: 'Historic 1897 (modernized 2015) floodgate sealing Kanał Miejski during flood waves to protect low-lying Nadodrze, Ołbin, and Kleczków.'
+    },
+    {
+      term: 'Jaz Szczytniki & Przekop Szczytnicki',
+      badge: '680 m³/s',
+      desc: 'Diversion weir splitting Górna Odra Miejska: sends up to 680 m³/s north into Stara Odra so Downtown (Śródmieście) never exceeds 950 m³/s.'
+    },
+    {
+      term: 'Polder zalewowy (Floodplain Polder)',
+      badge: 'Retention',
+      desc: 'Embanked floodplain basin (e.g., Blizanowice–Trestno, Lipki–Oława, Buków) intentionally flooded during high water to shave the peak wave.'
+    },
+    {
+      term: 'Cofka (Backwater Effect)',
+      badge: 'Hydraulics',
+      desc: 'Upstream rise in water surface when downstream outflow is throttled (e.g., at Rędzin or tributary mouths of Ślęza and Oława).'
+    }
+  ],
+  osmAttribution: '© OpenStreetMap contributors · OpenFreeMap'
 };

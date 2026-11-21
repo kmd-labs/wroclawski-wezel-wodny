@@ -1,0 +1,60 @@
+@let t = i18n.t();
+
+<div class="settings">
+  <!-- Dynamic Vector Level of Detail (LOD) -->
+  <section class="settings__section">
+    <div class="settings__head">
+      <h3 class="settings__label">{{ t.lodLabel }}</h3>
+      <span class="settings__value">{{ vectors.activePrecisionLabel() }}</span>
+    </div>
+    <p class="settings__desc">{{ t.lodDesc }}</p>
+
+    <app-switcher
+      size="sm"
+      [options]="lodOptions()"
+      [value]="vectors.lodMode()"
+      [ariaLabel]="t.lodLabel"
+      (valueChange)="onLodChange($event)">
+    </app-switcher>
+  </section>
+
+  <!-- Map Layers -->
+  <section class="settings__section">
+    <h3 class="settings__label">{{ t.layersLabel }}</h3>
+    <div class="settings__toggles">
+      <app-toggle
+        [label]="t.layerBuildings3d"
+        [checked]="state.show3dBuildings()"
+        [disabled]="state.currentView() === 'history'"
+        [fullWidth]="true"
+        (checkedChange)="state.show3dBuildings.set($event)">
+      </app-toggle>
+
+      <app-toggle
+        [label]="t.layerEmbankments3d"
+        [checked]="state.show3dEmbankments()"
+        [fullWidth]="true"
+        (checkedChange)="state.show3dEmbankments.set($event)">
+      </app-toggle>
+
+      <app-toggle
+        [label]="t.layerDepressions"
+        [checked]="state.showDepressionZones()"
+        [fullWidth]="true"
+        (checkedChange)="state.showDepressionZones.set($event)">
+      </app-toggle>
+    </div>
+  </section>
+
+  <!-- Theme (Light / Midnight Dark) -->
+  <section class="settings__section">
+    <h3 class="settings__label">{{ t.themeLabel }}</h3>
+    <app-switcher
+      size="sm"
+      [options]="themeOptions()"
+      [value]="theme.mode()"
+      [ariaLabel]="t.themeLabel"
+      (valueChange)="state.setTheme($event ?? 'light')">
+    </app-switcher>
+  </section>
+</div>

@@ -1,0 +1,13 @@
+{
+  "name": "www-vector-pipeline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Geofabrik OSM PBF -> Multi-LOD GeoJSON vector pipeline for Wroclawski Wezel Wodny",
+  "scripts": {
+    "build": "node --max-old-space-size=6144 src/build-vectors.mjs"
+  },
+  "dependencies": {
+    "osm-pbf-parser": "^2.3.0"
+  }
+}

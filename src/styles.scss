@@ -1,2 +1,36 @@
 @use "variables" as *;
 @use "base";
+
+// ─── MapLibre controls styled as KMD glass UI ────────────────────────────────
+
+.maplibregl-ctrl-bottom-right {
+  right: var(--dock-offset-x, 16px);
+  bottom: var(--dock-clearance, 96px);
+
+  @include respond-to("mobile") {
+    bottom: var(--dock-clearance, 112px);
+  }
+}
+
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+  margin: 0;
+}
+
+.maplibregl-ctrl-attrib {
+  font-family: $font-family;
+  font-size: font-size("xxs");
+  color: color("text-dim");
+  background: color("panel-bg");
+  border: 1px solid color("line");
+  border-radius: radius("pill");
+  backdrop-filter: blur(blur-token("sm"));
+  -webkit-backdrop-filter: blur(blur-token("sm"));
+
+  a {
+    color: color("text-desc");
+  }
+
+  &.maplibregl-compact {
+    background-color: color("panel-bg");
+  }
+}

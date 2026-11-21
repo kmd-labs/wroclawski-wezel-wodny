@@ -1,23 +1,33 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Globe, Activity, Layers, BookOpen } from 'lucide-angular';
 import {
+  LucideAngularModule,
+  Globe,
+  SlidersHorizontal,
+  Waves,
+  History,
+  Mountain
+} from 'lucide-angular';
+import {
+  AboutService,
   BrandComponent,
-  ButtonComponent,
+  BreakpointService,
   DropdownComponent,
   DropdownOption,
   PopupComponent,
   PopupService,
+  SeoService,
   SplashComponent,
   SplashService,
-  AboutService,
-  TimelineSliderComponent,
-  TooltipComponent,
-  BreakpointService,
-  SeoService
+  TooltipComponent
 } from '@kmd/design-system';
 import { I18nService } from './core/i18n/i18n.service';
 import { Lang } from './core/i18n/i18n.types';
+import { AppStateService } from './core/services/app-state.service';
+import { ViewMode } from './core/models/www.model';
+import { MapStageComponent } from './components/map-stage/map-stage.component';
+import { MapDockComponent } from './components/map-dock/map-dock.component';
+import { PinInspectorComponent } from './components/pin-inspector/pin-inspector.component';
 
 @Component({
   selector: 'app-root',
@@ -26,12 +36,13 @@ import { Lang } from './core/i18n/i18n.types';
     CommonModule,
     LucideAngularModule,
     BrandComponent,
-    ButtonComponent,
     DropdownComponent,
     PopupComponent,
     SplashComponent,
-    TimelineSliderComponent,
-    TooltipComponent
+    TooltipComponent,
+    MapStageComponent,
+    MapDockComponent,
+    PinInspectorComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -43,17 +54,14 @@ export class AppComponent {
   readonly about = inject(AboutService);
   readonly splash = inject(SplashService);
   readonly seo = inject(SeoService);
+  readonly state = inject(AppStateService);
 
   readonly globeIcon = Globe;
-  readonly bookOpenIcon = BookOpen;
-
-  readonly currentView = signal<string>('primary');
-  readonly sliderValue = signal<number>(0);
 
   constructor() {
     this.seo.update({
-      title: 'KMD · Wroclawski Wezel Wodny',
-      description: 'Interactive scientific data visualization by KMD Labs.',
+      title: 'KMD · Wrocławski Węzeł Wodny',
+      description: 'Interactive 3D hydrotechnical visualization of the Wrocław Water Node, historical floods (1997, 2010/2012, 2024), and Lower Silesia flood protection polders.',
       image: 'assets/design-system/og-image.png'
     });
   }
@@ -67,27 +75,19 @@ export class AppComponent {
     }))
   );
 
-  readonly viewOptions = computed<DropdownOption<string>[]>(() => {
+  readonly viewOptions = computed<DropdownOption<ViewMode>[]>(() => {
     const t = this.i18n.t();
     return [
-      { value: 'primary', label: t.viewPrimary, icon: Activity },
-      { value: 'secondary', label: t.viewSecondary, icon: Layers }
+      { value: 'equilibrium', label: t.viewEquilibrium, icon: SlidersHorizontal },
+      { value: 'floods', label: t.viewFloods, icon: Waves },
+      { value: 'history', label: t.viewHistory, icon: History },
+      { value: 'silesia', label: t.viewSilesia, icon: Mountain }
     ];
   });
 
   readonly currentViewIcon = computed(
-    () => this.viewOptions().find(o => o.value === this.currentView())?.icon ?? Activity
+    () => this.viewOptions().find(o => o.value === this.state.currentView())?.icon ?? SlidersHorizontal
   );
 
   readonly isPopupOpen = computed(() => this.popup.config() !== null);
-
-  openGlossary() {
-    this.popup.open({
-      id: 'glossary',
-      title: computed(() => this.i18n.t().glossary),
-      description: computed(() => this.i18n.t().glossaryDesc),
-      size: 'md',
-      actions: [{ label: computed(() => this.i18n.t().close), variant: 'default' }]
-    });
-  }
 }

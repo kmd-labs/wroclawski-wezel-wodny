@@ -1,0 +1,47 @@
+@use "variables" as *;
+
+.glossary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__item {
+    padding: 10px 12px;
+    border-radius: radius("sm");
+    background: color("panel-inset");
+    border: 1px solid color("line");
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__term {
+    margin: 0;
+    font-size: font-size("sm");
+    font-weight: font-weight("semibold");
+    color: color("text-bright");
+  }
+
+  &__badge {
+    padding: 2px 7px;
+    border-radius: radius("pill");
+    background: color("surface-muted");
+    font-family: $font-family-mono;
+    font-size: font-size("xxs");
+    color: color("accent");
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: font-size("xs");
+    line-height: 1.45;
+    color: color("text-desc");
+  }
+}
