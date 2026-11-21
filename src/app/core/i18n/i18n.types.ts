@@ -73,7 +73,6 @@ export interface Dict {
   weirPanelSubtitle: string;
   weirToggleBtn: string;
   autoEquilibriumBtn: string;
-  polderShavingLabel: string;
   statusSafe: string;
   statusWarning: string;
   statusOverflow: string;

@@ -52,7 +52,6 @@ export const EN: Dict = {
   weirPanelSubtitle: 'Adjust gate apertures (0–100%) to route the Odra wave safely.',
   weirToggleBtn: 'Gates',
   autoEquilibriumBtn: 'Auto-Balance',
-  polderShavingLabel: 'Upstream Polders (-260 m³/s)',
   statusSafe: 'Flow Safe',
   statusWarning: 'Near Capacity',
   statusOverflow: 'Overflowing!',

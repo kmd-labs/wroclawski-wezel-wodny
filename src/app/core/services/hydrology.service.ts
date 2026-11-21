@@ -499,17 +499,12 @@ export class HydrologyService {
       }
     } else {
       let inflow = this.state.inflowM3s();
-      let polderShave =
-        this.state.polderRetentionActive() && inflow > 2100
-          ? Math.min(260, (inflow - 2100) * 0.26)
-          : 0;
 
       if (view === 'history') {
         inflow = Math.min(2100, this.activeHistoryEra().capacityM3s * 0.85);
-        polderShave = 0;
       }
 
-      const effectiveTrestno = Math.max(250, inflow - polderShave);
+      const effectiveTrestno = Math.max(250, inflow);
       Object.assign(rawFlows, this.routeWaveFlows(effectiveTrestno, view, scenario.id, step));
     }
 
@@ -564,13 +559,12 @@ export class HydrologyService {
     if (view === 'history') return [];
 
     const branches = this.branchHydrology();
-    const polderOn = this.state.polderRetentionActive();
-    const inflow = this.state.inflowM3s();
     const basins: FloodBasinLevel[] = [];
 
     if (view === 'floods') {
       const kf = this.activeFloodKeyframe();
       const kfZones = new Set(kf.floodedZones);
+      const scenarioId = this.state.floodScenario();
       const cap = this.activeFloodScenario().systemCapacityM3s;
       const waveExcess = Math.max(0, (kf.flowTrestnoM3s - cap) / 1300);
 
@@ -593,7 +587,10 @@ export class HydrologyService {
           maxTriggerLoad = Math.max(maxTriggerLoad, branches[bId]?.loadRatio ?? 0);
         }
         const branchExcess = Math.max(0, maxTriggerLoad - 0.96);
-        const excessRatio = Math.min(1, Math.max(0.08, waveExcess * 0.65 + branchExcess * 0.55));
+        const is2010Kozanow = scenarioId === '2010' && profile.id === 'kozanow-pilczyce';
+        const excessRatio = is2010Kozanow
+          ? 0.72
+          : Math.min(1, Math.max(0.08, waveExcess * 0.65 + branchExcess * 0.55));
         const depthM = Math.round((0.25 + excessRatio * (profile.maxRiseM - 0.25)) * 100) / 100;
         basins.push({
           id: profile.id,
@@ -611,10 +608,8 @@ export class HydrologyService {
     for (const profile of ISOK_BASIN_PROFILES) {
       if (profile.id === 'polder-blizanowice-trestno') {
         const odraLoad = branches['odra-upper']?.loadRatio ?? 0;
-        if ((polderOn && inflow > 2100) || odraLoad > 1.005) {
-          const norm = polderOn
-            ? Math.min(1, Math.max(0.15, (inflow - 2100) / 1000))
-            : Math.min(1, (odraLoad - 1.0) / 0.25);
+        if (odraLoad > 1.005) {
+          const norm = Math.min(1, (odraLoad - 1.0) / 0.25);
           const depthM = Math.round((0.35 + norm * 2.4) * 100) / 100;
           basins.push({
             id: profile.id,

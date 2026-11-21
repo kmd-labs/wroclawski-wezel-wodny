@@ -24,7 +24,6 @@ import {
   SwitcherOption,
   TimelineMarker,
   TimelineSliderComponent,
-  ToggleComponent,
   TooltipDirective
 } from '@kmd/design-system';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -46,7 +45,6 @@ import { SourcesPopupComponent } from '../sources-popup/sources-popup.component'
     ButtonComponent,
     SwitcherComponent,
     TimelineSliderComponent,
-    ToggleComponent,
     TooltipDirective
   ],
   templateUrl: './map-dock.component.html',

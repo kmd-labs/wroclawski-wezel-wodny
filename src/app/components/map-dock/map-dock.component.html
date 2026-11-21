@@ -145,13 +145,6 @@
           </div>
 
           <div class="dock__drawer-foot">
-            <app-toggle
-              size="sm"
-              [label]="t.polderShavingLabel"
-              [checked]="state.polderRetentionActive()"
-              (checkedChange)="state.polderRetentionActive.set($event)">
-            </app-toggle>
-
             @if (floodedZoneNames().length > 0) {
               <div class="dock__alert dock__alert--danger">
                 <lucide-icon [img]="warnIcon" [size]="13"></lucide-icon>

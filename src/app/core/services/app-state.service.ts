@@ -23,7 +23,6 @@ export class AppStateService {
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
   readonly gateOpenings = signal<Record<GateId, number>>({ ...DEFAULT_GATE_OPENINGS });
-  readonly polderRetentionActive = signal<boolean>(false);
   readonly weirPanelOpen = signal<boolean>(false);
 
   // 2. Floods View State

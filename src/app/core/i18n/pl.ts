@@ -52,7 +52,6 @@ export const PL: Dict = {
   weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
   weirToggleBtn: 'Zasuwy',
   autoEquilibriumBtn: 'Auto-sterowanie',
-  polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
   statusSafe: 'Przepływ bezpieczny',
   statusWarning: 'Blisko limitu',
   statusOverflow: 'Przelanie wałów!',
