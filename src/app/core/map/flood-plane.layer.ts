@@ -215,10 +215,6 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
         let elevMasl = groundMasl;
 
         if (active) {
-          let totalWeight = 0;
-          let weightedWaterMasl = 0;
-          let maxInfluence = 0;
-
           for (const b of this.basins) {
             const dx = (lng - b.center[0]) / b.radii[0];
             const dy = (lat - b.center[1]) / b.radii[1];
@@ -229,22 +225,16 @@ export class FloodWaterPlaneLayer implements CustomLayerInterface {
               dist <= 0.78
                 ? 1.0
                 : 0.5 * (1 + Math.cos(Math.PI * ((dist - 0.78) / 0.57)));
-            const w = raw * raw;
-            if (w > 0.001) {
-              totalWeight += w;
-              weightedWaterMasl += w * b.waterMasl;
-              if (raw > maxInfluence) maxInfluence = raw;
-            }
-          }
+            if (raw <= 0.001) continue;
 
-          if (totalWeight > 0.001) {
-            const localWaterMasl = weightedWaterMasl / totalWeight;
-            const rawDepth = localWaterMasl - groundMasl;
-            // Attenuate water depth cleanly near basin margin so flood never leaks past basin rim
-            const rimAtten = maxInfluence >= 0.7 ? 1.0 : maxInfluence / 0.7;
-            depthM = rawDepth * rimAtten - (1 - rimAtten) * 1.5;
-            if (depthM > 0) {
-              elevMasl = Math.max(groundMasl, localWaterMasl);
+            // Pointwise envelope (max over active basins) guarantees strict monotonicity:
+            // adding a newly breaching shallow basin never dilutes or lowers adjacent deep water.
+            const rimAtten = raw >= 0.7 ? 1.0 : raw / 0.7;
+            const rawDepth = b.waterMasl - groundMasl;
+            const candidateDepth = rawDepth * rimAtten - (1 - rimAtten) * 1.5;
+            if (candidateDepth > depthM) {
+              depthM = candidateDepth;
+              elevMasl = Math.max(groundMasl, groundMasl + candidateDepth);
             }
           }
         }

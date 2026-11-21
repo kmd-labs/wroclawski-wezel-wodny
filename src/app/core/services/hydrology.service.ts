@@ -42,6 +42,7 @@ export interface FloodBasinLevel {
   id: string;
   center: [number, number];
   radii: [number, number];
+  bankfullMasl: number;
   waterMasl: number;
   depthM: number;
   excessRatio: number;
@@ -560,6 +561,7 @@ export class HydrologyService {
             id: profile.id,
             center: profile.center,
             radii: profile.radii,
+            bankfullMasl: profile.bankfullMasl,
             waterMasl: Math.round((profile.bankfullMasl + 1.8) * 100) / 100,
             depthM: 1.8,
             excessRatio: 0.4
@@ -577,6 +579,7 @@ export class HydrologyService {
           id: profile.id,
           center: profile.center,
           radii: profile.radii,
+          bankfullMasl: profile.bankfullMasl,
           waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
           depthM,
           excessRatio
@@ -597,6 +600,7 @@ export class HydrologyService {
             id: profile.id,
             center: profile.center,
             radii: profile.radii,
+            bankfullMasl: profile.bankfullMasl,
             waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
             depthM,
             excessRatio: norm
@@ -623,11 +627,12 @@ export class HydrologyService {
 
       if (maxOverCrit > 0) {
         const excessRatio = Math.min(1, Math.pow(maxOverCrit / 0.24, 0.85));
-        const depthM = Math.round((0.2 + excessRatio * (profile.maxRiseM - 0.2)) * 100) / 100;
+        const depthM = Math.round((0.05 + excessRatio * (profile.maxRiseM - 0.05)) * 100) / 100;
         basins.push({
           id: profile.id,
           center: profile.center,
           radii: profile.radii,
+          bankfullMasl: profile.bankfullMasl,
           waterMasl: Math.round((profile.bankfullMasl + depthM) * 100) / 100,
           depthM,
           excessRatio
@@ -729,13 +734,13 @@ export class HydrologyService {
     }
 
     let maxDepthM = 0;
-    let sumMasl = 0;
+    let maxMasl = 0;
     for (const b of activeBasins) {
       maxDepthM = Math.max(maxDepthM, b.depthM);
-      sumMasl += b.waterMasl;
+      maxMasl = Math.max(maxMasl, b.waterMasl);
     }
 
-    const displayMasl = Math.round((sumMasl / activeBasins.length) * 10) / 10;
+    const displayMasl = Math.round(maxMasl * 10) / 10;
     return {
       active: true,
       trestnoMasl: activeBasins[0].waterMasl,
