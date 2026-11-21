@@ -38,7 +38,7 @@ import { AppStateService } from '../services/app-state.service';
 import { HydrologyService } from '../services/hydrology.service';
 import { VectorDataService } from '../services/vector-data.service';
 import { HISTORY_ERAS } from '../data/www-events.data';
-import { CANAL_SEGMENTS, WEIR_NODES } from '../data/www-hydrology.data';
+import { CANAL_SEGMENTS, DEPRESSED_ZONES, WEIR_NODES } from '../data/www-hydrology.data';
 import { MapPinViewModel, WeirNode } from '../models/www.model';
 
 const WORKER_ASSET_PATH = 'assets/maplibre/maplibre-gl-worker.mjs';
@@ -166,14 +166,17 @@ export class MapService {
       untracked(() => this.updateProjections());
     });
 
-    // 6. Keep clicked river segment tooltip live when timeline, gates, or language change
+    // 6. Keep clicked river segment or map flood-level tooltip live when timeline, gates, or language change
     effect(() => {
       const seg = this.state.selectedSegment();
+      const floodPt = this.state.selectedFloodPoint();
       this.hydro.branchHydrology();
+      this.hydro.floodPlaneState();
       this.i18n.lang();
       this.mapReady();
       untracked(() => {
         if (seg) this.updateSegmentTooltip();
+        else if (floodPt) this.updateFloodPointTooltip();
         else this.tooltip.hide();
       });
     });
@@ -291,6 +294,8 @@ export class MapService {
       this.updateProjections();
       if (this.state.selectedSegment()) {
         this.zone.run(() => this.updateSegmentTooltip());
+      } else if (this.state.selectedFloodPoint()) {
+        this.zone.run(() => this.updateFloodPointTooltip());
       }
     });
     map.on('zoomend', () => {
@@ -312,6 +317,7 @@ export class MapService {
           const segKey = String(props['segKey'] ?? '');
           const branchId = String(props['id'] ?? '');
           if (segKey && branchId) {
+            this.state.selectedFloodPoint.set(null);
             this.state.selectedSegment.set({
               segKey,
               branchId,
@@ -321,7 +327,9 @@ export class MapService {
             return;
           }
         }
-        this.clearSelectedSegment();
+        this.state.selectedSegment.set(null);
+        this.state.selectedFloodPoint.set([e.lngLat.lng, e.lngLat.lat]);
+        this.updateFloodPointTooltip();
       });
     });
 
@@ -330,7 +338,91 @@ export class MapService {
 
   clearSelectedSegment(): void {
     this.state.selectedSegment.set(null);
+    this.state.selectedFloodPoint.set(null);
     this.tooltip.hide();
+  }
+
+  private updateFloodPointTooltip(): void {
+    const map = this.map;
+    const coords = this.state.selectedFloodPoint();
+    if (!map || !coords) return;
+
+    const pt = map.project(coords);
+    const rect = map.getContainer().getBoundingClientRect();
+    const sx = rect.left + pt.x;
+    const sy = rect.top + pt.y;
+
+    const lang = this.i18n.lang();
+    const t = this.i18n.t();
+    const info = this.hydro.inspectFloodAtLngLat(coords[0], coords[1]);
+    const zoneMeta = info.zoneId ? DEPRESSED_ZONES.find(z => z.id === info.zoneId) : null;
+    const title = zoneMeta
+      ? (lang === 'pl' ? zoneMeta.namePl : zoneMeta.nameEn)
+      : info.isFloodway
+        ? t.floodPopupFloodway
+        : t.floodPopupTitle;
+
+    const waterText =
+      info.waterMasl !== null
+        ? `${info.waterMasl.toFixed(1)} m a.s.l.`
+        : info.kind === 'protected' && this.hydro.floodPlaneState().active
+          ? t.floodPopupProtected
+          : info.kind === 'upland'
+            ? t.floodPopupUpland
+            : t.floodPopupDry;
+
+    const depthText = info.depthM > 0 ? `+${info.depthM.toFixed(1)} m` : '0.0 m';
+
+    const terrainSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--cap"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>`;
+    const waterSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--water"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
+    const depthSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="www-tooltip-col__icon www-tooltip-col__icon--load"><path d="M12 2v20"/><path d="m8 18 4 4 4-4"/><path d="m8 6 4-4 4 4"/></svg>`;
+
+    const htmlString = `
+      <div class="www-tooltip-col">
+        <div class="www-tooltip-col__header">
+          <span class="www-tooltip-col__title">${title}</span>
+        </div>
+        <div class="www-tooltip-col__divider"></div>
+        <div class="www-tooltip-col__rows">
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${terrainSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupGround}</span>
+            </div>
+            <span class="www-tooltip-col__val">${info.groundMasl.toFixed(1)} m</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${waterSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupWaterLevel}</span>
+            </div>
+            <span class="www-tooltip-col__val ${info.depthM > 0 ? 'www-tooltip-col__val--overtop' : ''}">${waterText}</span>
+          </div>
+          <div class="www-tooltip-col__row">
+            <div class="www-tooltip-col__label-group">
+              ${depthSvg}
+              <span class="www-tooltip-col__label">${t.floodPopupDepth}</span>
+            </div>
+            <span class="www-tooltip-col__val ${info.depthM > 0 ? 'www-tooltip-col__val--overtop' : ''}">${depthText}</span>
+          </div>
+        </div>
+      </div>
+    `.trim();
+
+    const safeHtml = this.sanitizer.bypassSecurityTrustHtml(htmlString);
+    this.tooltip.show(
+      `${title}: ${depthText}`,
+      sx,
+      sy - 10,
+      'top',
+      0,
+      {
+        html: safeHtml,
+        interactive: true,
+        closable: true,
+        onClose: () => this.clearSelectedSegment()
+      }
+    );
   }
 
   private updateSegmentTooltip(): void {

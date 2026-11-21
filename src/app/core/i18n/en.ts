@@ -38,9 +38,6 @@ export const EN: Dict = {
 
   // Hydrological Telemetry & Readouts
   readoutTrestno: 'Trestno Q',
-  readoutNodeLoad: 'WWW Load',
-  readoutWidawa: 'Widawa',
-  readoutDowntown: 'Downtown',
   readoutStaraOdra: 'Stara Odra',
   readoutCapacity: 'Capacity',
   readoutPeak: 'Peak Q',
@@ -48,7 +45,6 @@ export const EN: Dict = {
   readoutYear: 'Era',
   readoutRetention: 'Retention',
   readoutReducedFlow: 'At Wrocław',
-  readoutFloodLevel: 'Flood Level',
   segmentCapacity: 'Max capacity',
   segmentLoad: 'Load',
 
@@ -56,19 +52,26 @@ export const EN: Dict = {
   weirPanelTitle: 'Weir & Floodgate Controls',
   weirPanelSubtitle: 'Adjust gate apertures (0–100%) to route the Odra wave safely.',
   weirToggleBtn: 'Gates',
-  autoEquilibriumBtn: 'RZGW Auto-Balance',
-  presetNormalBtn: 'Normal (450 m³/s)',
-  preset1997Btn: 'Extreme Wave (3,640 m³/s)',
-  presetMisuseBtn: 'Gate Error Demo',
+  autoEquilibriumBtn: 'Auto-Balance',
   polderShavingLabel: 'Upstream Polders (-260 m³/s)',
   statusSafe: 'Flow Safe',
   statusWarning: 'Near Capacity',
-  statusOverflow: 'Overtopping!',
+  statusOverflow: 'Overflowing!',
   floodedDistrictsLabel: 'Inundated basins',
   noFloodingLabel: 'All embankments holding',
   gateClosed: 'Closed',
   gateOpen: 'Open',
   gateOpeningLabel: 'Gate opening',
+
+  // Map Click Flood Level Popup
+  floodPopupTitle: 'Flood Level',
+  floodPopupGround: 'Terrain (DEM)',
+  floodPopupWaterLevel: 'Flood level',
+  floodPopupDepth: 'Water depth',
+  floodPopupDry: 'Dry (0.0 m)',
+  floodPopupProtected: 'Protected by dyke',
+  floodPopupFloodway: 'Inter-dyke floodway',
+  floodPopupUpland: 'Dry · Above floodplain',
 
   // Historical Floods View
   scenario1997: '1997',
@@ -105,7 +108,7 @@ export const EN: Dict = {
   // Map Legend & Depression Callout
   legendNormal: 'Safe (<75%)',
   legendHigh: 'High (75–100%)',
-  legendOvertop: 'Overtopping (>100%)',
+  legendOvertop: 'Overflowing (>100%)',
   legendEmbankment: '3D Embankment',
   legendDepressed: 'Below Flood Crest',
   legendFlooded: 'Flooded Volume',

@@ -5,6 +5,18 @@ import {
   EMBANKMENT_SEGMENTS
 } from '../data/www-hydrology.data';
 import {
+  DEM_BASIN_IDS,
+  DEM_GRID_COLS,
+  DEM_GRID_ELEV_DM,
+  DEM_GRID_REL_ELEV_DM,
+  DEM_GRID_ROWS,
+  DEM_GRID_ZONE_CODE,
+  DEM_MAX_LAT,
+  DEM_MAX_LNG,
+  DEM_MIN_LAT,
+  DEM_MIN_LNG
+} from '../data/www-dem-grid.data';
+import {
   FLOOD_SCENARIOS,
   HISTORY_ERAS
 } from '../data/www-events.data';
@@ -58,6 +70,15 @@ export interface FloodPlaneState {
   basins: FloodBasinLevel[];
   /** Overbank flood depth (m above floor) inside unembanked międzywale sectors 0..7 (zone codes 10..17). */
   miedzywaleDepths: number[];
+}
+
+export interface FloodPointInspection {
+  groundMasl: number;
+  waterMasl: number | null;
+  depthM: number;
+  zoneId: string | null;
+  kind: 'flooded' | 'protected' | 'upland';
+  isFloodway: boolean;
 }
 
 interface IsokBasinProfile {
@@ -292,30 +313,6 @@ export class HydrologyService {
   applyOptimalEquilibrium(): void {
     const optimal = this.computeOptimalGateOpenings(this.state.inflowM3s());
     this.state.gateOpenings.set(optimal);
-  }
-
-  applyPresetNormal(): void {
-    this.state.inflowM3s.set(450);
-    this.state.polderRetentionActive.set(true);
-    this.state.gateOpenings.set(this.computeOptimalGateOpenings(450));
-  }
-
-  applyPreset1997Wave(): void {
-    this.state.inflowM3s.set(3640);
-    this.state.polderRetentionActive.set(true);
-    this.state.gateOpenings.set(this.computeOptimalGateOpenings(3640));
-  }
-
-  applyGateErrorDemo(): void {
-    this.state.inflowM3s.set(2550);
-    this.state.gateOpenings.set({
-      bartoszowice: 45,
-      opatowice: 95,
-      szczytniki: 25,
-      widawa: 0,
-      'psie-pole': 85,
-      redzin: 65
-    });
   }
 
   readonly activeFloodScenario = computed(() => FLOOD_SCENARIOS[this.state.floodScenario()]);
@@ -766,4 +763,83 @@ export class HydrologyService {
       miedzywaleDepths
     };
   });
+
+  /**
+   * Returns exact ground elevation, water surface level (m a.s.l.), and water depth (m)
+   * at a clicked `[lng, lat]` point using the pre-baked DEM + embankment barrier grid.
+   */
+  inspectFloodAtLngLat(lng: number, lat: number): FloodPointInspection {
+    const cFloat = ((lng - DEM_MIN_LNG) / (DEM_MAX_LNG - DEM_MIN_LNG)) * DEM_GRID_COLS;
+    const rFloat = ((lat - DEM_MIN_LAT) / (DEM_MAX_LAT - DEM_MIN_LAT)) * DEM_GRID_ROWS;
+
+    if (cFloat < 0 || cFloat > DEM_GRID_COLS || rFloat < 0 || rFloat > DEM_GRID_ROWS) {
+      return {
+        groundMasl: 118.0,
+        waterMasl: null,
+        depthM: 0,
+        zoneId: null,
+        kind: 'upland',
+        isFloodway: false
+      };
+    }
+
+    const c0 = Math.max(0, Math.min(DEM_GRID_COLS - 1, Math.floor(cFloat)));
+    const r0 = Math.max(0, Math.min(DEM_GRID_ROWS - 1, Math.floor(rFloat)));
+    const tc = cFloat - c0;
+    const tr = rFloat - r0;
+    const stride = DEM_GRID_COLS + 1;
+    const e00 = DEM_GRID_ELEV_DM[r0 * stride + c0] / 10;
+    const e10 = DEM_GRID_ELEV_DM[r0 * stride + (c0 + 1)] / 10;
+    const e01 = DEM_GRID_ELEV_DM[(r0 + 1) * stride + c0] / 10;
+    const e11 = DEM_GRID_ELEV_DM[(r0 + 1) * stride + (c0 + 1)] / 10;
+    const groundMasl =
+      Math.round(
+        ((e00 + (e10 - e00) * tc) * (1 - tr) + (e01 + (e11 - e01) * tc) * tr) * 10
+      ) / 10;
+
+    const cNear = Math.max(0, Math.min(DEM_GRID_COLS, Math.round(cFloat)));
+    const rNear = Math.max(0, Math.min(DEM_GRID_ROWS, Math.round(rFloat)));
+    const idx = rNear * stride + cNear;
+    const zoneCode = DEM_GRID_ZONE_CODE[idx];
+    const relElevM = DEM_GRID_REL_ELEV_DM[idx] / 10;
+    const plane = this.floodPlaneState();
+
+    if (zoneCode < 0) {
+      return {
+        groundMasl,
+        waterMasl: null,
+        depthM: 0,
+        zoneId: null,
+        kind: 'upland',
+        isFloodway: false
+      };
+    }
+
+    if (zoneCode >= 10) {
+      const sectorDepth = plane.active ? (plane.miedzywaleDepths[zoneCode - 10] ?? 0) : 0;
+      const depthM = Math.max(0, Math.round((sectorDepth - relElevM) * 10) / 10);
+      return {
+        groundMasl,
+        waterMasl: depthM > 0 ? Math.round((groundMasl + depthM) * 10) / 10 : null,
+        depthM,
+        zoneId: null,
+        kind: depthM > 0 ? 'flooded' : 'upland',
+        isFloodway: true
+      };
+    }
+
+    const basinId = DEM_BASIN_IDS[zoneCode] ?? null;
+    const activeBasin = plane.active ? plane.basins.find(b => b.id === basinId) : undefined;
+    const depthM = activeBasin
+      ? Math.max(0, Math.round((activeBasin.depthM - relElevM) * 10) / 10)
+      : 0;
+    return {
+      groundMasl,
+      waterMasl: depthM > 0 ? Math.round((groundMasl + depthM) * 10) / 10 : null,
+      depthM,
+      zoneId: basinId,
+      kind: depthM > 0 ? 'flooded' : 'protected',
+      isFloodway: false
+    };
+  }
 }

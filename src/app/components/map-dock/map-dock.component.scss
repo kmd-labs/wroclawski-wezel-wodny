@@ -437,3 +437,29 @@
     color: color("text-dim");
   }
 }
+
+.dock__timeline {
+  ::ng-deep .timeline-slider__event:first-child app-button {
+    transform: translateX(18px);
+
+    @include respond-to("mobile") {
+      transform: none;
+    }
+
+    @include respond-to("mobile-landscape") {
+      transform: none;
+    }
+  }
+
+  ::ng-deep .timeline-slider__event:last-child app-button {
+    transform: translateX(-18px);
+
+    @include respond-to("mobile") {
+      transform: none;
+    }
+
+    @include respond-to("mobile-landscape") {
+      transform: none;
+    }
+  }
+}

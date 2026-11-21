@@ -18,6 +18,7 @@ export class AppStateService {
     branchId: string;
     lngLat: [number, number];
   } | null>(null);
+  readonly selectedFloodPoint = signal<[number, number] | null>(null);
 
   // 1. Equilibrium View State
   readonly inflowM3s = signal<number>(2400);
@@ -56,6 +57,7 @@ export class AppStateService {
     this.selectedPinId.set(null);
     this.selectedWeirId.set(null);
     this.selectedSegment.set(null);
+    this.selectedFloodPoint.set(null);
     this.currentView.set(view);
   }
 

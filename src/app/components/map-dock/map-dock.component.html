@@ -106,15 +106,6 @@
               <p class="dock__drawer-sub">{{ t.weirPanelSubtitle }}</p>
             </div>
             <div class="dock__presets">
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPresetNormal()">
-                {{ t.presetNormalBtn }}
-              </app-button>
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyPreset1997Wave()">
-                {{ t.preset1997Btn }}
-              </app-button>
-              <app-button size="sm" variant="ghost" (btnClick)="hydro.applyGateErrorDemo()">
-                {{ t.presetMisuseBtn }}
-              </app-button>
               <app-button size="sm" variant="default" [active]="true" (btnClick)="hydro.applyOptimalEquilibrium()">
                 <lucide-icon [img]="autoIcon" [size]="13"></lucide-icon>
                 <span>{{ t.autoEquilibriumBtn }}</span>
@@ -252,25 +243,6 @@
               <span class="readout__label">{{ t.readoutTrestno }}</span>
               <span class="readout__val">{{ state.inflowM3s() }} m³/s</span>
             </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutNodeLoad }}</span>
-              <span class="readout__val">{{ eq.maxLoadPct }}%</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutDowntown }}</span>
-              <span class="readout__val">{{ eq.downtownFlow }} m³/s</span>
-            </div>
-            <div class="readout">
-              <span class="readout__label">{{ t.readoutWidawa }}</span>
-              <span class="readout__val">{{ eq.widawaFlow }} m³/s</span>
-            </div>
-            @if (hydro.floodPlaneState().active) {
-              @let fp = hydro.floodPlaneState();
-              <div class="readout">
-                <span class="readout__label">{{ t.readoutFloodLevel }}</span>
-                <span class="readout__val">+{{ fp.maxDepthM.toFixed(1) }} m ({{ fp.submergedCount }}/{{ fp.totalZonesCount }})</span>
-              </div>
-            }
           } @else if (view === 'floods') {
             @let kf = hydro.activeFloodKeyframe();
             <span class="status-pill status-pill--accent">

@@ -88,7 +88,7 @@ export class MapDockComponent {
 
   readonly sliderMin = computed(() => {
     const v = this.state.currentView();
-    if (v === 'equilibrium') return 400;
+    if (v === 'equilibrium') return 250;
     if (v === 'history') return 1241;
     return 0;
   });

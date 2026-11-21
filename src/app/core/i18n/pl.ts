@@ -38,9 +38,6 @@ export const PL: Dict = {
 
   // Hydrological Telemetry & Readouts
   readoutTrestno: 'Trestno Q',
-  readoutNodeLoad: 'Obciążenie WWW',
-  readoutWidawa: 'Widawa',
-  readoutDowntown: 'Śródmieście',
   readoutStaraOdra: 'Stara Odra',
   readoutCapacity: 'Przepustowość',
   readoutPeak: 'Szczyt Q',
@@ -48,7 +45,6 @@ export const PL: Dict = {
   readoutYear: 'Okres',
   readoutRetention: 'Retencja',
   readoutReducedFlow: 'We Wrocławiu',
-  readoutFloodLevel: 'Poziom zalania',
   segmentCapacity: 'Przepustowość',
   segmentLoad: 'Obciążenie',
 
@@ -56,10 +52,7 @@ export const PL: Dict = {
   weirPanelTitle: 'Sterowanie jazami i zasuwami',
   weirPanelSubtitle: 'Przesuń zasuwy (0–100%), aby bezpiecznie przeprowadzić falę przez miasto.',
   weirToggleBtn: 'Zasuwy',
-  autoEquilibriumBtn: 'Auto-sterowanie RZGW',
-  presetNormalBtn: 'Norma (450 m³/s)',
-  preset1997Btn: 'Ekstremalna fala (3640 m³/s)',
-  presetMisuseBtn: 'Błąd sterowania',
+  autoEquilibriumBtn: 'Auto-sterowanie',
   polderShavingLabel: 'Poldery przed Trestnem (-260 m³/s)',
   statusSafe: 'Przepływ bezpieczny',
   statusWarning: 'Blisko limitu',
@@ -69,6 +62,16 @@ export const PL: Dict = {
   gateClosed: 'Zamknięta',
   gateOpen: 'Otwarta',
   gateOpeningLabel: 'Otwarcie zasuwy',
+
+  // Map Click Flood Level Popup
+  floodPopupTitle: 'Poziom wody powodziowej',
+  floodPopupGround: 'Teren (DEM)',
+  floodPopupWaterLevel: 'Zwierciadło wody',
+  floodPopupDepth: 'Głębokość zalania',
+  floodPopupDry: 'Sucho (0,0 m)',
+  floodPopupProtected: 'Chronione wałem',
+  floodPopupFloodway: 'Międzywale',
+  floodPopupUpland: 'Sucho · Poza strefą zalewową',
 
   // Historical Floods View
   scenario1997: '1997',

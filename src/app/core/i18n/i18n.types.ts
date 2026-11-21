@@ -57,9 +57,6 @@ export interface Dict {
 
   // Hydrological Telemetry & Readouts
   readoutTrestno: string;
-  readoutNodeLoad: string;
-  readoutWidawa: string;
-  readoutDowntown: string;
   readoutStaraOdra: string;
   readoutCapacity: string;
   readoutPeak: string;
@@ -67,7 +64,6 @@ export interface Dict {
   readoutYear: string;
   readoutRetention: string;
   readoutReducedFlow: string;
-  readoutFloodLevel: string;
   segmentCapacity: string;
   segmentLoad: string;
 
@@ -76,9 +72,6 @@ export interface Dict {
   weirPanelSubtitle: string;
   weirToggleBtn: string;
   autoEquilibriumBtn: string;
-  presetNormalBtn: string;
-  preset1997Btn: string;
-  presetMisuseBtn: string;
   polderShavingLabel: string;
   statusSafe: string;
   statusWarning: string;
@@ -88,6 +81,16 @@ export interface Dict {
   gateClosed: string;
   gateOpen: string;
   gateOpeningLabel: string;
+
+  // Map Click Flood Level Popup
+  floodPopupTitle: string;
+  floodPopupGround: string;
+  floodPopupWaterLevel: string;
+  floodPopupDepth: string;
+  floodPopupDry: string;
+  floodPopupProtected: string;
+  floodPopupFloodway: string;
+  floodPopupUpland: string;
 
   // Historical Floods View
   scenario1997: string;
