@@ -211,15 +211,6 @@
               [class.dock__lozenge--premod]="state.floodScenario() !== '2024'">
               {{ state.floodScenario() === '2024' ? t.wwwStateModern : t.wwwStatePreModern }}
             </span>
-            <span class="dock__subtitle">
-              {{
-                state.floodScenario() === '1997'
-                  ? t.scenario1997Subtitle
-                  : state.floodScenario() === '2012'
-                    ? t.scenario2012Subtitle
-                    : t.scenario2024Subtitle
-              }}
-            </span>
           </div>
 
           <div class="hydrograph">

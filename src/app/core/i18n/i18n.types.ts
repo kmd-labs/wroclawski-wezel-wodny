@@ -96,9 +96,6 @@ export interface Dict {
   scenario1997: string;
   scenario2012: string;
   scenario2024: string;
-  scenario1997Subtitle: string;
-  scenario2012Subtitle: string;
-  scenario2024Subtitle: string;
   wwwStatePreModern: string;
   wwwStateModern: string;
   pinPendingLabel: string;
