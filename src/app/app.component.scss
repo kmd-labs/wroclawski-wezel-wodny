@@ -1,0 +1,107 @@
+@use "variables" as *;
+
+.viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: color("bg-deep");
+}
+
+.header {
+  position: fixed;
+  top: var(--header-offset-top, 16px);
+  left: var(--header-offset-x, 16px);
+  right: var(--header-offset-x, 16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+  z-index: 25;
+
+  &--popup-open {
+    z-index: 120;
+
+    .header__settings,
+    .header__view {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity transition("fast"), visibility transition("fast");
+    }
+  }
+
+  &__left,
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+  }
+
+  &__settings,
+  &__view {
+    @include header-pill;
+    transition: opacity transition("fast"), visibility transition("fast");
+  }
+
+  &__view {
+    width: 180px;
+  }
+
+  @include respond-to("mobile") {
+    &:not(.header--popup-open):has(::ng-deep .header__brand--expanded) {
+      .header__settings,
+      .header__view {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+    }
+
+    &__view {
+      width: 140px;
+    }
+  }
+
+  @include respond-to("mobile-landscape") {
+    &:not(.header--popup-open):has(::ng-deep .header__brand--expanded) {
+      .header__settings,
+      .header__view {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+    }
+  }
+}
+
+.stage {
+  width: 100%;
+  height: 100%;
+}
+
+.dock-wrap {
+  position: fixed;
+  bottom: var(--dock-offset-bottom, 16px);
+  left: var(--dock-offset-x, 16px);
+  right: var(--dock-offset-x, 16px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.dock {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  width: min(720px, 100%);
+
+  &__slider {
+    flex: 1;
+  }
+}
