@@ -98,8 +98,8 @@ export const EN: Dict = {
   layerEmbankments3d: '3D Flood Embankments (OSM Dykes)',
   layerDepressions: 'Low-Lying District Basins (-m)',
   themeLabel: 'Appearance',
-  themeLight: 'Light (Day)',
-  themeDark: 'Midnight (Dark)',
+  themeLight: 'Light',
+  themeDark: 'Dark',
 
   // Map Legend & Depression Callout
   legendNormal: 'Safe (<75%)',
@@ -138,7 +138,7 @@ export const EN: Dict = {
       provider: `PGW Wody Polskie · Hydroportal (${ISOK_MZP_METADATA.namespace}, acq. ${ISOK_MZP_METADATA.acquiredDate})`,
       url: 'https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS',
       license: 'Open Public Data (INSPIRE / HVD)',
-      licenseUrl: 'https://dane.gov.pl/',
+      licenseUrl: 'https://dane.gov.pl/en/regulations',
       desc: 'Official Q10%, Q1%, and Q0.2% fluvial flood hazard polygons used to calibrate inter-dyke floodways and basin inundation onset (illustrative use).'
     },
     {

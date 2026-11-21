@@ -98,8 +98,8 @@ export const PL: Dict = {
   layerEmbankments3d: 'Wały przeciwpowodziowe 3D (OSM)',
   layerDepressions: 'Niecki osiedli poniżej korony wału (-m)',
   themeLabel: 'Motyw interfejsu',
-  themeLight: 'Jasny (Dzień)',
-  themeDark: 'Midnight (Ciemny)',
+  themeLight: 'Jasny',
+  themeDark: 'Ciemny',
 
   // Map Legend & Depression Callout
   legendNormal: 'Bezpieczny (<75%)',
@@ -138,7 +138,7 @@ export const PL: Dict = {
       provider: `PGW Wody Polskie · Hydroportal (${ISOK_MZP_METADATA.namespace}, pobr. ${ISOK_MZP_METADATA.acquiredDate})`,
       url: 'https://wody.isok.gov.pl/wss/INSPIRE/INSPIRE_NZ_HY_MZPMRP_WFS',
       license: 'Otwarte dane publiczne (INSPIRE / HVD)',
-      licenseUrl: 'https://dane.gov.pl/',
+      licenseUrl: 'https://dane.gov.pl/en/regulations',
       desc: 'Oficjalne zasięgi zagrożenia powodziowego Q10%, Q1% i Q0,2% użyte do kalibracji międzywala i progów zalewowych (materiał poglądowy).'
     },
     {
